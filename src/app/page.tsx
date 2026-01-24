@@ -45,8 +45,10 @@ export default function Home() {
   const [showTodoModal, setShowTodoModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showEventDetailModal, setShowEventDetailModal] = useState(false);
+  const [showResearchDetailModal, setShowResearchDetailModal] = useState(false);
   const [selectedAirdropId, setSelectedAirdropId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedResearch, setSelectedResearch] = useState<Research | null>(null);
 
   // Form states
   const [newAirdrop, setNewAirdrop] = useState({ name: '', chain: '', deadline: '', expected_value: '' });
@@ -398,6 +400,11 @@ export default function Home() {
   const openEventDetail = (event: CalendarEvent) => {
     setSelectedEvent(event);
     setShowEventDetailModal(true);
+  };
+
+  const openResearchDetail = (item: Research) => {
+    setSelectedResearch(item);
+    setShowResearchDetailModal(true);
   };
 
   // Helpers
@@ -833,10 +840,14 @@ export default function Home() {
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             {research.map(item => (
-              <div key={item.id} className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg p-4 relative group">
+              <div
+                key={item.id}
+                className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg p-4 relative group cursor-pointer hover:border-[#6366f1] transition-colors"
+                onClick={() => openResearchDetail(item)}
+              >
                 {isAdmin && (
                   <button
-                    onClick={() => deleteResearch(item.id)}
+                    onClick={(e) => { e.stopPropagation(); deleteResearch(item.id); }}
                     className="absolute top-2 right-2 text-red-400 hover:text-red-300 text-xs opacity-0 group-hover:opacity-100"
                   >✕</button>
                 )}
@@ -851,8 +862,11 @@ export default function Home() {
                      item.sentiment === 'bearish' ? '🐻 Bearish' : '😐 Neutral'}
                   </span>
                 </div>
-                <p className="text-sm text-gray-400">{item.notes}</p>
+                <p className="text-sm text-gray-400 line-clamp-2">{item.notes}</p>
                 <p className="text-xs text-gray-600 mt-2">{item.date}</p>
+                {item.notes && item.notes.length > 80 && (
+                  <p className="text-xs text-[#6366f1] mt-1">더 보기...</p>
+                )}
               </div>
             ))}
             {research.length === 0 && (
@@ -1040,6 +1054,39 @@ export default function Home() {
             <button
               onClick={() => setShowEventDetailModal(false)}
               className="w-full py-2 bg-[#2a2a2a] rounded-lg hover:bg-[#3a3a3a]"
+            >Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* Research Detail Modal */}
+      {showResearchDetailModal && selectedResearch && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowResearchDetailModal(false)}>
+          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <span className="font-bold text-2xl">{selectedResearch.coin}</span>
+                <span className={`text-sm px-3 py-1 rounded ${
+                  selectedResearch.sentiment === 'bullish' ? 'bg-green-500/20 text-green-400' :
+                  selectedResearch.sentiment === 'bearish' ? 'bg-red-500/20 text-red-400' :
+                  'bg-gray-500/20 text-gray-400'
+                }`}>
+                  {selectedResearch.sentiment === 'bullish' ? '🐂 Bullish' :
+                   selectedResearch.sentiment === 'bearish' ? '🐻 Bearish' : '😐 Neutral'}
+                </span>
+              </div>
+              <button
+                onClick={() => setShowResearchDetailModal(false)}
+                className="text-gray-400 hover:text-white text-xl"
+              >✕</button>
+            </div>
+            <p className="text-gray-500 text-sm mb-4">{selectedResearch.date}</p>
+            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg p-4">
+              <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">{selectedResearch.notes}</p>
+            </div>
+            <button
+              onClick={() => setShowResearchDetailModal(false)}
+              className="w-full mt-4 py-2 bg-[#2a2a2a] rounded-lg hover:bg-[#3a3a3a]"
             >Close</button>
           </div>
         </div>
