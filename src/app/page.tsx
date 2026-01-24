@@ -1,42 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { supabase, Airdrop, AirdropTask, Todo, CalendarEvent, Research } from '@/lib/supabase';
 
-// Types
-interface Airdrop {
-  id: string;
-  name: string;
-  chain: string;
-  tasks: { id: string; name: string; done: boolean; cost: number }[];
-  deadline: string;
-  expectedValue: string;
-  status: 'active' | 'completed' | 'missed';
-  totalCost: number;
-}
-
-interface Todo {
-  id: string;
-  text: string;
-  done: boolean;
-  date: string;
-}
-
-interface CalendarEvent {
-  id: string;
-  title: string;
-  date: string;
-  type: 'airdrop' | 'snapshot' | 'tge' | 'other';
-  memo: string;
-}
-
-interface Research {
-  id: string;
-  coin: string;
-  notes: string;
-  sentiment: 'bullish' | 'bearish' | 'neutral';
-  date: string;
-}
-
+// Price type
 interface PriceData {
   coin: string;
   binance: number;
@@ -46,56 +13,13 @@ interface PriceData {
   gap: number;
 }
 
+// Extended types with tasks
+interface AirdropWithTasks extends Airdrop {
+  tasks: AirdropTask[];
+}
+
 // Admin PIN
 const ADMIN_PIN = '1507';
-
-// Demo data
-const initialAirdrops: Airdrop[] = [
-  {
-    id: '1',
-    name: 'LayerZero',
-    chain: 'Multi-chain',
-    tasks: [
-      { id: '1-1', name: 'Bridge ETH to Arbitrum', done: true, cost: 5 },
-      { id: '1-2', name: 'Bridge to Optimism', done: true, cost: 3 },
-      { id: '1-3', name: 'Use Stargate', done: false, cost: 2 },
-    ],
-    deadline: '2026-03-01',
-    expectedValue: '$500~2000',
-    status: 'active',
-    totalCost: 10,
-  },
-  {
-    id: '2',
-    name: 'zkSync',
-    chain: 'zkSync Era',
-    tasks: [
-      { id: '2-1', name: 'Bridge to zkSync Era', done: true, cost: 10 },
-      { id: '2-2', name: 'Swap on SyncSwap', done: true, cost: 2 },
-      { id: '2-3', name: 'Mint NFT', done: true, cost: 5 },
-      { id: '2-4', name: 'Add liquidity', done: false, cost: 20 },
-    ],
-    deadline: '2026-02-15',
-    expectedValue: '$300~1500',
-    status: 'active',
-    totalCost: 37,
-  },
-];
-
-const initialTodos: Todo[] = [
-  { id: '1', text: 'zkSync 일일 트랜잭션', done: false, date: '2026-01-24' },
-  { id: '2', text: 'Hyperliquid 펀딩비 체크', done: true, date: '2026-01-24' },
-];
-
-const initialEvents: CalendarEvent[] = [
-  { id: '1', title: 'LayerZero Snapshot', date: '2026-02-01', type: 'snapshot', memo: '스냅샷 전 브릿지 완료하기' },
-  { id: '2', title: 'zkSync TGE', date: '2026-02-15', type: 'tge', memo: '토큰 상장 예정, 클레임 준비' },
-];
-
-const initialResearch: Research[] = [
-  { id: '1', coin: 'ETH', notes: '2.0 업그레이드 후 디플레이션, 장기 홀딩', sentiment: 'bullish', date: '2026-01-23' },
-  { id: '2', coin: 'SOL', notes: '속도 빠름, 에어드랍 많음', sentiment: 'bullish', date: '2026-01-22' },
-];
 
 export default function Home() {
   // Auth state
@@ -105,13 +29,14 @@ export default function Home() {
   const [pinError, setPinError] = useState(false);
 
   // Data states
-  const [airdrops, setAirdrops] = useState<Airdrop[]>(initialAirdrops);
-  const [todos, setTodos] = useState<Todo[]>(initialTodos);
-  const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
-  const [research, setResearch] = useState<Research[]>(initialResearch);
+  const [airdrops, setAirdrops] = useState<AirdropWithTasks[]>([]);
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [research, setResearch] = useState<Research[]>([]);
   const [prices, setPrices] = useState<PriceData[]>([]);
   const [krwRate, setKrwRate] = useState(1350);
   const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
 
   // Modal states
   const [showAirdropModal, setShowAirdropModal] = useState(false);
@@ -124,14 +49,66 @@ export default function Home() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
   // Form states
-  const [newAirdrop, setNewAirdrop] = useState({ name: '', chain: '', deadline: '', expectedValue: '' });
-  const [newEvent, setNewEvent] = useState({ title: '', date: '', type: 'other' as CalendarEvent['type'], memo: '' });
-  const [newResearch, setNewResearch] = useState({ coin: '', notes: '', sentiment: 'neutral' as Research['sentiment'] });
+  const [newAirdrop, setNewAirdrop] = useState({ name: '', chain: '', deadline: '', expected_value: '' });
+  const [newEvent, setNewEvent] = useState({ title: '', date: '', type: 'other', memo: '' });
+  const [newResearch, setNewResearch] = useState({ coin: '', notes: '', sentiment: 'neutral' });
   const [newTodo, setNewTodo] = useState({ text: '', date: new Date().toISOString().split('T')[0] });
   const [newTask, setNewTask] = useState({ name: '', cost: 0 });
 
   const [currentDate] = useState(new Date());
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+
+  // Fetch data from Supabase
+  const fetchData = useCallback(async () => {
+    setDataLoading(true);
+    try {
+      // Fetch airdrops with tasks
+      const { data: airdropsData } = await supabase
+        .from('airdrops')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const { data: tasksData } = await supabase
+        .from('airdrop_tasks')
+        .select('*');
+
+      const airdropsWithTasks: AirdropWithTasks[] = (airdropsData || []).map(airdrop => ({
+        ...airdrop,
+        tasks: (tasksData || []).filter(task => task.airdrop_id === airdrop.id)
+      }));
+
+      setAirdrops(airdropsWithTasks);
+
+      // Fetch todos
+      const { data: todosData } = await supabase
+        .from('todos')
+        .select('*')
+        .order('date', { ascending: true });
+      setTodos(todosData || []);
+
+      // Fetch events
+      const { data: eventsData } = await supabase
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true });
+      setEvents(eventsData || []);
+
+      // Fetch research
+      const { data: researchData } = await supabase
+        .from('research')
+        .select('*')
+        .order('created_at', { ascending: false });
+      setResearch(researchData || []);
+
+    } catch (error) {
+      console.error('Data fetch error:', error);
+    }
+    setDataLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // PIN verification
   const handlePinSubmit = () => {
@@ -148,7 +125,6 @@ export default function Home() {
   // Fetch prices
   const fetchPrices = useCallback(async () => {
     try {
-      // Binance prices
       const binanceRes = await fetch('https://fapi.binance.com/fapi/v1/ticker/price');
       const binanceData = await binanceRes.json();
       const binancePrices: Record<string, number> = {};
@@ -156,11 +132,9 @@ export default function Home() {
         binancePrices[item.symbol.replace('USDT', '')] = parseFloat(item.price);
       });
 
-      // Upbit prices (via CoinGecko for KRW)
       const cgRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple,dogecoin&vs_currencies=krw,usd');
       const cgData = await cgRes.json();
 
-      // Calculate kimchi premium
       const coins = [
         { id: 'bitcoin', symbol: 'BTC', cg: cgData.bitcoin },
         { id: 'ethereum', symbol: 'ETH', cg: cgData.ethereum },
@@ -174,7 +148,7 @@ export default function Home() {
         const upbitKrw = coin.cg?.krw || 0;
         const upbitUsd = upbitKrw / krwRate;
         const kimchiPremium = binancePrice > 0 ? ((upbitUsd - binancePrice) / binancePrice) * 100 : 0;
-        const hyperliquidPrice = binancePrice * (1 + (Math.random() - 0.5) * 0.02); // Simulated
+        const hyperliquidPrice = binancePrice * (1 + (Math.random() - 0.5) * 0.02);
 
         return {
           coin: coin.symbol,
@@ -200,7 +174,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [fetchPrices]);
 
-  // Fetch exchange rate
   useEffect(() => {
     fetch('https://api.exchangerate-api.com/v4/latest/USD')
       .then(res => res.json())
@@ -209,111 +182,200 @@ export default function Home() {
   }, []);
 
   // CRUD functions
-  const toggleTodo = (id: string) => {
-    setTodos(todos.map(todo =>
-      todo.id === id ? { ...todo, done: !todo.done } : todo
-    ));
+  const toggleTodo = async (id: string) => {
+    const todo = todos.find(t => t.id === id);
+    if (!todo) return;
+
+    await supabase
+      .from('todos')
+      .update({ done: !todo.done })
+      .eq('id', id);
+
+    setTodos(todos.map(t => t.id === id ? { ...t, done: !t.done } : t));
   };
 
-  const addTodo = () => {
+  const addTodo = async () => {
     if (!newTodo.text.trim()) return;
-    setTodos([...todos, { id: Date.now().toString(), ...newTodo, done: false }]);
+
+    const { data, error } = await supabase
+      .from('todos')
+      .insert([{ text: newTodo.text, date: newTodo.date, done: false }])
+      .select()
+      .single();
+
+    if (!error && data) {
+      setTodos([...todos, data]);
+    }
     setNewTodo({ text: '', date: new Date().toISOString().split('T')[0] });
     setShowTodoModal(false);
   };
 
-  const deleteTodo = (id: string) => {
+  const deleteTodo = async (id: string) => {
+    await supabase.from('todos').delete().eq('id', id);
     setTodos(todos.filter(t => t.id !== id));
   };
 
-  const addAirdrop = () => {
+  const addAirdrop = async () => {
     if (!newAirdrop.name.trim()) return;
-    setAirdrops([...airdrops, {
-      id: Date.now().toString(),
-      ...newAirdrop,
-      tasks: [],
-      status: 'active',
-      totalCost: 0,
-    }]);
-    setNewAirdrop({ name: '', chain: '', deadline: '', expectedValue: '' });
+
+    const { data, error } = await supabase
+      .from('airdrops')
+      .insert([{
+        name: newAirdrop.name,
+        chain: newAirdrop.chain,
+        deadline: newAirdrop.deadline || null,
+        expected_value: newAirdrop.expected_value,
+        status: 'active',
+        total_cost: 0
+      }])
+      .select()
+      .single();
+
+    if (!error && data) {
+      setAirdrops([{ ...data, tasks: [] }, ...airdrops]);
+    }
+    setNewAirdrop({ name: '', chain: '', deadline: '', expected_value: '' });
     setShowAirdropModal(false);
   };
 
-  const deleteAirdrop = (id: string) => {
+  const deleteAirdrop = async (id: string) => {
+    await supabase.from('airdrops').delete().eq('id', id);
     setAirdrops(airdrops.filter(a => a.id !== id));
   };
 
-  const addEvent = () => {
+  const addEvent = async () => {
     if (!newEvent.title.trim()) return;
-    setEvents([...events, { id: Date.now().toString(), ...newEvent }]);
+
+    const { data, error } = await supabase
+      .from('events')
+      .insert([{
+        title: newEvent.title,
+        date: newEvent.date,
+        type: newEvent.type,
+        memo: newEvent.memo
+      }])
+      .select()
+      .single();
+
+    if (!error && data) {
+      setEvents([...events, data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+    }
     setNewEvent({ title: '', date: '', type: 'other', memo: '' });
     setShowEventModal(false);
   };
 
-  const deleteEvent = (id: string) => {
+  const deleteEvent = async (id: string) => {
+    await supabase.from('events').delete().eq('id', id);
     setEvents(events.filter(e => e.id !== id));
   };
 
-  const addResearch = () => {
+  const addResearch = async () => {
     if (!newResearch.coin.trim()) return;
-    setResearch([...research, {
-      id: Date.now().toString(),
-      ...newResearch,
-      date: new Date().toISOString().split('T')[0],
-    }]);
+
+    const { data, error } = await supabase
+      .from('research')
+      .insert([{
+        coin: newResearch.coin,
+        notes: newResearch.notes,
+        sentiment: newResearch.sentiment,
+        date: new Date().toISOString().split('T')[0]
+      }])
+      .select()
+      .single();
+
+    if (!error && data) {
+      setResearch([data, ...research]);
+    }
     setNewResearch({ coin: '', notes: '', sentiment: 'neutral' });
     setShowResearchModal(false);
   };
 
-  const deleteResearch = (id: string) => {
+  const deleteResearch = async (id: string) => {
+    await supabase.from('research').delete().eq('id', id);
     setResearch(research.filter(r => r.id !== id));
   };
 
-  const toggleAirdropTask = (airdropId: string, taskId: string) => {
+  const toggleAirdropTask = async (airdropId: string, taskId: string) => {
+    const airdrop = airdrops.find(a => a.id === airdropId);
+    const task = airdrop?.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    await supabase
+      .from('airdrop_tasks')
+      .update({ done: !task.done })
+      .eq('id', taskId);
+
     setAirdrops(airdrops.map(a => {
       if (a.id === airdropId) {
         return {
           ...a,
-          tasks: a.tasks.map(t =>
-            t.id === taskId ? { ...t, done: !t.done } : t
-          ),
+          tasks: a.tasks.map(t => t.id === taskId ? { ...t, done: !t.done } : t)
         };
       }
       return a;
     }));
   };
 
-  const addTask = () => {
+  const addTask = async () => {
     if (!newTask.name.trim() || !selectedAirdropId) return;
-    setAirdrops(airdrops.map(a => {
-      if (a.id === selectedAirdropId) {
-        const newTaskObj = {
-          id: `${a.id}-${Date.now()}`,
-          name: newTask.name,
-          done: false,
-          cost: newTask.cost,
-        };
-        return {
-          ...a,
-          tasks: [...a.tasks, newTaskObj],
-          totalCost: a.totalCost + newTask.cost,
-        };
-      }
-      return a;
-    }));
+
+    const { data, error } = await supabase
+      .from('airdrop_tasks')
+      .insert([{
+        airdrop_id: selectedAirdropId,
+        name: newTask.name,
+        cost: newTask.cost,
+        done: false
+      }])
+      .select()
+      .single();
+
+    if (!error && data) {
+      // Update airdrop total_cost
+      const airdrop = airdrops.find(a => a.id === selectedAirdropId);
+      const newTotalCost = (airdrop?.total_cost || 0) + newTask.cost;
+
+      await supabase
+        .from('airdrops')
+        .update({ total_cost: newTotalCost })
+        .eq('id', selectedAirdropId);
+
+      setAirdrops(airdrops.map(a => {
+        if (a.id === selectedAirdropId) {
+          return {
+            ...a,
+            tasks: [...a.tasks, data],
+            total_cost: newTotalCost
+          };
+        }
+        return a;
+      }));
+    }
+
     setNewTask({ name: '', cost: 0 });
     setShowTaskModal(false);
     setSelectedAirdropId(null);
   };
 
-  const deleteTask = (airdropId: string, taskId: string) => {
+  const deleteTask = async (airdropId: string, taskId: string) => {
+    const airdrop = airdrops.find(a => a.id === airdropId);
+    const task = airdrop?.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    await supabase.from('airdrop_tasks').delete().eq('id', taskId);
+
+    const newTotalCost = (airdrop?.total_cost || 0) - task.cost;
+    await supabase
+      .from('airdrops')
+      .update({ total_cost: newTotalCost })
+      .eq('id', airdropId);
+
     setAirdrops(airdrops.map(a => {
       if (a.id === airdropId) {
-        const task = a.tasks.find(t => t.id === taskId);
         return {
           ...a,
           tasks: a.tasks.filter(t => t.id !== taskId),
-          totalCost: a.totalCost - (task?.cost || 0),
+          total_cost: newTotalCost
         };
       }
       return a;
@@ -331,13 +393,14 @@ export default function Home() {
   };
 
   // Helpers
-  const getProgressPercent = (tasks: Airdrop['tasks']) => {
+  const getProgressPercent = (tasks: AirdropTask[]) => {
     if (tasks.length === 0) return 0;
     const done = tasks.filter(t => t.done).length;
     return Math.round((done / tasks.length) * 100);
   };
 
   const getDaysLeft = (deadline: string) => {
+    if (!deadline) return 999;
     const diff = new Date(deadline).getTime() - currentDate.getTime();
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
   };
@@ -357,9 +420,20 @@ export default function Home() {
     return events.filter(e => e.date === dateStr);
   };
 
-  const totalSpent = airdrops.reduce((sum, a) => sum + a.totalCost, 0);
+  const totalSpent = airdrops.reduce((sum, a) => sum + (a.total_cost || 0), 0);
   const totalTasks = airdrops.reduce((sum, a) => sum + a.tasks.length, 0);
   const completedTasks = airdrops.reduce((sum, a) => sum + a.tasks.filter(t => t.done).length, 0);
+
+  if (dataLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f]">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-[#6366f1] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen pb-20">
@@ -495,8 +569,8 @@ export default function Home() {
                       <tr key={airdrop.id} className="border-b border-[#2a2a2a]/50 hover:bg-[#0f0f0f]">
                         <td className="py-3 font-medium">{airdrop.name}</td>
                         <td className="py-3 text-gray-400">{airdrop.chain}</td>
-                        <td className="py-3 text-right text-[#f59e0b]">${airdrop.totalCost}</td>
-                        <td className="py-3 text-right text-[#22c55e]">{airdrop.expectedValue}</td>
+                        <td className="py-3 text-right text-[#f59e0b]">${airdrop.total_cost || 0}</td>
+                        <td className="py-3 text-right text-[#22c55e]">{airdrop.expected_value}</td>
                         <td className="py-3">
                           <div className="flex items-center gap-2">
                             <div className="flex-1 h-2 bg-[#2a2a2a] rounded-full overflow-hidden">
@@ -509,13 +583,17 @@ export default function Home() {
                           </div>
                         </td>
                         <td className="py-3 text-center">
-                          <span className={`text-xs px-2 py-1 rounded ${
-                            daysLeft <= 7 ? 'bg-red-500/20 text-red-400' :
-                            daysLeft <= 30 ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-green-500/20 text-green-400'
-                          }`}>
-                            D-{daysLeft}
-                          </span>
+                          {airdrop.deadline ? (
+                            <span className={`text-xs px-2 py-1 rounded ${
+                              daysLeft <= 7 ? 'bg-red-500/20 text-red-400' :
+                              daysLeft <= 30 ? 'bg-yellow-500/20 text-yellow-400' :
+                              'bg-green-500/20 text-green-400'
+                            }`}>
+                              D-{daysLeft}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-500">-</span>
+                          )}
                         </td>
                         {isAdmin && (
                           <td className="py-3 text-center">
@@ -603,9 +681,9 @@ export default function Home() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
                   <span className="text-xl">📅</span>
-                  <button onClick={() => setSelectedMonth(new Date(selectedMonth.setMonth(selectedMonth.getMonth() - 1)))} className="text-gray-400 hover:text-white">&lt;</button>
+                  <button onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1))} className="text-gray-400 hover:text-white">&lt;</button>
                   <span>{selectedMonth.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })}</span>
-                  <button onClick={() => setSelectedMonth(new Date(selectedMonth.setMonth(selectedMonth.getMonth() + 1)))} className="text-gray-400 hover:text-white">&gt;</button>
+                  <button onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1))} className="text-gray-400 hover:text-white">&gt;</button>
                 </h2>
                 {isAdmin && (
                   <button
@@ -724,6 +802,9 @@ export default function Home() {
                     )}
                   </div>
                 ))}
+                {todos.length === 0 && (
+                  <p className="text-gray-500 text-sm text-center py-4">No todos yet</p>
+                )}
               </div>
             </section>
           </div>
@@ -766,6 +847,9 @@ export default function Home() {
                 <p className="text-xs text-gray-600 mt-2">{item.date}</p>
               </div>
             ))}
+            {research.length === 0 && (
+              <p className="text-gray-500 text-sm col-span-3 text-center py-4">No research notes yet</p>
+            )}
           </div>
         </section>
 
@@ -868,8 +952,8 @@ export default function Home() {
             <input
               type="text"
               placeholder="Expected value (e.g. $500~2000)"
-              value={newAirdrop.expectedValue}
-              onChange={(e) => setNewAirdrop({ ...newAirdrop, expectedValue: e.target.value })}
+              value={newAirdrop.expected_value}
+              onChange={(e) => setNewAirdrop({ ...newAirdrop, expected_value: e.target.value })}
               className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-4"
             />
             <div className="flex gap-2">
@@ -901,7 +985,7 @@ export default function Home() {
             />
             <select
               value={newEvent.type}
-              onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value as CalendarEvent['type'] })}
+              onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
               className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-3"
             >
               <option value="airdrop">Airdrop</option>
@@ -1010,7 +1094,7 @@ export default function Home() {
             />
             <select
               value={newResearch.sentiment}
-              onChange={(e) => setNewResearch({ ...newResearch, sentiment: e.target.value as Research['sentiment'] })}
+              onChange={(e) => setNewResearch({ ...newResearch, sentiment: e.target.value })}
               className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-4"
             >
               <option value="bullish">🐂 Bullish</option>
