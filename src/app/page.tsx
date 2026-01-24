@@ -197,13 +197,21 @@ export default function Home() {
   const addTodo = async () => {
     if (!newTodo.text.trim()) return;
 
+    console.log('Adding todo:', newTodo);
     const { data, error } = await supabase
       .from('todos')
       .insert([{ text: newTodo.text, date: newTodo.date, done: false }])
       .select()
       .single();
 
-    if (!error && data) {
+    console.log('Todo result:', data, 'Error:', error);
+
+    if (error) {
+      alert('Error: ' + error.message);
+      return;
+    }
+
+    if (data) {
       setTodos([...todos, data]);
     }
     setNewTodo({ text: '', date: new Date().toISOString().split('T')[0] });
