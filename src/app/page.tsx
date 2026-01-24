@@ -1084,8 +1084,8 @@ export default function Home() {
             </div>
 
             {/* Content - Clean & Large */}
-            <article className="prose prose-invert prose-lg max-w-none">
-              <div className="text-gray-100 whitespace-pre-wrap text-lg md:text-xl leading-loose tracking-wide">
+            <article className="max-w-3xl">
+              <div className="text-gray-100 text-lg md:text-xl leading-relaxed break-words" style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
                 {selectedResearch.notes}
               </div>
             </article>
