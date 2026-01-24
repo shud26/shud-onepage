@@ -1062,11 +1062,11 @@ export default function Home() {
       {/* Research Detail Modal - Full Screen */}
       {showResearchDetailModal && selectedResearch && (
         <div className="fixed inset-0 bg-[#0f0f0f] z-50 overflow-y-auto">
-          <div className="min-h-screen p-6 max-w-4xl mx-auto">
+          <div className="min-h-screen p-8 md:p-12 lg:p-16">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6 sticky top-0 bg-[#0f0f0f] py-4 border-b border-[#2a2a2a]">
-              <div className="flex items-center gap-3">
-                <span className="font-bold text-3xl">{selectedResearch.coin}</span>
+            <div className="flex items-center justify-between mb-8 sticky top-0 bg-[#0f0f0f] py-4 z-10">
+              <div className="flex items-center gap-4">
+                <span className="font-bold text-2xl md:text-4xl">{selectedResearch.coin}</span>
                 <span className={`text-sm px-3 py-1 rounded ${
                   selectedResearch.sentiment === 'bullish' ? 'bg-green-500/20 text-green-400' :
                   selectedResearch.sentiment === 'bearish' ? 'bg-red-500/20 text-red-400' :
@@ -1075,20 +1075,20 @@ export default function Home() {
                   {selectedResearch.sentiment === 'bullish' ? '🐂 Bullish' :
                    selectedResearch.sentiment === 'bearish' ? '🐻 Bearish' : '😐 Neutral'}
                 </span>
+                <span className="text-gray-500 text-sm">{selectedResearch.date}</span>
               </div>
               <button
                 onClick={() => setShowResearchDetailModal(false)}
-                className="px-4 py-2 bg-[#2a2a2a] rounded-lg hover:bg-[#3a3a3a] text-sm"
-              >← Back</button>
+                className="px-5 py-2.5 bg-[#2a2a2a] rounded-lg hover:bg-[#3a3a3a] text-sm font-medium"
+              >← 돌아가기</button>
             </div>
 
-            {/* Date */}
-            <p className="text-gray-500 text-sm mb-6">{selectedResearch.date}</p>
-
-            {/* Content */}
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6">
-              <p className="text-gray-200 whitespace-pre-wrap leading-relaxed text-base">{selectedResearch.notes}</p>
-            </div>
+            {/* Content - Clean & Large */}
+            <article className="prose prose-invert prose-lg max-w-none">
+              <div className="text-gray-100 whitespace-pre-wrap text-lg md:text-xl leading-loose tracking-wide">
+                {selectedResearch.notes}
+              </div>
+            </article>
           </div>
         </div>
       )}
