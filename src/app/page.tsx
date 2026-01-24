@@ -1059,13 +1059,14 @@ export default function Home() {
         </div>
       )}
 
-      {/* Research Detail Modal */}
+      {/* Research Detail Modal - Full Screen */}
       {showResearchDetailModal && selectedResearch && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowResearchDetailModal(false)}>
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 bg-[#0f0f0f] z-50 overflow-y-auto">
+          <div className="min-h-screen p-6 max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6 sticky top-0 bg-[#0f0f0f] py-4 border-b border-[#2a2a2a]">
               <div className="flex items-center gap-3">
-                <span className="font-bold text-2xl">{selectedResearch.coin}</span>
+                <span className="font-bold text-3xl">{selectedResearch.coin}</span>
                 <span className={`text-sm px-3 py-1 rounded ${
                   selectedResearch.sentiment === 'bullish' ? 'bg-green-500/20 text-green-400' :
                   selectedResearch.sentiment === 'bearish' ? 'bg-red-500/20 text-red-400' :
@@ -1077,17 +1078,17 @@ export default function Home() {
               </div>
               <button
                 onClick={() => setShowResearchDetailModal(false)}
-                className="text-gray-400 hover:text-white text-xl"
-              >✕</button>
+                className="px-4 py-2 bg-[#2a2a2a] rounded-lg hover:bg-[#3a3a3a] text-sm"
+              >← Back</button>
             </div>
-            <p className="text-gray-500 text-sm mb-4">{selectedResearch.date}</p>
-            <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg p-4">
-              <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">{selectedResearch.notes}</p>
+
+            {/* Date */}
+            <p className="text-gray-500 text-sm mb-6">{selectedResearch.date}</p>
+
+            {/* Content */}
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6">
+              <p className="text-gray-200 whitespace-pre-wrap leading-relaxed text-base">{selectedResearch.notes}</p>
             </div>
-            <button
-              onClick={() => setShowResearchDetailModal(false)}
-              className="w-full mt-4 py-2 bg-[#2a2a2a] rounded-lg hover:bg-[#3a3a3a]"
-            >Close</button>
           </div>
         </div>
       )}
