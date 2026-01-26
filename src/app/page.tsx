@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { supabase, Airdrop, AirdropTask, Todo, CalendarEvent, Research, WhaleWallet } from '@/lib/supabase';
+import { supabase, Airdrop, AirdropTask, Todo, CalendarEvent, Research } from '@/lib/supabase';
 
 // Price type
 interface PriceData {
@@ -17,14 +17,6 @@ interface PriceData {
 // Extended types with tasks
 interface AirdropWithTasks extends Airdrop {
   tasks: AirdropTask[];
-}
-
-// Whale wallet with balance
-interface WhaleWithBalance extends WhaleWallet {
-  balance?: string;
-  balanceUSD?: number;
-  lastTx?: string;
-  loading?: boolean;
 }
 
 // Admin PIN
@@ -44,11 +36,8 @@ export default function Home() {
   const [research, setResearch] = useState<Research[]>([]);
   const [prices, setPrices] = useState<PriceData[]>([]);
   const [krwRate, setKrwRate] = useState(1350);
-  const [whales, setWhales] = useState<WhaleWithBalance[]>([]);
-  const [ethPrice, setEthPrice] = useState(0);
   const [loading, setLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(true);
-  const [whaleLoading, setWhaleLoading] = useState(false);
 
   // Modal states
   const [showAirdropModal, setShowAirdropModal] = useState(false);
@@ -58,7 +47,6 @@ export default function Home() {
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showEventDetailModal, setShowEventDetailModal] = useState(false);
   const [showResearchDetailModal, setShowResearchDetailModal] = useState(false);
-  const [showWhaleModal, setShowWhaleModal] = useState(false);
   const [selectedAirdropId, setSelectedAirdropId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [selectedResearch, setSelectedResearch] = useState<Research | null>(null);
@@ -69,7 +57,6 @@ export default function Home() {
   const [newResearch, setNewResearch] = useState({ coin: '', notes: '', sentiment: 'neutral' });
   const [newTodo, setNewTodo] = useState({ text: '', date: new Date().toISOString().split('T')[0] });
   const [newTask, setNewTask] = useState({ name: '', cost: 0 });
-  const [newWhale, setNewWhale] = useState({ name: '', address: '', notes: '' });
 
   const [currentDate] = useState(new Date());
   const [selectedMonth, setSelectedMonth] = useState(new Date());
@@ -125,99 +112,6 @@ export default function Home() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  // Fetch whale wallets from Supabase
-  const fetchWhales = useCallback(async () => {
-    const { data } = await supabase
-      .from('whale_wallets')
-      .select('*')
-      .order('created_at', { ascending: true });
-    if (data) {
-      setWhales(data.map(w => ({ ...w, loading: true })));
-      // Fetch balances for each whale
-      fetchWhaleBalances(data);
-    }
-  }, []);
-
-  // Fetch ETH balance from Etherscan
-  const fetchWhaleBalances = async (walletList: WhaleWallet[]) => {
-    setWhaleLoading(true);
-    try {
-      // Get ETH price first
-      const priceRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
-      const priceData = await priceRes.json();
-      const ethPriceUSD = priceData.ethereum?.usd || 0;
-      setEthPrice(ethPriceUSD);
-
-      // Fetch balance for each wallet (rate limited, so do one by one)
-      const updatedWhales: WhaleWithBalance[] = [];
-      for (const wallet of walletList) {
-        try {
-          // Using public Etherscan API (no key needed for basic calls, but rate limited)
-          const balanceRes = await fetch(
-            `https://api.etherscan.io/api?module=account&action=balance&address=${wallet.address}&tag=latest`
-          );
-          const balanceData = await balanceRes.json();
-
-          if (balanceData.status === '1') {
-            const balanceWei = BigInt(balanceData.result);
-            const balanceEth = Number(balanceWei) / 1e18;
-            const balanceUSD = balanceEth * ethPriceUSD;
-
-            updatedWhales.push({
-              ...wallet,
-              balance: balanceEth.toFixed(4),
-              balanceUSD: balanceUSD,
-              loading: false
-            });
-          } else {
-            updatedWhales.push({ ...wallet, balance: 'Error', loading: false });
-          }
-
-          // Rate limit: wait 200ms between calls
-          await new Promise(resolve => setTimeout(resolve, 200));
-        } catch {
-          updatedWhales.push({ ...wallet, balance: 'Error', loading: false });
-        }
-      }
-      setWhales(updatedWhales);
-    } catch (error) {
-      console.error('Whale balance fetch error:', error);
-    }
-    setWhaleLoading(false);
-  };
-
-  useEffect(() => {
-    fetchWhales();
-  }, [fetchWhales]);
-
-  // Add new whale wallet
-  const addWhale = async () => {
-    if (!newWhale.name.trim() || !newWhale.address.trim()) return;
-
-    // Validate address format
-    if (!/^0x[a-fA-F0-9]{40}$/.test(newWhale.address)) {
-      alert('올바른 이더리움 주소를 입력하세요');
-      return;
-    }
-
-    await supabase.from('whale_wallets').insert({
-      name: newWhale.name,
-      address: newWhale.address,
-      chain: 'ethereum',
-      notes: newWhale.notes
-    });
-
-    setNewWhale({ name: '', address: '', notes: '' });
-    setShowWhaleModal(false);
-    fetchWhales();
-  };
-
-  // Delete whale wallet
-  const deleteWhale = async (id: string) => {
-    await supabase.from('whale_wallets').delete().eq('id', id);
-    fetchWhales();
-  };
 
   // PIN verification
   const handlePinSubmit = () => {
@@ -566,12 +460,6 @@ export default function Home() {
             <h1 className="text-xl font-bold">
               <span className="text-[#6366f1]">shud</span> onepage
             </h1>
-            <Link
-              href="/whales"
-              className="px-3 py-1.5 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-sm hover:bg-[#2a2a2a] flex items-center gap-1"
-            >
-              🐋 Whale Watch
-            </Link>
           </div>
           <div className="flex items-center gap-3">
             {isAdmin && (
@@ -661,96 +549,21 @@ export default function Home() {
           <p className="text-xs text-gray-500 mt-3">환율: 1 USD = {krwRate.toLocaleString()} KRW | 60초마다 자동 갱신</p>
         </section>
 
-        {/* Whale Watch */}
-        <section className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <span className="text-xl">🐋</span> Whale Watch
-              {whaleLoading && <span className="text-xs text-gray-500 animate-pulse">업데이트 중...</span>}
-            </h2>
-            <div className="flex gap-2">
-              <button
-                onClick={fetchWhales}
-                className="text-xs text-gray-400 hover:text-white"
-                disabled={whaleLoading}
-              >
-                새로고침
-              </button>
-              {isAdmin && (
-                <button
-                  onClick={() => setShowWhaleModal(true)}
-                  className="text-sm text-[#6366f1] hover:text-[#818cf8]"
-                >+ 지갑 추가</button>
-              )}
+        {/* Whale Watch Banner */}
+        <Link href="/whales" className="block">
+          <section className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 hover:border-[#6366f1] transition-colors group">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-3xl">🐋</span>
+                <div>
+                  <h2 className="text-lg font-semibold group-hover:text-[#6366f1] transition-colors">Whale Watch</h2>
+                  <p className="text-sm text-gray-400">고래 지갑 추적 & 활동 분석 | 아무 주소 조회 가능</p>
+                </div>
+              </div>
+              <span className="text-gray-500 group-hover:text-[#6366f1] transition-colors text-xl">→</span>
             </div>
-          </div>
-
-          {whales.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">추적 중인 지갑이 없습니다</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-gray-400 border-b border-[#2a2a2a]">
-                    <th className="text-left py-2">이름</th>
-                    <th className="text-left py-2">주소</th>
-                    <th className="text-right py-2">잔액 (ETH)</th>
-                    <th className="text-right py-2">가치 (USD)</th>
-                    <th className="text-left py-2">메모</th>
-                    {isAdmin && <th className="text-center py-2">삭제</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {whales.map(whale => (
-                    <tr key={whale.id} className="border-b border-[#2a2a2a]/50 hover:bg-[#0f0f0f]">
-                      <td className="py-3 font-medium">{whale.name}</td>
-                      <td className="py-3">
-                        <a
-                          href={`https://etherscan.io/address/${whale.address}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#6366f1] hover:text-[#818cf8] font-mono text-xs"
-                        >
-                          {whale.address.slice(0, 6)}...{whale.address.slice(-4)}
-                        </a>
-                      </td>
-                      <td className="py-3 text-right">
-                        {whale.loading ? (
-                          <span className="text-gray-500 animate-pulse">...</span>
-                        ) : (
-                          <span className="text-[#22c55e]">{whale.balance} ETH</span>
-                        )}
-                      </td>
-                      <td className="py-3 text-right">
-                        {whale.loading ? (
-                          <span className="text-gray-500 animate-pulse">...</span>
-                        ) : whale.balanceUSD ? (
-                          <span className="text-white font-medium">
-                            ${whale.balanceUSD.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                          </span>
-                        ) : (
-                          <span className="text-gray-500">-</span>
-                        )}
-                      </td>
-                      <td className="py-3 text-gray-400 text-xs">{whale.notes || '-'}</td>
-                      {isAdmin && (
-                        <td className="py-3 text-center">
-                          <button
-                            onClick={() => deleteWhale(whale.id)}
-                            className="text-red-400 hover:text-red-300 text-xs"
-                          >삭제</button>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-          <p className="text-xs text-gray-500 mt-3">
-            ETH 가격: ${ethPrice.toLocaleString()} | Etherscan API 사용
-          </p>
-        </section>
+          </section>
+        </Link>
 
         {/* Main Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
@@ -1371,53 +1184,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Add Whale Modal */}
-      {showWhaleModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">🐋 고래 지갑 추가</h3>
-            <input
-              type="text"
-              placeholder="이름 (예: Vitalik)"
-              value={newWhale.name}
-              onChange={(e) => setNewWhale({ ...newWhale, name: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-3"
-              autoFocus
-            />
-            <input
-              type="text"
-              placeholder="주소 (0x...)"
-              value={newWhale.address}
-              onChange={(e) => setNewWhale({ ...newWhale, address: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-3 font-mono text-sm"
-            />
-            <input
-              type="text"
-              placeholder="메모 (선택)"
-              value={newWhale.notes}
-              onChange={(e) => setNewWhale({ ...newWhale, notes: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-4"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setShowWhaleModal(false);
-                  setNewWhale({ name: '', address: '', notes: '' });
-                }}
-                className="flex-1 py-2 bg-[#2a2a2a] rounded-lg hover:bg-[#3a3a3a]"
-              >
-                취소
-              </button>
-              <button
-                onClick={addWhale}
-                className="flex-1 py-2 bg-[#6366f1] rounded-lg hover:bg-[#818cf8]"
-              >
-                추가
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
