@@ -856,30 +856,24 @@ export default function Home() {
             <ins className="adsbygoogle" style={{ display: 'block' }} data-ad-format="auto" data-full-width-responsive="true"></ins>
           </div>
 
-          {/* ===== COIN RESEARCH (PUBLIC) ===== */}
+          {/* ===== COIN RESEARCH PREVIEW ===== */}
           <section id="research" className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-semibold">코인 리서치</h2>
-              {isAdmin && (
-                <button
-                  onClick={() => setShowResearchModal(true)}
-                  className="text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C]"
-                >+ Add</button>
-              )}
+              <Link
+                href="/research"
+                className="text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C] transition-colors flex items-center gap-1"
+              >
+                전체 보기 &#8594;
+              </Link>
             </div>
             <div className="grid md:grid-cols-3 gap-4">
-              {research.map(item => (
-                <div
+              {research.slice(0, 6).map(item => (
+                <Link
                   key={item.id}
-                  className="bg-[#0A0A0B] border border-[#1F1F23] rounded-xl p-5 relative group cursor-pointer hover:border-[#FF5C00] transition-colors"
-                  onClick={() => openResearchDetail(item)}
+                  href="/research"
+                  className="bg-[#0A0A0B] border border-[#1F1F23] rounded-xl p-5 hover:border-[#FF5C00] transition-colors block"
                 >
-                  {isAdmin && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); deleteResearch(item.id); }}
-                      className="absolute top-3 right-3 text-[#ef4444] hover:text-red-300 text-xs opacity-0 group-hover:opacity-100"
-                    >&#10005;</button>
-                  )}
                   <div className="flex items-center justify-between mb-3">
                     <span className="font-bold text-base font-mono-data tracking-tight">{item.coin}</span>
                     <span className={`text-[10px] font-medium px-2.5 py-1 rounded-full ${
@@ -893,15 +887,19 @@ export default function Home() {
                   </div>
                   <p className="text-[13px] text-[#ADADB0] line-clamp-2 leading-relaxed">{item.notes}</p>
                   <p className="text-[11px] text-[#6B6B70] mt-3 font-mono-data">{item.date}</p>
-                  {item.notes && item.notes.length > 80 && (
-                    <p className="text-[11px] text-[#FF5C00] mt-1.5 font-medium">더 보기...</p>
-                  )}
-                </div>
+                </Link>
               ))}
               {research.length === 0 && (
                 <p className="text-[#6B6B70] text-[13px] col-span-3 text-center py-8">리서치 노트가 없습니다</p>
               )}
             </div>
+            {research.length > 6 && (
+              <div className="mt-4 text-center">
+                <Link href="/research" className="text-sm text-[#FF5C00] hover:text-[#FF8A4C] transition-colors">
+                  +{research.length - 6}개 더 보기 &#8594;
+                </Link>
+              </div>
+            )}
           </section>
 
           {/* Ad Slot 2 */}
@@ -1083,6 +1081,7 @@ export default function Home() {
                 <li><a href="#whale" className="hover:text-[#FF5C00] transition-colors">고래 지갑 추적 &amp; 조회</a></li>
                 <li><a href="#prices" className="hover:text-[#FF5C00] transition-colors">암호화폐 실시간 시세</a></li>
                 <li><Link href="/whales" className="hover:text-[#FF5C00] transition-colors">고래 지갑 상세 분석</Link></li>
+                <li><Link href="/research" className="hover:text-[#FF5C00] transition-colors">코인 리서치 노트</Link></li>
               </ul>
             </div>
             <div>
