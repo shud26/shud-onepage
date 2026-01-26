@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { supabase, WhaleWallet } from '@/lib/supabase';
+import { supabase, WhaleWallet, WhaleAlert } from '@/lib/supabase';
 
 interface WhaleWithBalance extends WhaleWallet {
   balance?: string;
@@ -50,6 +50,9 @@ export default function WhalesPage() {
   const [searchAddress, setSearchAddress] = useState('');
   const [filter, setFilter] = useState<'all' | 'korean' | 'global' | 'exchange'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'balance'>('balance');
+  const [recentAlerts, setRecentAlerts] = useState<WhaleAlert[]>([]);
+  const [alertCheckLoading, setAlertCheckLoading] = useState(false);
+  const [alertResult, setAlertResult] = useState<string | null>(null);
 
   // Fetch whale wallets
   const fetchWhales = useCallback(async () => {
@@ -116,9 +119,44 @@ export default function WhalesPage() {
     setLoading(false);
   };
 
+  // Fetch recent alerts
+  const fetchAlerts = useCallback(async () => {
+    const { data } = await supabase
+      .from('whale_alerts')
+      .select('*')
+      .order('sent_at', { ascending: false })
+      .limit(20);
+
+    if (data) setRecentAlerts(data);
+  }, []);
+
+  // Manual alert check
+  const triggerAlertCheck = async () => {
+    setAlertCheckLoading(true);
+    setAlertResult(null);
+    try {
+      const res = await fetch('/api/whale-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: ADMIN_PIN }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAlertResult(`${data.walletsChecked}개 지갑 체크, ${data.alertsSent}개 알림 전송`);
+        fetchAlerts();
+      } else {
+        setAlertResult(`에러: ${data.error}`);
+      }
+    } catch (error) {
+      setAlertResult(`에러: ${String(error)}`);
+    }
+    setAlertCheckLoading(false);
+  };
+
   useEffect(() => {
     fetchWhales();
-  }, [fetchWhales]);
+    fetchAlerts();
+  }, [fetchWhales, fetchAlerts]);
 
   // PIN verification
   const handlePinSubmit = () => {
@@ -371,12 +409,21 @@ export default function WhalesPage() {
               ETH: ${ethPrice.toLocaleString()}
             </span>
             {isAdmin ? (
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="px-4 py-2 bg-[#6366f1] rounded-lg text-sm hover:bg-[#818cf8]"
-              >
-                + 지갑 추가
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={triggerAlertCheck}
+                  disabled={alertCheckLoading}
+                  className="px-4 py-2 bg-[#f59e0b] rounded-lg text-sm hover:bg-[#fbbf24] disabled:opacity-50"
+                >
+                  {alertCheckLoading ? '체크 중...' : '🔔 Alert Check'}
+                </button>
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="px-4 py-2 bg-[#6366f1] rounded-lg text-sm hover:bg-[#818cf8]"
+                >
+                  + 지갑 추가
+                </button>
+              </div>
             ) : (
               <button
                 onClick={() => setShowPinModal(true)}
@@ -576,6 +623,92 @@ export default function WhalesPage() {
             </table>
           </div>
         </div>
+
+        {/* Alert Result */}
+        {alertResult && (
+          <div className="mt-4 bg-[#1a1a1a] border border-[#f59e0b]/30 rounded-xl p-4">
+            <p className="text-sm text-[#f59e0b]">🔔 {alertResult}</p>
+          </div>
+        )}
+
+        {/* Recent Alerts */}
+        {recentAlerts.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-lg font-bold mb-4">🔔 최근 알림 히스토리</h2>
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-[#0f0f0f] text-gray-400 border-b border-[#2a2a2a]">
+                      <th className="text-left py-3 px-4">시간</th>
+                      <th className="text-left py-3 px-4">방향</th>
+                      <th className="text-left py-3 px-4">지갑</th>
+                      <th className="text-right py-3 px-4">수량</th>
+                      <th className="text-right py-3 px-4">USD</th>
+                      <th className="text-center py-3 px-4">Tx</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentAlerts.map((alert) => {
+                      const knownWallet = whales.find(
+                        w => w.address.toLowerCase() === alert.wallet_address.toLowerCase()
+                      );
+                      return (
+                        <tr key={alert.id} className="border-b border-[#2a2a2a]/50 hover:bg-[#0f0f0f]">
+                          <td className="py-3 px-4 text-xs text-gray-400">
+                            {new Date(alert.sent_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`text-xs px-2 py-0.5 rounded ${
+                              alert.direction === 'out'
+                                ? 'bg-red-500/20 text-red-400'
+                                : 'bg-green-500/20 text-green-400'
+                            }`}>
+                              {alert.direction === 'out' ? '📤 전송' : '📥 수신'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-xs">
+                            {knownWallet ? (
+                              <span className="text-white font-medium">{knownWallet.name}</span>
+                            ) : (
+                              <code className="text-[#6366f1]">
+                                {alert.wallet_address.slice(0, 8)}...
+                              </code>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-right text-xs font-mono">
+                            {typeof alert.value === 'number' && alert.value > 1_000_000
+                              ? `${(alert.value / 1_000_000).toFixed(2)}M`
+                              : typeof alert.value === 'number' && alert.value > 1_000
+                              ? `${(alert.value / 1_000).toFixed(1)}K`
+                              : Number(alert.value).toFixed(2)
+                            } {alert.token_symbol}
+                          </td>
+                          <td className="py-3 px-4 text-right text-xs">
+                            {alert.usd_value
+                              ? `$${Number(alert.usd_value).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+                              : '-'
+                            }
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <a
+                              href={`https://etherscan.io/tx/${alert.tx_hash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-[#6366f1] hover:text-[#818cf8]"
+                            >
+                              보기
+                            </a>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
 
         <p className="text-xs text-gray-500 mt-4 text-center">
           Etherscan API 사용 | 잔액은 ETH만 표시 (토큰 제외)

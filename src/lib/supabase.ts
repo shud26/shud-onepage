@@ -61,3 +61,15 @@ export interface WhaleWallet {
   notes: string;
   created_at: string;
 }
+
+export interface WhaleAlert {
+  id: string;
+  wallet_address: string;
+  tx_hash: string;
+  alert_type: string;
+  direction: string;
+  value: number;
+  token_symbol: string;
+  usd_value: number | null;
+  sent_at: string;
+}

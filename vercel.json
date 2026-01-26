@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/whale-alert",
+      "schedule": "0 23 * * *"
+    }
+  ]
+}
