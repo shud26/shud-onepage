@@ -8,6 +8,27 @@ interface WhaleWithBalance extends WhaleWallet {
   balance?: string;
   balanceUSD?: number;
   loading?: boolean;
+  recentActivity?: string;
+}
+
+interface Transaction {
+  hash: string;
+  from: string;
+  to: string;
+  value: string;
+  timeStamp: string;
+  functionName?: string;
+  tokenSymbol?: string;
+  tokenName?: string;
+}
+
+interface ActivitySummary {
+  totalTxCount: number;
+  lastActive: string;
+  ethSent: number;
+  ethReceived: number;
+  tokenTransfers: { symbol: string; count: number }[];
+  recentActions: string[];
 }
 
 // Admin PIN
@@ -23,6 +44,10 @@ export default function WhalesPage() {
   const [ethPrice, setEthPrice] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [selectedWhale, setSelectedWhale] = useState<WhaleWithBalance | null>(null);
+  const [activitySummary, setActivitySummary] = useState<ActivitySummary | null>(null);
+  const [activityLoading, setActivityLoading] = useState(false);
   const [newWhale, setNewWhale] = useState({ name: '', address: '', notes: '' });
   const [filter, setFilter] = useState<'all' | 'korean' | 'global' | 'exchange'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'balance'>('balance');
@@ -134,6 +159,116 @@ export default function WhalesPage() {
     if (!confirm('정말 삭제하시겠습니까?')) return;
     await supabase.from('whale_wallets').delete().eq('id', id);
     fetchWhales();
+  };
+
+  // Fetch recent activity for a whale
+  const fetchActivity = async (whale: WhaleWithBalance) => {
+    setSelectedWhale(whale);
+    setShowActivityModal(true);
+    setActivityLoading(true);
+    setActivitySummary(null);
+
+    try {
+      // Fetch normal transactions (last 50)
+      const txRes = await fetch(
+        `https://api.etherscan.io/api?module=account&action=txlist&address=${whale.address}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc`
+      );
+      const txData = await txRes.json();
+
+      // Rate limit
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Fetch token transfers (last 50)
+      const tokenRes = await fetch(
+        `https://api.etherscan.io/api?module=account&action=tokentx&address=${whale.address}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc`
+      );
+      const tokenData = await tokenRes.json();
+
+      const transactions: Transaction[] = txData.status === '1' ? txData.result : [];
+      const tokenTransfers: Transaction[] = tokenData.status === '1' ? tokenData.result : [];
+
+      // Analyze transactions
+      let ethSent = 0;
+      let ethReceived = 0;
+      const recentActions: string[] = [];
+      const tokenCounts: Record<string, number> = {};
+
+      // Process ETH transactions
+      transactions.slice(0, 20).forEach((tx: Transaction) => {
+        const value = parseFloat(tx.value) / 1e18;
+        const isOutgoing = tx.from.toLowerCase() === whale.address.toLowerCase();
+        const date = new Date(parseInt(tx.timeStamp) * 1000);
+        const dateStr = date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+
+        if (isOutgoing) {
+          ethSent += value;
+          if (value > 0.1) {
+            const action = tx.functionName
+              ? `${dateStr}: ${value.toFixed(2)} ETH 전송 (${tx.functionName.split('(')[0]})`
+              : `${dateStr}: ${value.toFixed(2)} ETH 전송`;
+            recentActions.push(action);
+          }
+        } else {
+          ethReceived += value;
+          if (value > 0.1) {
+            recentActions.push(`${dateStr}: ${value.toFixed(2)} ETH 수신`);
+          }
+        }
+      });
+
+      // Process token transfers
+      tokenTransfers.slice(0, 30).forEach((tx: Transaction) => {
+        const symbol = tx.tokenSymbol || 'Unknown';
+        tokenCounts[symbol] = (tokenCounts[symbol] || 0) + 1;
+
+        const date = new Date(parseInt(tx.timeStamp) * 1000);
+        const dateStr = date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+        const isOutgoing = tx.from.toLowerCase() === whale.address.toLowerCase();
+
+        if (recentActions.length < 15) {
+          recentActions.push(`${dateStr}: ${symbol} ${isOutgoing ? '전송' : '수신'}`);
+        }
+      });
+
+      // Sort token counts
+      const tokenTransfersSummary = Object.entries(tokenCounts)
+        .map(([symbol, count]) => ({ symbol, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+
+      // Last active
+      const lastTx = transactions[0] || tokenTransfers[0];
+      const lastActive = lastTx
+        ? new Date(parseInt(lastTx.timeStamp) * 1000).toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        : '알 수 없음';
+
+      setActivitySummary({
+        totalTxCount: transactions.length + tokenTransfers.length,
+        lastActive,
+        ethSent,
+        ethReceived,
+        tokenTransfers: tokenTransfersSummary,
+        recentActions: recentActions.slice(0, 15)
+      });
+    } catch (error) {
+      console.error('Activity fetch error:', error);
+      setActivitySummary({
+        totalTxCount: 0,
+        lastActive: '에러 발생',
+        ethSent: 0,
+        ethReceived: 0,
+        tokenTransfers: [],
+        recentActions: ['데이터를 불러올 수 없습니다']
+      });
+    }
+
+    setActivityLoading(false);
   };
 
   // Filter whales
@@ -285,6 +420,7 @@ export default function WhalesPage() {
                   <th className="text-right py-4 px-4">잔액 (ETH)</th>
                   <th className="text-right py-4 px-4">가치 (USD)</th>
                   <th className="text-left py-4 px-4">메모</th>
+                  <th className="text-center py-4 px-4">활동</th>
                   <th className="text-center py-4 px-4">링크</th>
                   {isAdmin && <th className="text-center py-4 px-4">삭제</th>}
                 </tr>
@@ -322,6 +458,14 @@ export default function WhalesPage() {
                     </td>
                     <td className="py-4 px-4 text-gray-400 text-xs max-w-[150px] truncate">
                       {whale.notes || '-'}
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <button
+                        onClick={() => fetchActivity(whale)}
+                        className="text-xs bg-[#22c55e]/20 text-[#22c55e] px-2 py-1 rounded hover:bg-[#22c55e]/30"
+                      >
+                        활동 분석
+                      </button>
                     </td>
                     <td className="py-4 px-4 text-center">
                       <div className="flex gap-2 justify-center">
@@ -438,6 +582,118 @@ export default function WhalesPage() {
                 추가
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Activity Modal */}
+      {showActivityModal && selectedWhale && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-semibold">📊 {selectedWhale.name}</h3>
+                <code className="text-xs text-[#6366f1]">
+                  {selectedWhale.address.slice(0, 12)}...{selectedWhale.address.slice(-8)}
+                </code>
+              </div>
+              <button
+                onClick={() => { setShowActivityModal(false); setSelectedWhale(null); setActivitySummary(null); }}
+                className="text-gray-400 hover:text-white text-xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {activityLoading ? (
+              <div className="py-12 text-center">
+                <div className="animate-spin w-8 h-8 border-2 border-[#6366f1] border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-gray-400">트랜잭션 분석 중...</p>
+              </div>
+            ) : activitySummary ? (
+              <div className="space-y-4">
+                {/* Last Active */}
+                <div className="bg-[#0f0f0f] rounded-lg p-4">
+                  <p className="text-xs text-gray-400 mb-1">마지막 활동</p>
+                  <p className="text-[#22c55e] font-medium">{activitySummary.lastActive}</p>
+                </div>
+
+                {/* ETH Flow */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-[#0f0f0f] rounded-lg p-4">
+                    <p className="text-xs text-gray-400 mb-1">ETH 전송 (최근 20건)</p>
+                    <p className="text-red-400 font-bold text-lg">
+                      -{activitySummary.ethSent.toFixed(2)} ETH
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      ≈ ${(activitySummary.ethSent * ethPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    </p>
+                  </div>
+                  <div className="bg-[#0f0f0f] rounded-lg p-4">
+                    <p className="text-xs text-gray-400 mb-1">ETH 수신 (최근 20건)</p>
+                    <p className="text-[#22c55e] font-bold text-lg">
+                      +{activitySummary.ethReceived.toFixed(2)} ETH
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      ≈ ${(activitySummary.ethReceived * ethPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Token Transfers */}
+                {activitySummary.tokenTransfers.length > 0 && (
+                  <div className="bg-[#0f0f0f] rounded-lg p-4">
+                    <p className="text-xs text-gray-400 mb-2">토큰 활동 (최근 30건)</p>
+                    <div className="flex flex-wrap gap-2">
+                      {activitySummary.tokenTransfers.map((t, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-1 bg-[#2a2a2a] rounded text-xs"
+                        >
+                          {t.symbol} <span className="text-[#6366f1]">×{t.count}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Recent Actions */}
+                <div className="bg-[#0f0f0f] rounded-lg p-4">
+                  <p className="text-xs text-gray-400 mb-2">최근 활동 내역</p>
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {activitySummary.recentActions.length > 0 ? (
+                      activitySummary.recentActions.map((action, i) => (
+                        <p key={i} className="text-xs text-gray-300 py-1 border-b border-[#2a2a2a]/50">
+                          {action}
+                        </p>
+                      ))
+                    ) : (
+                      <p className="text-xs text-gray-500">최근 활동 없음</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Links */}
+                <div className="flex gap-2 pt-2">
+                  <a
+                    href={`https://etherscan.io/address/${selectedWhale.address}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-2 bg-[#6366f1] rounded-lg text-center text-sm hover:bg-[#818cf8]"
+                  >
+                    Etherscan에서 보기
+                  </a>
+                  <a
+                    href={`https://debank.com/profile/${selectedWhale.address}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-2 bg-[#f59e0b] rounded-lg text-center text-sm hover:bg-[#fbbf24]"
+                  >
+                    DeBank에서 보기
+                  </a>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       )}
