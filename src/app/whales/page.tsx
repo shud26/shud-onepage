@@ -11,22 +11,9 @@ interface WhaleWithBalance extends WhaleWallet {
   recentActivity?: string;
 }
 
-interface Transaction {
-  hash: string;
-  from: string;
-  to: string;
-  value: string;
-  timeStamp: string;
-  functionName?: string;
-  tokenSymbol?: string;
-  tokenName?: string;
-  tokenDecimal?: string;
-  isError?: string;
-}
-
 interface ActivityItem {
   timestamp: number;
-  type: 'eth_send' | 'eth_receive' | 'contract_call' | 'token_send' | 'token_receive';
+  type: 'eth_send' | 'eth_receive' | 'token_send' | 'token_receive';
   label: string;
   value: string;
   detail: string;
@@ -37,9 +24,9 @@ interface ActivitySummary {
   lastActive: string;
   ethSent: number;
   ethReceived: number;
-  contractCalls: number;
-  tokenTransfers: { symbol: string; count: number }[];
+  topTokens: { symbol: string; count: number }[];
   timeline: ActivityItem[];
+  error?: string;
 }
 
 // Admin PIN
@@ -172,159 +159,104 @@ export default function WhalesPage() {
     fetchWhales();
   };
 
-  // Decode function name to readable label
-  const decodeFunctionName = (fn?: string): string => {
-    if (!fn) return '';
-    const name = fn.split('(')[0];
-    const labels: Record<string, string> = {
-      transfer: '토큰 전송',
-      approve: '승인',
-      swap: '스왑',
-      swapExactTokensForTokens: '토큰 스왑',
-      swapExactETHForTokens: 'ETH→토큰 스왑',
-      swapExactTokensForETH: '토큰→ETH 스왑',
-      multicall: '멀티콜',
-      execute: '실행',
-      deposit: '입금',
-      withdraw: '출금',
-      claim: '클레임',
-      mint: '민트',
-      burn: '소각',
-      stake: '스테이킹',
-      unstake: '언스테이킹',
-      addLiquidity: '유동성 추가',
-      removeLiquidity: '유동성 제거',
-      borrow: '대출',
-      repay: '상환',
-      supply: '공급',
-      bridge: '브릿지',
-    };
-    return labels[name] || name;
-  };
-
   // Format date
   const fmtDate = (ts: number) => {
     const d = new Date(ts * 1000);
     return d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
-  // Fetch recent activity for a whale
+  // Fetch recent activity using Ethplorer API (free, no key needed)
   const fetchActivity = async (whale: WhaleWithBalance) => {
     setSelectedWhale(whale);
     setShowActivityModal(true);
     setActivityLoading(true);
     setActivitySummary(null);
 
+    const addr = whale.address.toLowerCase();
+
     try {
-      // Fetch normal transactions (last 25)
-      const txRes = await fetch(
-        `https://api.etherscan.io/api?module=account&action=txlist&address=${whale.address}&page=1&offset=25&sort=desc`
+      // 1) ETH transactions from Ethplorer
+      const ethRes = await fetch(
+        `https://api.ethplorer.io/getAddressTransactions/${whale.address}?apiKey=freekey&limit=25`
       );
-      const txData = await txRes.json();
+      const ethTxs = await ethRes.json();
 
-      // Rate limit - Etherscan free needs 5s between calls
-      await new Promise(resolve => setTimeout(resolve, 5500));
+      // Small delay to respect rate limit
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Fetch ERC-20 token transfers (last 25)
-      const tokenRes = await fetch(
-        `https://api.etherscan.io/api?module=account&action=tokentx&address=${whale.address}&page=1&offset=25&sort=desc`
+      // 2) Token transfer history from Ethplorer
+      const histRes = await fetch(
+        `https://api.ethplorer.io/getAddressHistory/${whale.address}?apiKey=freekey&limit=25&type=transfer`
       );
-      const tokenData = await tokenRes.json();
+      const histData = await histRes.json();
 
-      const transactions: Transaction[] = txData.status === '1' ? txData.result : [];
-      const tokenTxs: Transaction[] = tokenData.status === '1' ? tokenData.result : [];
-
-      // Build unified timeline
       const timeline: ActivityItem[] = [];
       let ethSent = 0;
       let ethReceived = 0;
-      let contractCalls = 0;
       const tokenCounts: Record<string, number> = {};
-      const addr = whale.address.toLowerCase();
 
       // Process ETH transactions
-      for (const tx of transactions) {
-        if (tx.isError === '1') continue;
-        const ts = parseInt(tx.timeStamp);
-        const value = parseFloat(tx.value) / 1e18;
-        const isOut = tx.from.toLowerCase() === addr;
-        const fnLabel = decodeFunctionName(tx.functionName);
+      // Ethplorer format: [{timestamp, from, to, hash, value (in ETH), success}]
+      if (Array.isArray(ethTxs)) {
+        for (const tx of ethTxs) {
+          if (tx.success === false) continue;
+          const value = typeof tx.value === 'number' ? tx.value : parseFloat(tx.value || '0');
+          const isOut = (tx.from || '').toLowerCase() === addr;
 
-        if (isOut) {
-          ethSent += value;
-          if (fnLabel && value === 0) {
-            // Pure contract call (no ETH)
-            contractCalls++;
+          if (isOut) {
+            ethSent += value;
             timeline.push({
-              timestamp: ts,
-              type: 'contract_call',
-              label: fnLabel,
-              value: '',
-              detail: `→ ${tx.to.slice(0, 8)}...`,
-            });
-          } else if (fnLabel) {
-            // Contract call with ETH
-            contractCalls++;
-            timeline.push({
-              timestamp: ts,
-              type: 'eth_send',
-              label: fnLabel,
-              value: `${value.toFixed(4)} ETH`,
-              detail: `→ ${tx.to.slice(0, 8)}...`,
-            });
-          } else {
-            // Simple ETH transfer
-            timeline.push({
-              timestamp: ts,
+              timestamp: tx.timestamp,
               type: 'eth_send',
               label: 'ETH 전송',
               value: `${value.toFixed(4)} ETH`,
-              detail: `→ ${tx.to.slice(0, 8)}...`,
+              detail: `→ ${(tx.to || '').slice(0, 10)}...`,
             });
-          }
-        } else {
-          ethReceived += value;
-          if (value > 0) {
+          } else {
+            ethReceived += value;
             timeline.push({
-              timestamp: ts,
+              timestamp: tx.timestamp,
               type: 'eth_receive',
               label: 'ETH 수신',
               value: `${value.toFixed(4)} ETH`,
-              detail: `← ${tx.from.slice(0, 8)}...`,
+              detail: `← ${(tx.from || '').slice(0, 10)}...`,
             });
           }
         }
       }
 
       // Process token transfers
-      for (const tx of tokenTxs) {
-        const ts = parseInt(tx.timeStamp);
-        const symbol = tx.tokenSymbol || '???';
-        const decimals = parseInt(tx.tokenDecimal || '18');
-        const rawValue = parseFloat(tx.value) / Math.pow(10, decimals);
-        const isOut = tx.from.toLowerCase() === addr;
-        tokenCounts[symbol] = (tokenCounts[symbol] || 0) + 1;
+      // Ethplorer format: {operations: [{timestamp, tokenInfo:{symbol,decimals}, type, value, from, to}]}
+      const ops = histData?.operations;
+      if (Array.isArray(ops)) {
+        for (const op of ops) {
+          const symbol = op.tokenInfo?.symbol || '???';
+          const decimals = parseInt(op.tokenInfo?.decimals || '18');
+          const rawValue = parseFloat(op.value || '0') / Math.pow(10, decimals);
+          const isOut = (op.from || '').toLowerCase() === addr;
+          tokenCounts[symbol] = (tokenCounts[symbol] || 0) + 1;
 
-        const fmtVal = rawValue > 1000000
-          ? `${(rawValue / 1000000).toFixed(2)}M`
-          : rawValue > 1000
-          ? `${(rawValue / 1000).toFixed(1)}K`
-          : rawValue.toFixed(2);
+          const fmtVal = rawValue > 1000000
+            ? `${(rawValue / 1000000).toFixed(2)}M`
+            : rawValue > 1000
+            ? `${(rawValue / 1000).toFixed(1)}K`
+            : rawValue.toFixed(2);
 
-        timeline.push({
-          timestamp: ts,
-          type: isOut ? 'token_send' : 'token_receive',
-          label: `${symbol} ${isOut ? '전송' : '수신'}`,
-          value: `${fmtVal} ${symbol}`,
-          detail: isOut ? `→ ${tx.to.slice(0, 8)}...` : `← ${tx.from.slice(0, 8)}...`,
-        });
+          timeline.push({
+            timestamp: op.timestamp,
+            type: isOut ? 'token_send' : 'token_receive',
+            label: `${symbol} ${isOut ? '전송' : '수신'}`,
+            value: `${fmtVal} ${symbol}`,
+            detail: isOut ? `→ ${(op.to || '').slice(0, 10)}...` : `← ${(op.from || '').slice(0, 10)}...`,
+          });
+        }
       }
 
       // Sort by timestamp desc
       timeline.sort((a, b) => b.timestamp - a.timestamp);
 
       // Token summary
-      const tokenTransfersSummary = Object.entries(tokenCounts)
+      const topTokens = Object.entries(tokenCounts)
         .map(([symbol, count]) => ({ symbol, count }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
@@ -338,14 +270,17 @@ export default function WhalesPage() {
           })
         : '알 수 없음';
 
+      const ethTxCount = Array.isArray(ethTxs) ? ethTxs.length : 0;
+      const tokenOpCount = Array.isArray(ops) ? ops.length : 0;
+
       setActivitySummary({
-        totalTxCount: transactions.length + tokenTxs.length,
+        totalTxCount: ethTxCount + tokenOpCount,
         lastActive,
         ethSent,
         ethReceived,
-        contractCalls,
-        tokenTransfers: tokenTransfersSummary,
+        topTokens,
         timeline: timeline.slice(0, 20),
+        error: timeline.length === 0 ? `ETH 응답: ${JSON.stringify(ethTxs).slice(0, 100)} | 토큰 응답: ${JSON.stringify(histData).slice(0, 100)}` : undefined,
       });
     } catch (error) {
       console.error('Activity fetch error:', error);
@@ -354,9 +289,9 @@ export default function WhalesPage() {
         lastActive: '에러 발생',
         ethSent: 0,
         ethReceived: 0,
-        contractCalls: 0,
-        tokenTransfers: [],
+        topTokens: [],
         timeline: [],
+        error: String(error),
       });
     }
 
@@ -716,8 +651,8 @@ export default function WhalesPage() {
                     <p className="text-white font-bold text-lg">{activitySummary.totalTxCount}</p>
                   </div>
                   <div className="bg-[#0f0f0f] rounded-lg p-3 text-center">
-                    <p className="text-xs text-gray-400">컨트랙트 호출</p>
-                    <p className="text-[#6366f1] font-bold text-lg">{activitySummary.contractCalls}</p>
+                    <p className="text-xs text-gray-400">관련 토큰</p>
+                    <p className="text-[#6366f1] font-bold text-lg">{activitySummary.topTokens.length}</p>
                   </div>
                 </div>
 
@@ -744,11 +679,11 @@ export default function WhalesPage() {
                 </div>
 
                 {/* Token Summary */}
-                {activitySummary.tokenTransfers.length > 0 && (
+                {activitySummary.topTokens.length > 0 && (
                   <div className="bg-[#0f0f0f] rounded-lg p-3">
                     <p className="text-xs text-gray-400 mb-2">관련 토큰</p>
                     <div className="flex flex-wrap gap-2">
-                      {activitySummary.tokenTransfers.map((t, i) => (
+                      {activitySummary.topTokens.map((t, i) => (
                         <span key={i} className="px-2 py-1 bg-[#2a2a2a] rounded text-xs">
                           {t.symbol} <span className="text-[#6366f1]">x{t.count}</span>
                         </span>
@@ -764,27 +699,22 @@ export default function WhalesPage() {
                     {activitySummary.timeline.length > 0 ? (
                       activitySummary.timeline.map((item, i) => (
                         <div key={i} className="flex items-start gap-3 py-2 border-b border-[#2a2a2a]/30 last:border-0">
-                          {/* Icon */}
                           <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs ${
                             item.type === 'eth_send' ? 'bg-red-500/20 text-red-400' :
                             item.type === 'eth_receive' ? 'bg-green-500/20 text-green-400' :
                             item.type === 'token_send' ? 'bg-orange-500/20 text-orange-400' :
-                            item.type === 'token_receive' ? 'bg-blue-500/20 text-blue-400' :
-                            'bg-purple-500/20 text-purple-400'
+                            'bg-blue-500/20 text-blue-400'
                           }`}>
-                            {item.type === 'eth_send' || item.type === 'token_send' ? '↑' :
-                             item.type === 'eth_receive' || item.type === 'token_receive' ? '↓' : '⚡'}
+                            {item.type.includes('send') ? '↑' : '↓'}
                           </div>
-                          {/* Content */}
                           <div className="flex-1 min-w-0">
                             <div className="flex justify-between items-center">
                               <span className="text-xs font-medium text-white">{item.label}</span>
                               {item.value && (
                                 <span className={`text-xs font-mono ${
-                                  item.type.includes('send') ? 'text-red-400' :
-                                  item.type.includes('receive') ? 'text-[#22c55e]' : 'text-gray-300'
+                                  item.type.includes('send') ? 'text-red-400' : 'text-[#22c55e]'
                                 }`}>
-                                  {item.type.includes('send') ? '-' : item.type.includes('receive') ? '+' : ''}{item.value}
+                                  {item.type.includes('send') ? '-' : '+'}{item.value}
                                 </span>
                               )}
                             </div>
@@ -796,7 +726,12 @@ export default function WhalesPage() {
                         </div>
                       ))
                     ) : (
-                      <p className="text-xs text-gray-500 py-4 text-center">최근 활동 없음</p>
+                      <div className="py-4 text-center">
+                        <p className="text-xs text-gray-500">최근 활동을 찾지 못했습니다</p>
+                        {activitySummary.error && (
+                          <p className="text-[10px] text-gray-600 mt-2 break-all">{activitySummary.error}</p>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
