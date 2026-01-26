@@ -20,8 +20,17 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "shud onepage | Crypto Dashboard",
-  description: "Track airdrops, research coins, and catch opportunities",
+  title: "실시간 김치프리미엄 · 고래지갑 추적 | SHUD Crypto Tools",
+  description: "실시간 김치 프리미엄 확인, 고래 지갑 추적, 암호화폐 시세 모니터링. 무료 크립토 도구 모음 - 김프 계산기, 이더리움 고래 알림, BTC ETH SOL 실시간 가격.",
+  keywords: "김치 프리미엄, 김프 실시간, 고래 지갑 추적, 이더리움 고래, 크립토 도구, 암호화폐 시세, BTC 가격, ETH 가격, 실시간 시세",
+  openGraph: {
+    title: "실시간 김치프리미엄 · 고래지갑 추적 | SHUD Crypto Tools",
+    description: "김치 프리미엄 실시간 확인, 고래 지갑 추적, 암호화폐 시세 모니터링. 무료 크립토 도구.",
+    type: "website",
+    url: "https://tftchess.com",
+    locale: "ko_KR",
+    siteName: "SHUD Crypto Tools",
+  },
 };
 
 export default function RootLayout({
@@ -31,6 +40,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
+      <head>
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://tftchess.com" />
+      </head>
       <body
         className={`${inter.variable} ${dmMono.variable} ${instrumentSerif.variable} antialiased min-h-screen`}
       >
