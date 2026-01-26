@@ -50,6 +50,11 @@ export interface Research {
   notes: string;
   sentiment: string;
   date: string;
+  category: string;
+  tier: string;
+  funding: string;
+  vcs: string;
+  airdrop_tasks_text: string;
   created_at: string;
 }
 

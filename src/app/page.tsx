@@ -874,9 +874,21 @@ export default function Home() {
                   href="/research"
                   className="bg-[#0A0A0B] border border-[#1F1F23] rounded-xl p-5 hover:border-[#FF5C00] transition-colors block"
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
                     <span className="font-bold text-base font-mono-data tracking-tight">{item.coin}</span>
-                    <span className={`text-[10px] font-medium px-2.5 py-1 rounded-full ${
+                    {item.tier && (
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                        item.tier === 'S' ? 'bg-[#ef4444]/15 text-[#ef4444] border-[#ef4444]/30' :
+                        item.tier === 'A' ? 'bg-[#FF5C00]/15 text-[#FF5C00] border-[#FF5C00]/30' :
+                        item.tier === 'B' ? 'bg-[#f59e0b]/15 text-[#f59e0b] border-[#f59e0b]/30' :
+                        item.tier === 'C' ? 'bg-[#22c55e]/15 text-[#22c55e] border-[#22c55e]/30' :
+                        'bg-[#6B6B70]/15 text-[#6B6B70] border-[#6B6B70]/30'
+                      }`}>{item.tier}</span>
+                    )}
+                    {item.category && (
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#1A1A1D] text-[#8B8B90] border border-[#1F1F23]">{item.category}</span>
+                    )}
+                    <span className={`text-[10px] font-medium px-2.5 py-1 rounded-full ml-auto ${
                       item.sentiment === 'bullish' ? 'bg-[#22c55e]/10 text-[#22c55e]' :
                       item.sentiment === 'bearish' ? 'bg-[#ef4444]/10 text-[#ef4444]' :
                       'bg-[#FF5C00]/10 text-[#FF5C00]'
@@ -885,6 +897,9 @@ export default function Home() {
                        item.sentiment === 'bearish' ? 'Bearish' : 'Neutral'}
                     </span>
                   </div>
+                  {item.funding && (
+                    <p className="text-[11px] text-[#f59e0b] mb-2 font-mono-data">{item.funding}</p>
+                  )}
                   <p className="text-[13px] text-[#ADADB0] line-clamp-2 leading-relaxed">{item.notes}</p>
                   <p className="text-[11px] text-[#6B6B70] mt-3 font-mono-data">{item.date}</p>
                 </Link>
