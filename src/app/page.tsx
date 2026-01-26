@@ -561,22 +561,16 @@ export default function Home() {
           <p className="text-[11px] text-[#4A4A4E] px-6 py-3 font-mono-data">1 USD = {krwRate.toLocaleString()} KRW &middot; Auto-refresh 60s</p>
         </section>
 
-        {/* Whale Watch Banner */}
-        <Link href="/whales" className="block">
-          <section className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6 hover:border-[#FF5C00] transition-colors group">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-[#FF5C00]/10 flex items-center justify-center">
-                  <span className="text-[#FF5C00] text-lg font-bold font-mono-data">W</span>
-                </div>
-                <div>
-                  <h2 className="text-sm font-semibold group-hover:text-[#FF5C00] transition-colors tracking-wide">Whale Watch</h2>
-                  <p className="text-xs text-[#6B6B70] mt-0.5">Track whale wallets & activity analysis</p>
-                </div>
-              </div>
-              <span className="text-[#6B6B70] group-hover:text-[#FF5C00] transition-colors text-sm">&#8594;</span>
+        {/* Whale Watch */}
+        <Link href="/whales" className="block group">
+          <div className="flex items-center justify-between px-1 py-1">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FF5C00]"></span>
+              <span className="text-sm font-semibold text-[#ADADB0] group-hover:text-[#FF5C00] transition-colors">Whale Watch</span>
+              <span className="text-[11px] text-[#4A4A4E]">&#183; Track whale wallets & activity</span>
             </div>
-          </section>
+            <span className="text-[#4A4A4E] group-hover:text-[#FF5C00] transition-colors text-xs">&#8594;</span>
+          </div>
         </Link>
 
         {/* Main Grid */}
