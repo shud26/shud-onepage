@@ -490,7 +490,7 @@ export default function Home() {
         {/* Page Title */}
         <div>
           <h2 className="font-display text-4xl text-white tracking-tight">Dashboard</h2>
-          <p className="text-sm text-[#6B6B70] mt-2">Crypto portfolio overview & monitoring</p>
+          <p className="text-sm text-[#6B6B70] mt-2">크립토 포트폴리오 & 모니터링</p>
         </div>
 
         {/* Stats Overview */}
@@ -567,7 +567,7 @@ export default function Home() {
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#FF5C00]"></span>
               <span className="text-sm font-semibold text-[#ADADB0] group-hover:text-[#FF5C00] transition-colors">Whale Watch</span>
-              <span className="text-[11px] text-[#4A4A4E]">&#183; Track whale wallets & activity</span>
+              <span className="text-[11px] text-[#4A4A4E]">&#183; 고래 지갑 추적 & 활동 분석</span>
             </div>
             <span className="text-[#4A4A4E] group-hover:text-[#FF5C00] transition-colors text-xs">&#8594;</span>
           </div>
@@ -591,13 +591,13 @@ export default function Home() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-[#6B6B70] border-b border-[#1F1F23] bg-[#0D0D0E] text-[11px] font-semibold tracking-wider uppercase">
-                    <th className="text-left py-3.5 px-6">Project</th>
-                    <th className="text-left py-3.5 px-6">Chain</th>
-                    <th className="text-right py-3.5 px-6">Cost</th>
-                    <th className="text-right py-3.5 px-6">Expected</th>
-                    <th className="text-center py-3.5 px-6">Progress</th>
+                    <th className="text-left py-3.5 px-6">프로젝트</th>
+                    <th className="text-left py-3.5 px-6">체인</th>
+                    <th className="text-right py-3.5 px-6">비용</th>
+                    <th className="text-right py-3.5 px-6">예상 수익</th>
+                    <th className="text-center py-3.5 px-6">진행률</th>
                     <th className="text-center py-3.5 px-6">D-Day</th>
-                    {isAdmin && <th className="text-center py-3.5 px-6">Del</th>}
+                    {isAdmin && <th className="text-center py-3.5 px-6">삭제</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -732,8 +732,8 @@ export default function Home() {
                 )}
               </div>
               <div className="grid grid-cols-7 gap-1 text-center text-[11px]">
-                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                  <div key={`${day}-${i}`} className="text-[#6B6B70] py-1 font-medium">{day}</div>
+                {['일', '월', '화', '수', '목', '금', '토'].map(day => (
+                  <div key={day} className="text-[#6B6B70] py-1 font-medium">{day}</div>
                 ))}
                 {Array.from({ length: firstDay }).map((_, i) => (
                   <div key={`empty-${i}`} />
@@ -774,7 +774,7 @@ export default function Home() {
 
               {/* Upcoming events */}
               <div className="mt-4 pt-4 border-t border-[#1F1F23] space-y-1.5">
-                <p className="text-[11px] text-[#6B6B70] font-semibold tracking-wider uppercase mb-2">Upcoming</p>
+                <p className="text-[11px] text-[#6B6B70] font-semibold tracking-wider uppercase mb-2">다가오는 일정</p>
                 {events.slice(0, 5).map(event => (
                   <div
                     key={event.id}
@@ -840,7 +840,7 @@ export default function Home() {
                   </div>
                 ))}
                 {todos.length === 0 && (
-                  <p className="text-[#6B6B70] text-[13px] text-center py-6">No todos yet</p>
+                  <p className="text-[#6B6B70] text-[13px] text-center py-6">할 일이 없습니다</p>
                 )}
               </div>
             </section>
@@ -885,12 +885,12 @@ export default function Home() {
                 <p className="text-[13px] text-[#ADADB0] line-clamp-2 leading-relaxed">{item.notes}</p>
                 <p className="text-[11px] text-[#6B6B70] mt-3 font-mono-data">{item.date}</p>
                 {item.notes && item.notes.length > 80 && (
-                  <p className="text-[11px] text-[#FF5C00] mt-1.5 font-medium">Read more...</p>
+                  <p className="text-[11px] text-[#FF5C00] mt-1.5 font-medium">더 보기...</p>
                 )}
               </div>
             ))}
             {research.length === 0 && (
-              <p className="text-[#6B6B70] text-[13px] col-span-3 text-center py-8">No research notes yet</p>
+              <p className="text-[#6B6B70] text-[13px] col-span-3 text-center py-8">리서치 노트가 없습니다</p>
             )}
           </div>
         </section>
@@ -1102,7 +1102,7 @@ export default function Home() {
               <button
                 onClick={() => setShowResearchDetailModal(false)}
                 className="px-5 py-2.5 bg-[#1F1F23] rounded-lg hover:bg-[#2A2A2E] text-[13px] font-medium text-[#ADADB0] transition-colors"
-              >&#8592; Back</button>
+              >&#8592; 돌아가기</button>
             </div>
 
             {/* Content */}
