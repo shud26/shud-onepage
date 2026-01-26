@@ -47,6 +47,7 @@ export default function WhalesPage() {
   const [activitySummary, setActivitySummary] = useState<ActivitySummary | null>(null);
   const [activityLoading, setActivityLoading] = useState(false);
   const [newWhale, setNewWhale] = useState({ name: '', address: '', notes: '' });
+  const [searchAddress, setSearchAddress] = useState('');
   const [filter, setFilter] = useState<'all' | 'korean' | 'global' | 'exchange'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'balance'>('balance');
 
@@ -163,6 +164,30 @@ export default function WhalesPage() {
   const fmtDate = (ts: number) => {
     const d = new Date(ts * 1000);
     return d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Lookup any address
+  const lookupAddress = () => {
+    const addr = searchAddress.trim();
+    if (!/^0x[a-fA-F0-9]{40}$/.test(addr)) {
+      alert('올바른 이더리움 주소를 입력하세요 (0x...)');
+      return;
+    }
+    // Check if it's a known whale
+    const known = whales.find(w => w.address.toLowerCase() === addr.toLowerCase());
+    if (known) {
+      fetchActivity(known);
+    } else {
+      fetchActivity({
+        id: 'lookup',
+        name: '조회 주소',
+        address: addr,
+        chain: 'ethereum',
+        notes: '직접 조회',
+        created_at: '',
+        loading: false,
+      });
+    }
   };
 
   // Fetch recent activity using Ethplorer API (free, no key needed)
@@ -365,6 +390,27 @@ export default function WhalesPage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Address Lookup */}
+        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4 mb-6">
+          <p className="text-sm text-gray-400 mb-3">지갑 주소 조회</p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="0x... 이더리움 주소 입력"
+              value={searchAddress}
+              onChange={(e) => setSearchAddress(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && lookupAddress()}
+              className="flex-1 bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 font-mono text-sm placeholder:text-gray-600 focus:border-[#6366f1] outline-none"
+            />
+            <button
+              onClick={lookupAddress}
+              className="px-6 py-2 bg-[#6366f1] rounded-lg text-sm font-medium hover:bg-[#818cf8] whitespace-nowrap"
+            >
+              분석
+            </button>
+          </div>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
