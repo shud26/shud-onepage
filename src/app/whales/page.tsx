@@ -20,6 +20,16 @@ interface Transaction {
   functionName?: string;
   tokenSymbol?: string;
   tokenName?: string;
+  tokenDecimal?: string;
+  isError?: string;
+}
+
+interface ActivityItem {
+  timestamp: number;
+  type: 'eth_send' | 'eth_receive' | 'contract_call' | 'token_send' | 'token_receive';
+  label: string;
+  value: string;
+  detail: string;
 }
 
 interface ActivitySummary {
@@ -27,8 +37,9 @@ interface ActivitySummary {
   lastActive: string;
   ethSent: number;
   ethReceived: number;
+  contractCalls: number;
   tokenTransfers: { symbol: string; count: number }[];
-  recentActions: string[];
+  timeline: ActivityItem[];
 }
 
 // Admin PIN
@@ -161,6 +172,42 @@ export default function WhalesPage() {
     fetchWhales();
   };
 
+  // Decode function name to readable label
+  const decodeFunctionName = (fn?: string): string => {
+    if (!fn) return '';
+    const name = fn.split('(')[0];
+    const labels: Record<string, string> = {
+      transfer: '토큰 전송',
+      approve: '승인',
+      swap: '스왑',
+      swapExactTokensForTokens: '토큰 스왑',
+      swapExactETHForTokens: 'ETH→토큰 스왑',
+      swapExactTokensForETH: '토큰→ETH 스왑',
+      multicall: '멀티콜',
+      execute: '실행',
+      deposit: '입금',
+      withdraw: '출금',
+      claim: '클레임',
+      mint: '민트',
+      burn: '소각',
+      stake: '스테이킹',
+      unstake: '언스테이킹',
+      addLiquidity: '유동성 추가',
+      removeLiquidity: '유동성 제거',
+      borrow: '대출',
+      repay: '상환',
+      supply: '공급',
+      bridge: '브릿지',
+    };
+    return labels[name] || name;
+  };
+
+  // Format date
+  const fmtDate = (ts: number) => {
+    const d = new Date(ts * 1000);
+    return d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+
   // Fetch recent activity for a whale
   const fetchActivity = async (whale: WhaleWithBalance) => {
     setSelectedWhale(whale);
@@ -169,92 +216,136 @@ export default function WhalesPage() {
     setActivitySummary(null);
 
     try {
-      // Fetch normal transactions (last 50)
+      // Fetch normal transactions (last 25)
       const txRes = await fetch(
-        `https://api.etherscan.io/api?module=account&action=txlist&address=${whale.address}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc`
+        `https://api.etherscan.io/api?module=account&action=txlist&address=${whale.address}&page=1&offset=25&sort=desc`
       );
       const txData = await txRes.json();
 
-      // Rate limit
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Rate limit - Etherscan free needs 5s between calls
+      await new Promise(resolve => setTimeout(resolve, 5500));
 
-      // Fetch token transfers (last 50)
+      // Fetch ERC-20 token transfers (last 25)
       const tokenRes = await fetch(
-        `https://api.etherscan.io/api?module=account&action=tokentx&address=${whale.address}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc`
+        `https://api.etherscan.io/api?module=account&action=tokentx&address=${whale.address}&page=1&offset=25&sort=desc`
       );
       const tokenData = await tokenRes.json();
 
       const transactions: Transaction[] = txData.status === '1' ? txData.result : [];
-      const tokenTransfers: Transaction[] = tokenData.status === '1' ? tokenData.result : [];
+      const tokenTxs: Transaction[] = tokenData.status === '1' ? tokenData.result : [];
 
-      // Analyze transactions
+      // Build unified timeline
+      const timeline: ActivityItem[] = [];
       let ethSent = 0;
       let ethReceived = 0;
-      const recentActions: string[] = [];
+      let contractCalls = 0;
       const tokenCounts: Record<string, number> = {};
+      const addr = whale.address.toLowerCase();
 
       // Process ETH transactions
-      transactions.slice(0, 20).forEach((tx: Transaction) => {
+      for (const tx of transactions) {
+        if (tx.isError === '1') continue;
+        const ts = parseInt(tx.timeStamp);
         const value = parseFloat(tx.value) / 1e18;
-        const isOutgoing = tx.from.toLowerCase() === whale.address.toLowerCase();
-        const date = new Date(parseInt(tx.timeStamp) * 1000);
-        const dateStr = date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+        const isOut = tx.from.toLowerCase() === addr;
+        const fnLabel = decodeFunctionName(tx.functionName);
 
-        if (isOutgoing) {
+        if (isOut) {
           ethSent += value;
-          if (value > 0.1) {
-            const action = tx.functionName
-              ? `${dateStr}: ${value.toFixed(2)} ETH 전송 (${tx.functionName.split('(')[0]})`
-              : `${dateStr}: ${value.toFixed(2)} ETH 전송`;
-            recentActions.push(action);
+          if (fnLabel && value === 0) {
+            // Pure contract call (no ETH)
+            contractCalls++;
+            timeline.push({
+              timestamp: ts,
+              type: 'contract_call',
+              label: fnLabel,
+              value: '',
+              detail: `→ ${tx.to.slice(0, 8)}...`,
+            });
+          } else if (fnLabel) {
+            // Contract call with ETH
+            contractCalls++;
+            timeline.push({
+              timestamp: ts,
+              type: 'eth_send',
+              label: fnLabel,
+              value: `${value.toFixed(4)} ETH`,
+              detail: `→ ${tx.to.slice(0, 8)}...`,
+            });
+          } else {
+            // Simple ETH transfer
+            timeline.push({
+              timestamp: ts,
+              type: 'eth_send',
+              label: 'ETH 전송',
+              value: `${value.toFixed(4)} ETH`,
+              detail: `→ ${tx.to.slice(0, 8)}...`,
+            });
           }
         } else {
           ethReceived += value;
-          if (value > 0.1) {
-            recentActions.push(`${dateStr}: ${value.toFixed(2)} ETH 수신`);
+          if (value > 0) {
+            timeline.push({
+              timestamp: ts,
+              type: 'eth_receive',
+              label: 'ETH 수신',
+              value: `${value.toFixed(4)} ETH`,
+              detail: `← ${tx.from.slice(0, 8)}...`,
+            });
           }
         }
-      });
+      }
 
       // Process token transfers
-      tokenTransfers.slice(0, 30).forEach((tx: Transaction) => {
-        const symbol = tx.tokenSymbol || 'Unknown';
+      for (const tx of tokenTxs) {
+        const ts = parseInt(tx.timeStamp);
+        const symbol = tx.tokenSymbol || '???';
+        const decimals = parseInt(tx.tokenDecimal || '18');
+        const rawValue = parseFloat(tx.value) / Math.pow(10, decimals);
+        const isOut = tx.from.toLowerCase() === addr;
         tokenCounts[symbol] = (tokenCounts[symbol] || 0) + 1;
 
-        const date = new Date(parseInt(tx.timeStamp) * 1000);
-        const dateStr = date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
-        const isOutgoing = tx.from.toLowerCase() === whale.address.toLowerCase();
+        const fmtVal = rawValue > 1000000
+          ? `${(rawValue / 1000000).toFixed(2)}M`
+          : rawValue > 1000
+          ? `${(rawValue / 1000).toFixed(1)}K`
+          : rawValue.toFixed(2);
 
-        if (recentActions.length < 15) {
-          recentActions.push(`${dateStr}: ${symbol} ${isOutgoing ? '전송' : '수신'}`);
-        }
-      });
+        timeline.push({
+          timestamp: ts,
+          type: isOut ? 'token_send' : 'token_receive',
+          label: `${symbol} ${isOut ? '전송' : '수신'}`,
+          value: `${fmtVal} ${symbol}`,
+          detail: isOut ? `→ ${tx.to.slice(0, 8)}...` : `← ${tx.from.slice(0, 8)}...`,
+        });
+      }
 
-      // Sort token counts
+      // Sort by timestamp desc
+      timeline.sort((a, b) => b.timestamp - a.timestamp);
+
+      // Token summary
       const tokenTransfersSummary = Object.entries(tokenCounts)
         .map(([symbol, count]) => ({ symbol, count }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
 
       // Last active
-      const lastTx = transactions[0] || tokenTransfers[0];
-      const lastActive = lastTx
-        ? new Date(parseInt(lastTx.timeStamp) * 1000).toLocaleDateString('ko-KR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+      const latestTs = timeline[0]?.timestamp;
+      const lastActive = latestTs
+        ? new Date(latestTs * 1000).toLocaleDateString('ko-KR', {
+            year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
           })
         : '알 수 없음';
 
       setActivitySummary({
-        totalTxCount: transactions.length + tokenTransfers.length,
+        totalTxCount: transactions.length + tokenTxs.length,
         lastActive,
         ethSent,
         ethReceived,
+        contractCalls,
         tokenTransfers: tokenTransfersSummary,
-        recentActions: recentActions.slice(0, 15)
+        timeline: timeline.slice(0, 20),
       });
     } catch (error) {
       console.error('Activity fetch error:', error);
@@ -263,8 +354,9 @@ export default function WhalesPage() {
         lastActive: '에러 발생',
         ethSent: 0,
         ethReceived: 0,
+        contractCalls: 0,
         tokenTransfers: [],
-        recentActions: ['데이터를 불러올 수 없습니다']
+        timeline: [],
       });
     }
 
@@ -609,30 +701,41 @@ export default function WhalesPage() {
               <div className="py-12 text-center">
                 <div className="animate-spin w-8 h-8 border-2 border-[#6366f1] border-t-transparent rounded-full mx-auto mb-4"></div>
                 <p className="text-gray-400">트랜잭션 분석 중...</p>
+                <p className="text-gray-500 text-xs mt-2">Etherscan API 호출 중 (약 6초 소요)</p>
               </div>
             ) : activitySummary ? (
               <div className="space-y-4">
-                {/* Last Active */}
-                <div className="bg-[#0f0f0f] rounded-lg p-4">
-                  <p className="text-xs text-gray-400 mb-1">마지막 활동</p>
-                  <p className="text-[#22c55e] font-medium">{activitySummary.lastActive}</p>
+                {/* Summary Stats */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-[#0f0f0f] rounded-lg p-3 text-center">
+                    <p className="text-xs text-gray-400">마지막 활동</p>
+                    <p className="text-[#22c55e] text-xs font-medium mt-1">{activitySummary.lastActive}</p>
+                  </div>
+                  <div className="bg-[#0f0f0f] rounded-lg p-3 text-center">
+                    <p className="text-xs text-gray-400">총 트랜잭션</p>
+                    <p className="text-white font-bold text-lg">{activitySummary.totalTxCount}</p>
+                  </div>
+                  <div className="bg-[#0f0f0f] rounded-lg p-3 text-center">
+                    <p className="text-xs text-gray-400">컨트랙트 호출</p>
+                    <p className="text-[#6366f1] font-bold text-lg">{activitySummary.contractCalls}</p>
+                  </div>
                 </div>
 
                 {/* ETH Flow */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-[#0f0f0f] rounded-lg p-4">
-                    <p className="text-xs text-gray-400 mb-1">ETH 전송 (최근 20건)</p>
-                    <p className="text-red-400 font-bold text-lg">
-                      -{activitySummary.ethSent.toFixed(2)} ETH
+                  <div className="bg-[#0f0f0f] rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-1">ETH 전송</p>
+                    <p className="text-red-400 font-bold">
+                      -{activitySummary.ethSent.toFixed(4)} ETH
                     </p>
                     <p className="text-xs text-gray-500">
                       ≈ ${(activitySummary.ethSent * ethPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </p>
                   </div>
-                  <div className="bg-[#0f0f0f] rounded-lg p-4">
-                    <p className="text-xs text-gray-400 mb-1">ETH 수신 (최근 20건)</p>
-                    <p className="text-[#22c55e] font-bold text-lg">
-                      +{activitySummary.ethReceived.toFixed(2)} ETH
+                  <div className="bg-[#0f0f0f] rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-1">ETH 수신</p>
+                    <p className="text-[#22c55e] font-bold">
+                      +{activitySummary.ethReceived.toFixed(4)} ETH
                     </p>
                     <p className="text-xs text-gray-500">
                       ≈ ${(activitySummary.ethReceived * ethPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })}
@@ -640,35 +743,60 @@ export default function WhalesPage() {
                   </div>
                 </div>
 
-                {/* Token Transfers */}
+                {/* Token Summary */}
                 {activitySummary.tokenTransfers.length > 0 && (
-                  <div className="bg-[#0f0f0f] rounded-lg p-4">
-                    <p className="text-xs text-gray-400 mb-2">토큰 활동 (최근 30건)</p>
+                  <div className="bg-[#0f0f0f] rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-2">관련 토큰</p>
                     <div className="flex flex-wrap gap-2">
                       {activitySummary.tokenTransfers.map((t, i) => (
-                        <span
-                          key={i}
-                          className="px-2 py-1 bg-[#2a2a2a] rounded text-xs"
-                        >
-                          {t.symbol} <span className="text-[#6366f1]">×{t.count}</span>
+                        <span key={i} className="px-2 py-1 bg-[#2a2a2a] rounded text-xs">
+                          {t.symbol} <span className="text-[#6366f1]">x{t.count}</span>
                         </span>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* Recent Actions */}
-                <div className="bg-[#0f0f0f] rounded-lg p-4">
-                  <p className="text-xs text-gray-400 mb-2">최근 활동 내역</p>
-                  <div className="space-y-1 max-h-48 overflow-y-auto">
-                    {activitySummary.recentActions.length > 0 ? (
-                      activitySummary.recentActions.map((action, i) => (
-                        <p key={i} className="text-xs text-gray-300 py-1 border-b border-[#2a2a2a]/50">
-                          {action}
-                        </p>
+                {/* Timeline */}
+                <div className="bg-[#0f0f0f] rounded-lg p-3">
+                  <p className="text-xs text-gray-400 mb-3">최근 활동 타임라인</p>
+                  <div className="space-y-0 max-h-64 overflow-y-auto">
+                    {activitySummary.timeline.length > 0 ? (
+                      activitySummary.timeline.map((item, i) => (
+                        <div key={i} className="flex items-start gap-3 py-2 border-b border-[#2a2a2a]/30 last:border-0">
+                          {/* Icon */}
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs ${
+                            item.type === 'eth_send' ? 'bg-red-500/20 text-red-400' :
+                            item.type === 'eth_receive' ? 'bg-green-500/20 text-green-400' :
+                            item.type === 'token_send' ? 'bg-orange-500/20 text-orange-400' :
+                            item.type === 'token_receive' ? 'bg-blue-500/20 text-blue-400' :
+                            'bg-purple-500/20 text-purple-400'
+                          }`}>
+                            {item.type === 'eth_send' || item.type === 'token_send' ? '↑' :
+                             item.type === 'eth_receive' || item.type === 'token_receive' ? '↓' : '⚡'}
+                          </div>
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs font-medium text-white">{item.label}</span>
+                              {item.value && (
+                                <span className={`text-xs font-mono ${
+                                  item.type.includes('send') ? 'text-red-400' :
+                                  item.type.includes('receive') ? 'text-[#22c55e]' : 'text-gray-300'
+                                }`}>
+                                  {item.type.includes('send') ? '-' : item.type.includes('receive') ? '+' : ''}{item.value}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex justify-between items-center mt-0.5">
+                              <span className="text-[10px] text-gray-500 font-mono">{item.detail}</span>
+                              <span className="text-[10px] text-gray-500">{fmtDate(item.timestamp)}</span>
+                            </div>
+                          </div>
+                        </div>
                       ))
                     ) : (
-                      <p className="text-xs text-gray-500">최근 활동 없음</p>
+                      <p className="text-xs text-gray-500 py-4 text-center">최근 활동 없음</p>
                     )}
                   </div>
                 </div>
@@ -681,7 +809,7 @@ export default function WhalesPage() {
                     rel="noopener noreferrer"
                     className="flex-1 py-2 bg-[#6366f1] rounded-lg text-center text-sm hover:bg-[#818cf8]"
                   >
-                    Etherscan에서 보기
+                    Etherscan
                   </a>
                   <a
                     href={`https://debank.com/profile/${selectedWhale.address}`}
@@ -689,7 +817,7 @@ export default function WhalesPage() {
                     rel="noopener noreferrer"
                     className="flex-1 py-2 bg-[#f59e0b] rounded-lg text-center text-sm hover:bg-[#fbbf24]"
                   >
-                    DeBank에서 보기
+                    DeBank
                   </a>
                 </div>
               </div>
