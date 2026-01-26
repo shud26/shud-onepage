@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { supabase, Airdrop, AirdropTask, Todo, CalendarEvent, Research } from '@/lib/supabase';
+import { supabase, Airdrop, AirdropTask, Todo, CalendarEvent, Research, BlogPost } from '@/lib/supabase';
 
 // Price type
 interface PriceData {
@@ -44,6 +44,7 @@ export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [research, setResearch] = useState<Research[]>([]);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [prices, setPrices] = useState<PriceData[]>([]);
   const [krwRate, setKrwRate] = useState(1350);
   const [loading, setLoading] = useState(true);
@@ -114,6 +115,14 @@ export default function Home() {
         .select('*')
         .order('created_at', { ascending: false });
       setResearch(researchData || []);
+
+      const { data: blogData } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('published', true)
+        .order('date', { ascending: false })
+        .limit(3);
+      setBlogPosts(blogData || []);
 
     } catch (error) {
       console.error('Data fetch error:', error);
@@ -514,6 +523,7 @@ export default function Home() {
             <a href="#whale" className="hover:text-white transition-colors">고래</a>
             <a href="#airdrops" className="hover:text-white transition-colors">에어드랍</a>
             <a href="#research" className="hover:text-white transition-colors">리서치</a>
+            <Link href="/blog" className="hover:text-white transition-colors">블로그</Link>
           </div>
           <div className="flex items-center gap-3">
             {isAdmin && (
@@ -856,6 +866,44 @@ export default function Home() {
             <ins className="adsbygoogle" style={{ display: 'block' }} data-ad-format="auto" data-full-width-responsive="true"></ins>
           </div>
 
+          {/* ===== BLOG PREVIEW ===== */}
+          {blogPosts.length > 0 && (
+            <section className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-semibold">개발 블로그</h2>
+                <Link
+                  href="/blog"
+                  className="text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C] transition-colors flex items-center gap-1"
+                >
+                  전체 보기 &#8594;
+                </Link>
+              </div>
+              <div className="grid md:grid-cols-3 gap-4">
+                {blogPosts.slice(0, 3).map(post => (
+                  <Link
+                    key={post.id}
+                    href={`/blog/${post.slug}`}
+                    className="bg-[#0A0A0B] border border-[#1F1F23] rounded-xl p-5 hover:border-[#FF5C00] transition-colors block"
+                  >
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {(post.tags || []).slice(0, 2).map((tag, i) => (
+                        <span
+                          key={i}
+                          className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#FF5C00]/10 text-[#FF5C00]"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <h3 className="text-sm font-semibold text-white mb-2 line-clamp-2">{post.title}</h3>
+                    <p className="text-[12px] text-[#ADADB0] line-clamp-2 leading-relaxed mb-3">{post.description}</p>
+                    <p className="text-[11px] text-[#6B6B70] font-mono-data">{post.date}</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* ===== COIN RESEARCH PREVIEW ===== */}
           <section id="research" className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6">
             <div className="flex items-center justify-between mb-5">
@@ -1097,6 +1145,7 @@ export default function Home() {
                 <li><a href="#prices" className="hover:text-[#FF5C00] transition-colors">암호화폐 실시간 시세</a></li>
                 <li><Link href="/whales" className="hover:text-[#FF5C00] transition-colors">고래 지갑 상세 분석</Link></li>
                 <li><Link href="/research" className="hover:text-[#FF5C00] transition-colors">코인 리서치 노트</Link></li>
+                <li><Link href="/blog" className="hover:text-[#FF5C00] transition-colors">개발 블로그</Link></li>
               </ul>
             </div>
             <div>

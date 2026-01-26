@@ -78,3 +78,16 @@ export interface WhaleAlert {
   usd_value: number | null;
   sent_at: string;
 }
+
+export interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  content: string;
+  tags: string[];
+  date: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+}
