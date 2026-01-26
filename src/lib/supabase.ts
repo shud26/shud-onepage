@@ -52,3 +52,12 @@ export interface Research {
   date: string;
   created_at: string;
 }
+
+export interface WhaleWallet {
+  id: string;
+  name: string;
+  address: string;
+  chain: string;
+  notes: string;
+  created_at: string;
+}
