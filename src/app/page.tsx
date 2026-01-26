@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { supabase, Airdrop, AirdropTask, Todo, CalendarEvent, Research, WhaleWallet } from '@/lib/supabase';
 
 // Price type
@@ -561,9 +562,17 @@ export default function Home() {
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-[#2a2a2a] bg-[#0f0f0f]/90 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold">
-            <span className="text-[#6366f1]">shud</span> onepage
-          </h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-xl font-bold">
+              <span className="text-[#6366f1]">shud</span> onepage
+            </h1>
+            <Link
+              href="/whales"
+              className="px-3 py-1.5 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-sm hover:bg-[#2a2a2a] flex items-center gap-1"
+            >
+              🐋 Whale Watch
+            </Link>
+          </div>
           <div className="flex items-center gap-3">
             {isAdmin && (
               <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Admin</span>
