@@ -442,9 +442,9 @@ export default function Home() {
 
   if (dataLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f]">
+      <div className="min-h-screen flex items-center justify-center bg-[#0A0A0B]">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-[#6366f1] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-2 border-[#FF5C00] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-400">Loading...</p>
         </div>
       </div>
@@ -454,145 +454,156 @@ export default function Home() {
   return (
     <main className="min-h-screen pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-[#2a2a2a] bg-[#0f0f0f]/90 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 border-b border-[#1F1F23] bg-[#0A0A0B]/90 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold">
-              <span className="text-[#6366f1]">shud</span> onepage
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-semibold tracking-[4px] font-mono-data">
+              SHUD
             </h1>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF5C00]"></span>
           </div>
           <div className="flex items-center gap-3">
             {isAdmin && (
-              <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Admin</span>
+              <span className="text-xs bg-[#22c55e]/10 text-green-400 px-3 py-1 rounded-full">Admin</span>
             )}
             <button
               onClick={() => isAdmin ? setIsAdmin(false) : setShowPinModal(true)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isAdmin
                   ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                  : 'bg-[#6366f1] hover:bg-[#818cf8]'
+                  : 'border border-[#1F1F23] hover:bg-[#1A1A1D] text-[#8B8B90]'
               }`}
             >
-              {isAdmin ? 'Logout' : 'Login'}
+              {isAdmin ? 'Logout' : '🔒 PIN Login'}
+            </button>
+            <button
+              onClick={fetchPrices}
+              className="px-4 py-2.5 rounded-lg text-sm font-medium bg-[#FF5C00] hover:bg-[#FF8A4C] transition-colors"
+            >
+              ↻ Refresh
             </button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-7">
+        {/* Page Title */}
+        <div>
+          <h2 className="font-display text-4xl text-white tracking-tight">Dashboard</h2>
+          <p className="text-sm text-[#6B6B70] mt-2">Crypto portfolio overview & monitoring</p>
+        </div>
+
         {/* Stats Overview */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
-            <p className="text-sm text-gray-400">Active Airdrops</p>
-            <p className="text-2xl font-bold text-[#6366f1]">{airdrops.filter(a => a.status === 'active').length}</p>
+          <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
+            <p className="text-xs font-semibold text-[#6B6B70] tracking-wider uppercase">Active Airdrops</p>
+            <p className="text-3xl font-medium text-white mt-3 font-mono-data tracking-tight">{airdrops.filter(a => a.status === 'active').length}</p>
           </div>
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
-            <p className="text-sm text-gray-400">Tasks Progress</p>
-            <p className="text-2xl font-bold text-[#22c55e]">{completedTasks}/{totalTasks}</p>
+          <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
+            <p className="text-xs font-semibold text-[#6B6B70] tracking-wider uppercase">Tasks Done</p>
+            <p className="text-3xl font-medium text-[#22c55e] mt-3 font-mono-data tracking-tight">{completedTasks}/{totalTasks}</p>
           </div>
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
-            <p className="text-sm text-gray-400">Total Spent</p>
-            <p className="text-2xl font-bold text-[#f59e0b]">${totalSpent}</p>
+          <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
+            <p className="text-xs font-semibold text-[#6B6B70] tracking-wider uppercase">Total Spent</p>
+            <p className="text-3xl font-medium text-white mt-3 font-mono-data tracking-tight">${totalSpent}</p>
           </div>
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
-            <p className="text-sm text-gray-400">김프</p>
-            <p className={`text-2xl font-bold ${prices[0]?.kimchiPremium > 0 ? 'text-red-400' : 'text-green-400'}`}>
-              {prices[0]?.kimchiPremium?.toFixed(2) || '0.00'}%
+          <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
+            <p className="text-xs font-semibold text-[#6B6B70] tracking-wider uppercase">Kimchi Premium</p>
+            <p className={`text-3xl font-medium mt-3 font-mono-data tracking-tight ${prices[0]?.kimchiPremium > 0 ? 'text-[#FF5C00]' : 'text-green-400'}`}>
+              {prices[0]?.kimchiPremium > 0 ? '+' : ''}{prices[0]?.kimchiPremium?.toFixed(2) || '0.00'}%
             </p>
           </div>
         </section>
 
         {/* Kimchi Premium & Arbitrage */}
-        <section className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <span className="text-xl">💹</span> 김프 & 차익거래 기회
-            </h2>
-            <button onClick={fetchPrices} className="text-xs text-gray-400 hover:text-white">
-              {loading ? 'Loading...' : '새로고침'}
-            </button>
+        <section className="bg-[#111113] border border-[#1F1F23] rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-5">
+            <h2 className="text-sm font-semibold">Kimchi Premium & Arbitrage</h2>
+            <span className="flex items-center gap-1.5 bg-[#22c55e]/10 text-[#22c55e] text-[10px] font-medium px-2.5 py-1 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]"></span>
+              LIVE
+            </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-gray-400 border-b border-[#2a2a2a]">
-                  <th className="text-left py-2">Coin</th>
-                  <th className="text-right py-2">Binance</th>
-                  <th className="text-right py-2">Upbit (KRW)</th>
-                  <th className="text-right py-2">김프</th>
-                  <th className="text-right py-2">HL Gap</th>
-                  <th className="text-right py-2">기회</th>
+                <tr className="text-[#6B6B70] border-b border-[#1F1F23] bg-[#0D0D0E] text-[11px] font-semibold tracking-wider uppercase">
+                  <th className="text-left py-3.5 px-6">Coin</th>
+                  <th className="text-right py-3.5 px-6">Binance</th>
+                  <th className="text-right py-3.5 px-6">Upbit (KRW)</th>
+                  <th className="text-right py-3.5 px-6">Premium</th>
+                  <th className="text-right py-3.5 px-6">HL Gap</th>
+                  <th className="text-right py-3.5 px-6">Opportunity</th>
                 </tr>
               </thead>
               <tbody>
                 {prices.map(p => (
-                  <tr key={p.coin} className="border-b border-[#2a2a2a]/50 hover:bg-[#0f0f0f]">
-                    <td className="py-3 font-medium">{p.coin}</td>
-                    <td className="text-right text-gray-300">${p.binance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                    <td className="text-right text-gray-300">${p.upbit.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                    <td className={`text-right font-medium ${p.kimchiPremium > 2 ? 'text-red-400' : p.kimchiPremium > 0 ? 'text-yellow-400' : 'text-green-400'}`}>
+                  <tr key={p.coin} className="border-b border-[#1F1F23]/50 hover:bg-[#0A0A0B] text-[13px]">
+                    <td className="py-3.5 px-6 font-medium text-white">{p.coin}</td>
+                    <td className="text-right py-3.5 px-6 text-[#ADADB0] font-mono-data">${p.binance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                    <td className="text-right py-3.5 px-6 text-[#ADADB0] font-mono-data">${p.upbit.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                    <td className={`text-right py-3.5 px-6 font-medium font-mono-data ${p.kimchiPremium > 2 ? 'text-[#FF5C00]' : p.kimchiPremium > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
                       {p.kimchiPremium > 0 ? '+' : ''}{p.kimchiPremium.toFixed(2)}%
                     </td>
-                    <td className={`text-right ${Math.abs(p.gap) > 0.5 ? 'text-yellow-400' : 'text-gray-400'}`}>
+                    <td className={`text-right py-3.5 px-6 font-mono-data ${Math.abs(p.gap) > 0.5 ? 'text-[#FF5C00]' : 'text-[#6B6B70]'}`}>
                       {p.gap > 0 ? '+' : ''}{p.gap.toFixed(2)}%
                     </td>
-                    <td className="text-right">
-                      {p.kimchiPremium > 3 && <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">역프 주의</span>}
-                      {p.kimchiPremium < -2 && <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">매수 기회</span>}
-                      {Math.abs(p.gap) > 1 && <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded ml-1">차익거래</span>}
+                    <td className="text-right py-3.5 px-6">
+                      {p.kimchiPremium > 3 && <span className="text-[10px] font-medium bg-[#ef4444]/10 text-[#ef4444] px-2.5 py-1 rounded-full">Reverse</span>}
+                      {p.kimchiPremium < -2 && <span className="text-[10px] font-medium bg-[#22c55e]/10 text-[#22c55e] px-2.5 py-1 rounded-full">Buy</span>}
+                      {p.kimchiPremium >= -2 && p.kimchiPremium <= 3 && <span className="text-[10px] font-medium bg-[#FF5C00]/10 text-[#FF5C00] px-2.5 py-1 rounded-full">Premium</span>}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-gray-500 mt-3">환율: 1 USD = {krwRate.toLocaleString()} KRW | 60초마다 자동 갱신</p>
+          <p className="text-[11px] text-[#4A4A4E] px-6 py-3 font-mono-data">1 USD = {krwRate.toLocaleString()} KRW &middot; Auto-refresh 60s</p>
         </section>
 
         {/* Whale Watch Banner */}
         <Link href="/whales" className="block">
-          <section className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 hover:border-[#6366f1] transition-colors group">
+          <section className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6 hover:border-[#FF5C00] transition-colors group">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <span className="text-3xl">🐋</span>
+                <div className="w-10 h-10 rounded-lg bg-[#FF5C00]/10 flex items-center justify-center">
+                  <span className="text-[#FF5C00] text-lg font-bold font-mono-data">W</span>
+                </div>
                 <div>
-                  <h2 className="text-lg font-semibold group-hover:text-[#6366f1] transition-colors">Whale Watch</h2>
-                  <p className="text-sm text-gray-400">고래 지갑 추적 & 활동 분석 | 아무 주소 조회 가능</p>
+                  <h2 className="text-sm font-semibold group-hover:text-[#FF5C00] transition-colors tracking-wide">Whale Watch</h2>
+                  <p className="text-xs text-[#6B6B70] mt-0.5">Track whale wallets & activity analysis</p>
                 </div>
               </div>
-              <span className="text-gray-500 group-hover:text-[#6366f1] transition-colors text-xl">→</span>
+              <span className="text-[#6B6B70] group-hover:text-[#FF5C00] transition-colors text-sm">&#8594;</span>
             </div>
           </section>
         </Link>
 
         {/* Main Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Airdrop Tracker - Excel Style */}
-          <section className="lg:col-span-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <span className="text-xl">🎯</span> Airdrop Tracker
-              </h2>
+          {/* Airdrop Tracker */}
+          <section className="lg:col-span-2 bg-[#111113] border border-[#1F1F23] rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-5">
+              <h2 className="text-sm font-semibold tracking-wide">Airdrop Tracker</h2>
               {isAdmin && (
                 <button
                   onClick={() => setShowAirdropModal(true)}
-                  className="text-sm text-[#6366f1] hover:text-[#818cf8]"
+                  className="text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C]"
                 >+ Add</button>
               )}
             </div>
 
-            {/* Excel-style table */}
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-gray-400 border-b border-[#2a2a2a]">
-                    <th className="text-left py-2">프로젝트</th>
-                    <th className="text-left py-2">체인</th>
-                    <th className="text-right py-2">비용</th>
-                    <th className="text-right py-2">예상 수익</th>
-                    <th className="text-center py-2">진행률</th>
-                    <th className="text-center py-2">D-Day</th>
-                    {isAdmin && <th className="text-center py-2">삭제</th>}
+                  <tr className="text-[#6B6B70] border-b border-[#1F1F23] bg-[#0D0D0E] text-[11px] font-semibold tracking-wider uppercase">
+                    <th className="text-left py-3.5 px-6">Project</th>
+                    <th className="text-left py-3.5 px-6">Chain</th>
+                    <th className="text-right py-3.5 px-6">Cost</th>
+                    <th className="text-right py-3.5 px-6">Expected</th>
+                    <th className="text-center py-3.5 px-6">Progress</th>
+                    <th className="text-center py-3.5 px-6">D-Day</th>
+                    {isAdmin && <th className="text-center py-3.5 px-6">Del</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -600,41 +611,41 @@ export default function Home() {
                     const progress = getProgressPercent(airdrop.tasks);
                     const daysLeft = getDaysLeft(airdrop.deadline);
                     return (
-                      <tr key={airdrop.id} className="border-b border-[#2a2a2a]/50 hover:bg-[#0f0f0f]">
-                        <td className="py-3 font-medium">{airdrop.name}</td>
-                        <td className="py-3 text-gray-400">{airdrop.chain}</td>
-                        <td className="py-3 text-right text-[#f59e0b]">${airdrop.total_cost || 0}</td>
-                        <td className="py-3 text-right text-[#22c55e]">{airdrop.expected_value}</td>
-                        <td className="py-3">
+                      <tr key={airdrop.id} className="border-b border-[#1F1F23]/50 hover:bg-[#0A0A0B] text-[13px]">
+                        <td className="py-3.5 px-6 font-medium text-white">{airdrop.name}</td>
+                        <td className="py-3.5 px-6 text-[#ADADB0]">{airdrop.chain}</td>
+                        <td className="py-3.5 px-6 text-right text-[#f59e0b] font-mono-data">${airdrop.total_cost || 0}</td>
+                        <td className="py-3.5 px-6 text-right text-[#22c55e] font-mono-data">{airdrop.expected_value}</td>
+                        <td className="py-3.5 px-6">
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 h-2 bg-[#2a2a2a] rounded-full overflow-hidden">
+                            <div className="flex-1 h-1.5 bg-[#1F1F23] rounded-full overflow-hidden">
                               <div
-                                className="h-full bg-gradient-to-r from-[#6366f1] to-[#818cf8]"
+                                className="h-full bg-gradient-to-r from-[#FF5C00] to-[#FF8A4C] rounded-full"
                                 style={{ width: `${progress}%` }}
                               />
                             </div>
-                            <span className="text-xs text-gray-400">{progress}%</span>
+                            <span className="text-[11px] text-[#6B6B70] font-mono-data">{progress}%</span>
                           </div>
                         </td>
-                        <td className="py-3 text-center">
+                        <td className="py-3.5 px-6 text-center">
                           {airdrop.deadline ? (
-                            <span className={`text-xs px-2 py-1 rounded ${
-                              daysLeft <= 7 ? 'bg-red-500/20 text-red-400' :
-                              daysLeft <= 30 ? 'bg-yellow-500/20 text-yellow-400' :
-                              'bg-green-500/20 text-green-400'
+                            <span className={`text-[10px] font-medium px-2.5 py-1 rounded-full ${
+                              daysLeft <= 7 ? 'bg-[#ef4444]/10 text-[#ef4444]' :
+                              daysLeft <= 30 ? 'bg-[#f59e0b]/10 text-[#f59e0b]' :
+                              'bg-[#22c55e]/10 text-[#22c55e]'
                             }`}>
                               D-{daysLeft}
                             </span>
                           ) : (
-                            <span className="text-xs text-gray-500">-</span>
+                            <span className="text-[11px] text-[#6B6B70]">-</span>
                           )}
                         </td>
                         {isAdmin && (
-                          <td className="py-3 text-center">
+                          <td className="py-3.5 px-6 text-center">
                             <button
                               onClick={() => deleteAirdrop(airdrop.id)}
-                              className="text-red-400 hover:text-red-300"
-                            >✕</button>
+                              className="text-[#ef4444] hover:text-red-300 text-xs"
+                            >&#10005;</button>
                           </td>
                         )}
                       </tr>
@@ -642,54 +653,52 @@ export default function Home() {
                   })}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t border-[#2a2a2a] font-medium">
-                    <td className="py-3">Total</td>
-                    <td></td>
-                    <td className="py-3 text-right text-[#f59e0b]">${totalSpent}</td>
-                    <td className="py-3 text-right text-[#22c55e]">-</td>
-                    <td></td>
-                    <td></td>
-                    {isAdmin && <td></td>}
+                  <tr className="border-t border-[#1F1F23] font-medium text-[13px]">
+                    <td className="py-3.5 px-6 text-[#ADADB0]">Total</td>
+                    <td className="px-6"></td>
+                    <td className="py-3.5 px-6 text-right text-[#f59e0b] font-mono-data">${totalSpent}</td>
+                    <td className="py-3.5 px-6 text-right text-[#6B6B70]">-</td>
+                    <td className="px-6"></td>
+                    <td className="px-6"></td>
+                    {isAdmin && <td className="px-6"></td>}
                   </tr>
                 </tfoot>
               </table>
             </div>
 
             {/* Expanded tasks */}
-            <div className="mt-4 space-y-3">
+            <div className="px-6 pb-5 space-y-3">
               {airdrops.map(airdrop => (
-                <details key={airdrop.id} className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg">
-                  <summary className="p-3 cursor-pointer hover:bg-[#1a1a1a] flex items-center justify-between">
-                    <span>{airdrop.name} Tasks ({airdrop.tasks.filter(t => t.done).length}/{airdrop.tasks.length})</span>
+                <details key={airdrop.id} className="bg-[#0A0A0B] border border-[#1F1F23] rounded-lg">
+                  <summary className="px-4 py-3 cursor-pointer hover:bg-[#111113] text-[13px] text-[#ADADB0]">
+                    {airdrop.name} Tasks ({airdrop.tasks.filter(t => t.done).length}/{airdrop.tasks.length})
                   </summary>
-                  <div className="p-3 pt-0 space-y-2">
+                  <div className="px-4 pb-3 space-y-2">
                     {airdrop.tasks.map(task => (
                       <div
                         key={task.id}
-                        className="flex items-center justify-between text-sm group"
+                        className="flex items-center justify-between text-[13px] group"
                       >
                         <label
-                          className="flex items-center gap-2 cursor-pointer flex-1"
+                          className="flex items-center gap-2.5 cursor-pointer flex-1"
                           onClick={() => isAdmin && toggleAirdropTask(airdrop.id, task.id)}
                         >
-                          <input
-                            type="checkbox"
-                            checked={task.done}
-                            readOnly
-                            disabled={!isAdmin}
-                            className="w-4 h-4 rounded"
-                          />
-                          <span className={task.done ? 'text-gray-500 line-through' : 'text-gray-300'}>
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
+                            task.done ? 'border-[#22c55e] bg-[#22c55e]' : 'border-[#2A2A2E]'
+                          }`}>
+                            {task.done && <span className="text-white text-[10px]">&#10003;</span>}
+                          </div>
+                          <span className={task.done ? 'text-[#6B6B70] line-through' : 'text-[#ADADB0]'}>
                             {task.name}
                           </span>
                         </label>
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-500">${task.cost}</span>
+                          <span className="text-[#6B6B70] font-mono-data text-xs">${task.cost}</span>
                           {isAdmin && (
                             <button
                               onClick={() => deleteTask(airdrop.id, task.id)}
-                              className="text-red-400 hover:text-red-300 text-xs opacity-0 group-hover:opacity-100"
-                            >✕</button>
+                              className="text-[#ef4444] hover:text-red-300 text-xs opacity-0 group-hover:opacity-100"
+                            >&#10005;</button>
                           )}
                         </div>
                       </div>
@@ -697,7 +706,7 @@ export default function Home() {
                     {isAdmin && (
                       <button
                         onClick={() => openTaskModal(airdrop.id)}
-                        className="w-full mt-2 py-2 text-sm text-[#6366f1] hover:text-[#818cf8] border border-dashed border-[#2a2a2a] rounded-lg hover:border-[#6366f1]"
+                        className="w-full mt-2 py-2 text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C] border border-dashed border-[#1F1F23] rounded-lg hover:border-[#FF5C00] transition-colors"
                       >
                         + Add Task
                       </button>
@@ -711,24 +720,26 @@ export default function Home() {
           {/* Right Column */}
           <div className="space-y-6">
             {/* Calendar */}
-            <section className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-5">
+            <section className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <span className="text-xl">📅</span>
-                  <button onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1))} className="text-gray-400 hover:text-white">&lt;</button>
-                  <span>{selectedMonth.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })}</span>
-                  <button onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1))} className="text-gray-400 hover:text-white">&gt;</button>
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-semibold tracking-wide">Calendar</h2>
+                  <div className="flex items-center gap-1 ml-2">
+                    <button onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1))} className="text-[#6B6B70] hover:text-white text-xs px-1">&lt;</button>
+                    <span className="text-xs text-[#ADADB0] font-mono-data">{selectedMonth.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })}</span>
+                    <button onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1))} className="text-[#6B6B70] hover:text-white text-xs px-1">&gt;</button>
+                  </div>
+                </div>
                 {isAdmin && (
                   <button
                     onClick={() => setShowEventModal(true)}
-                    className="text-sm text-[#6366f1] hover:text-[#818cf8]"
+                    className="text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C]"
                   >+ Add</button>
                 )}
               </div>
-              <div className="grid grid-cols-7 gap-1 text-center text-xs">
-                {['일', '월', '화', '수', '목', '금', '토'].map(day => (
-                  <div key={day} className="text-gray-500 py-1">{day}</div>
+              <div className="grid grid-cols-7 gap-1 text-center text-[11px]">
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                  <div key={`${day}-${i}`} className="text-[#6B6B70] py-1 font-medium">{day}</div>
                 ))}
                 {Array.from({ length: firstDay }).map((_, i) => (
                   <div key={`empty-${i}`} />
@@ -742,8 +753,8 @@ export default function Home() {
                   return (
                     <div
                       key={day}
-                      className={`py-1 rounded cursor-pointer hover:bg-[#2a2a2a] relative ${
-                        isToday ? 'bg-[#6366f1] text-white font-bold' : ''
+                      className={`py-1.5 rounded-md cursor-pointer hover:bg-[#1A1A1D] relative text-[#ADADB0] ${
+                        isToday ? 'bg-[#FF5C00] !text-white font-bold' : ''
                       }`}
                     >
                       {day}
@@ -753,10 +764,10 @@ export default function Home() {
                             <div
                               key={e.id}
                               className={`w-1 h-1 rounded-full ${
-                                e.type === 'snapshot' ? 'bg-yellow-400' :
-                                e.type === 'tge' ? 'bg-green-400' :
-                                e.type === 'airdrop' ? 'bg-purple-400' :
-                                'bg-gray-400'
+                                e.type === 'snapshot' ? 'bg-[#f59e0b]' :
+                                e.type === 'tge' ? 'bg-[#22c55e]' :
+                                e.type === 'airdrop' ? 'bg-[#FF5C00]' :
+                                'bg-[#6B6B70]'
                               }`}
                             />
                           ))}
@@ -768,30 +779,30 @@ export default function Home() {
               </div>
 
               {/* Upcoming events */}
-              <div className="mt-4 space-y-2">
-                <p className="text-xs text-gray-500">Upcoming Events</p>
+              <div className="mt-4 pt-4 border-t border-[#1F1F23] space-y-1.5">
+                <p className="text-[11px] text-[#6B6B70] font-semibold tracking-wider uppercase mb-2">Upcoming</p>
                 {events.slice(0, 5).map(event => (
                   <div
                     key={event.id}
-                    className="flex items-center justify-between text-sm bg-[#0f0f0f] p-2 rounded cursor-pointer hover:bg-[#1a1a1a]"
+                    className="flex items-center justify-between text-[13px] bg-[#0A0A0B] px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1A1A1D] transition-colors"
                     onClick={() => openEventDetail(event)}
                   >
                     <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${
-                        event.type === 'snapshot' ? 'bg-yellow-400' :
-                        event.type === 'tge' ? 'bg-green-400' :
-                        event.type === 'airdrop' ? 'bg-purple-400' :
-                        'bg-gray-400'
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        event.type === 'snapshot' ? 'bg-[#f59e0b]' :
+                        event.type === 'tge' ? 'bg-[#22c55e]' :
+                        event.type === 'airdrop' ? 'bg-[#FF5C00]' :
+                        'bg-[#6B6B70]'
                       }`} />
-                      <span>{event.title}</span>
+                      <span className="text-[#ADADB0]">{event.title}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-500">{event.date}</span>
+                      <span className="text-[#6B6B70] font-mono-data text-[11px]">{event.date}</span>
                       {isAdmin && (
                         <button
                           onClick={(e) => { e.stopPropagation(); deleteEvent(event.id); }}
-                          className="text-red-400 hover:text-red-300 text-xs"
-                        >✕</button>
+                          className="text-[#ef4444] hover:text-red-300 text-xs"
+                        >&#10005;</button>
                       )}
                     </div>
                   </div>
@@ -800,44 +811,42 @@ export default function Home() {
             </section>
 
             {/* Today's Todo */}
-            <section className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-5">
+            <section className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <span className="text-xl">✅</span> Today
-                </h2>
+                <h2 className="text-sm font-semibold tracking-wide">Todo</h2>
                 {isAdmin && (
                   <button
                     onClick={() => setShowTodoModal(true)}
-                    className="text-sm text-[#6366f1] hover:text-[#818cf8]"
+                    className="text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C]"
                   >+ Add</button>
                 )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {todos.map(todo => (
                   <div
                     key={todo.id}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-[#0f0f0f] group"
+                    className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-[#0A0A0B] group transition-colors"
                   >
                     <label
                       className="flex items-center gap-3 cursor-pointer flex-1"
                       onClick={() => isAdmin && toggleTodo(todo.id)}
                     >
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                        todo.done ? 'border-[#22c55e] bg-[#22c55e]' : 'border-[#2a2a2a] group-hover:border-[#6366f1]'
+                      <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors ${
+                        todo.done ? 'border-[#22c55e] bg-[#22c55e]' : 'border-[#2A2A2E] group-hover:border-[#FF5C00]'
                       }`}>
-                        {todo.done && <span className="text-white text-xs">✓</span>}
+                        {todo.done && <span className="text-white text-[10px]">&#10003;</span>}
                       </div>
-                      <span className={todo.done ? 'text-gray-500 line-through' : 'text-gray-300'}>
+                      <span className={`text-[13px] ${todo.done ? 'text-[#6B6B70] line-through' : 'text-[#ADADB0]'}`}>
                         {todo.text}
                       </span>
                     </label>
                     {isAdmin && (
-                      <button onClick={() => deleteTodo(todo.id)} className="text-red-400 hover:text-red-300 text-xs opacity-0 group-hover:opacity-100">✕</button>
+                      <button onClick={() => deleteTodo(todo.id)} className="text-[#ef4444] hover:text-red-300 text-xs opacity-0 group-hover:opacity-100">&#10005;</button>
                     )}
                   </div>
                 ))}
                 {todos.length === 0 && (
-                  <p className="text-gray-500 text-sm text-center py-4">No todos yet</p>
+                  <p className="text-[#6B6B70] text-[13px] text-center py-6">No todos yet</p>
                 )}
               </div>
             </section>
@@ -845,15 +854,13 @@ export default function Home() {
         </div>
 
         {/* Research Section */}
-        <section className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <span className="text-xl">🔍</span> Coin Research
-            </h2>
+        <section className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-sm font-semibold tracking-wide">Coin Research</h2>
             {isAdmin && (
               <button
                 onClick={() => setShowResearchModal(true)}
-                className="text-sm text-[#6366f1] hover:text-[#818cf8]"
+                className="text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C]"
               >+ Add</button>
             )}
           </div>
@@ -861,76 +868,78 @@ export default function Home() {
             {research.map(item => (
               <div
                 key={item.id}
-                className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg p-4 relative group cursor-pointer hover:border-[#6366f1] transition-colors"
+                className="bg-[#0A0A0B] border border-[#1F1F23] rounded-xl p-5 relative group cursor-pointer hover:border-[#FF5C00] transition-colors"
                 onClick={() => openResearchDetail(item)}
               >
                 {isAdmin && (
                   <button
                     onClick={(e) => { e.stopPropagation(); deleteResearch(item.id); }}
-                    className="absolute top-2 right-2 text-red-400 hover:text-red-300 text-xs opacity-0 group-hover:opacity-100"
-                  >✕</button>
+                    className="absolute top-3 right-3 text-[#ef4444] hover:text-red-300 text-xs opacity-0 group-hover:opacity-100"
+                  >&#10005;</button>
                 )}
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-lg">{item.coin}</span>
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    item.sentiment === 'bullish' ? 'bg-green-500/20 text-green-400' :
-                    item.sentiment === 'bearish' ? 'bg-red-500/20 text-red-400' :
-                    'bg-gray-500/20 text-gray-400'
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-bold text-base font-mono-data tracking-tight">{item.coin}</span>
+                  <span className={`text-[10px] font-medium px-2.5 py-1 rounded-full ${
+                    item.sentiment === 'bullish' ? 'bg-[#22c55e]/10 text-[#22c55e]' :
+                    item.sentiment === 'bearish' ? 'bg-[#ef4444]/10 text-[#ef4444]' :
+                    'bg-[#FF5C00]/10 text-[#FF5C00]'
                   }`}>
-                    {item.sentiment === 'bullish' ? '🐂 Bullish' :
-                     item.sentiment === 'bearish' ? '🐻 Bearish' : '😐 Neutral'}
+                    {item.sentiment === 'bullish' ? 'Bullish' :
+                     item.sentiment === 'bearish' ? 'Bearish' : 'Neutral'}
                   </span>
                 </div>
-                <p className="text-sm text-gray-400 line-clamp-2">{item.notes}</p>
-                <p className="text-xs text-gray-600 mt-2">{item.date}</p>
+                <p className="text-[13px] text-[#ADADB0] line-clamp-2 leading-relaxed">{item.notes}</p>
+                <p className="text-[11px] text-[#6B6B70] mt-3 font-mono-data">{item.date}</p>
                 {item.notes && item.notes.length > 80 && (
-                  <p className="text-xs text-[#6366f1] mt-1">더 보기...</p>
+                  <p className="text-[11px] text-[#FF5C00] mt-1.5 font-medium">Read more...</p>
                 )}
               </div>
             ))}
             {research.length === 0 && (
-              <p className="text-gray-500 text-sm col-span-3 text-center py-4">No research notes yet</p>
+              <p className="text-[#6B6B70] text-[13px] col-span-3 text-center py-8">No research notes yet</p>
             )}
           </div>
         </section>
 
         {/* Ad Banner */}
-        <section className="bg-gradient-to-r from-[#1a1a1a] to-[#2a2a2a] border border-[#2a2a2a] rounded-xl p-6 text-center">
-          <p className="text-gray-400 text-sm">📢 Ad Space</p>
-          <p className="text-xs text-gray-600 mt-1">Google AdSense or Sponsor Banner</p>
+        <section className="bg-[#111113] border border-[#1F1F23] border-dashed rounded-xl p-8 text-center">
+          <p className="text-[#6B6B70] text-[13px]">Ad Space</p>
+          <p className="text-[11px] text-[#4A4A4E] mt-1">Google AdSense or Sponsor Banner</p>
         </section>
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-[#2a2a2a] mt-10">
-        <div className="max-w-7xl mx-auto px-4 py-6 text-center text-gray-500 text-sm">
-          <p>Built with Claude Code | shud26</p>
+      <footer className="border-t border-[#1F1F23] mt-10">
+        <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-center gap-2 text-[#6B6B70] text-[11px] font-mono-data tracking-wide">
+          <span>Built with Claude Code</span>
+          <span className="w-1 h-1 rounded-full bg-[#2A2A2E]"></span>
+          <span>shud26</span>
         </div>
       </footer>
 
       {/* PIN Modal */}
       {showPinModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 w-80">
-            <h3 className="text-lg font-semibold mb-4">Admin Login</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6 w-80">
+            <h3 className="text-sm font-semibold mb-4 tracking-wide">Admin Login</h3>
             <input
               type="password"
               placeholder="Enter PIN"
               value={pinInput}
               onChange={(e) => setPinInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handlePinSubmit()}
-              className={`w-full bg-[#0f0f0f] border ${pinError ? 'border-red-500' : 'border-[#2a2a2a]'} rounded-lg px-4 py-2 mb-4`}
+              className={`w-full bg-[#0A0A0B] border ${pinError ? 'border-[#ef4444]' : 'border-[#1F1F23]'} rounded-lg px-4 py-2.5 mb-4 text-[13px] font-mono-data placeholder:text-[#4A4A4E] focus:outline-none focus:border-[#FF5C00] transition-colors`}
               autoFocus
             />
-            {pinError && <p className="text-red-400 text-sm mb-4">Wrong PIN</p>}
+            {pinError && <p className="text-[#ef4444] text-[13px] mb-4">Wrong PIN</p>}
             <div className="flex gap-2">
               <button
                 onClick={() => { setShowPinModal(false); setPinInput(''); setPinError(false); }}
-                className="flex-1 py-2 bg-[#2a2a2a] rounded-lg hover:bg-[#3a3a3a]"
+                className="flex-1 py-2.5 bg-[#1A1A1D] rounded-lg hover:bg-[#2A2A2E] text-[13px] font-medium text-[#ADADB0] transition-colors"
               >Cancel</button>
               <button
                 onClick={handlePinSubmit}
-                className="flex-1 py-2 bg-[#6366f1] rounded-lg hover:bg-[#818cf8]"
+                className="flex-1 py-2.5 bg-[#FF5C00] rounded-lg hover:bg-[#FF8A4C] text-[13px] font-medium transition-colors"
               >Login</button>
             </div>
           </div>
@@ -939,26 +948,26 @@ export default function Home() {
 
       {/* Add Todo Modal */}
       {showTodoModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">Add Todo</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6 w-96">
+            <h3 className="text-sm font-semibold mb-4 tracking-wide">Add Todo</h3>
             <input
               type="text"
               placeholder="What to do?"
               value={newTodo.text}
               onChange={(e) => setNewTodo({ ...newTodo, text: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-3"
+              className="w-full bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-4 py-2.5 mb-3 text-[13px] placeholder:text-[#4A4A4E] focus:outline-none focus:border-[#FF5C00] transition-colors"
               autoFocus
             />
             <input
               type="date"
               value={newTodo.date}
               onChange={(e) => setNewTodo({ ...newTodo, date: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-4"
+              className="w-full bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-4 py-2.5 mb-4 text-[13px] focus:outline-none focus:border-[#FF5C00] transition-colors"
             />
             <div className="flex gap-2">
-              <button onClick={() => setShowTodoModal(false)} className="flex-1 py-2 bg-[#2a2a2a] rounded-lg hover:bg-[#3a3a3a]">Cancel</button>
-              <button onClick={addTodo} className="flex-1 py-2 bg-[#6366f1] rounded-lg hover:bg-[#818cf8]">Add</button>
+              <button onClick={() => setShowTodoModal(false)} className="flex-1 py-2.5 bg-[#1A1A1D] rounded-lg hover:bg-[#2A2A2E] text-[13px] font-medium text-[#ADADB0] transition-colors">Cancel</button>
+              <button onClick={addTodo} className="flex-1 py-2.5 bg-[#FF5C00] rounded-lg hover:bg-[#FF8A4C] text-[13px] font-medium transition-colors">Add</button>
             </div>
           </div>
         </div>
@@ -966,15 +975,15 @@ export default function Home() {
 
       {/* Add Airdrop Modal */}
       {showAirdropModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">Add Airdrop</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6 w-96">
+            <h3 className="text-sm font-semibold mb-4 tracking-wide">Add Airdrop</h3>
             <input
               type="text"
               placeholder="Project name"
               value={newAirdrop.name}
               onChange={(e) => setNewAirdrop({ ...newAirdrop, name: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-3"
+              className="w-full bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-4 py-2.5 mb-3 text-[13px] placeholder:text-[#4A4A4E] focus:outline-none focus:border-[#FF5C00] transition-colors"
               autoFocus
             />
             <input
@@ -982,24 +991,24 @@ export default function Home() {
               placeholder="Chain (e.g. Ethereum, Arbitrum)"
               value={newAirdrop.chain}
               onChange={(e) => setNewAirdrop({ ...newAirdrop, chain: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-3"
+              className="w-full bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-4 py-2.5 mb-3 text-[13px] placeholder:text-[#4A4A4E] focus:outline-none focus:border-[#FF5C00] transition-colors"
             />
             <input
               type="date"
               value={newAirdrop.deadline}
               onChange={(e) => setNewAirdrop({ ...newAirdrop, deadline: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-3"
+              className="w-full bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-4 py-2.5 mb-3 text-[13px] focus:outline-none focus:border-[#FF5C00] transition-colors"
             />
             <input
               type="text"
               placeholder="Expected value (e.g. $500~2000)"
               value={newAirdrop.expected_value}
               onChange={(e) => setNewAirdrop({ ...newAirdrop, expected_value: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-4"
+              className="w-full bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-4 py-2.5 mb-4 text-[13px] placeholder:text-[#4A4A4E] focus:outline-none focus:border-[#FF5C00] transition-colors"
             />
             <div className="flex gap-2">
-              <button onClick={() => setShowAirdropModal(false)} className="flex-1 py-2 bg-[#2a2a2a] rounded-lg hover:bg-[#3a3a3a]">Cancel</button>
-              <button onClick={addAirdrop} className="flex-1 py-2 bg-[#6366f1] rounded-lg hover:bg-[#818cf8]">Add</button>
+              <button onClick={() => setShowAirdropModal(false)} className="flex-1 py-2.5 bg-[#1A1A1D] rounded-lg hover:bg-[#2A2A2E] text-[13px] font-medium text-[#ADADB0] transition-colors">Cancel</button>
+              <button onClick={addAirdrop} className="flex-1 py-2.5 bg-[#FF5C00] rounded-lg hover:bg-[#FF8A4C] text-[13px] font-medium transition-colors">Add</button>
             </div>
           </div>
         </div>
@@ -1007,27 +1016,27 @@ export default function Home() {
 
       {/* Add Event Modal */}
       {showEventModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">Add Calendar Event</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6 w-96">
+            <h3 className="text-sm font-semibold mb-4 tracking-wide">Add Event</h3>
             <input
               type="text"
               placeholder="Event title"
               value={newEvent.title}
               onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-3"
+              className="w-full bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-4 py-2.5 mb-3 text-[13px] placeholder:text-[#4A4A4E] focus:outline-none focus:border-[#FF5C00] transition-colors"
               autoFocus
             />
             <input
               type="date"
               value={newEvent.date}
               onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-3"
+              className="w-full bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-4 py-2.5 mb-3 text-[13px] focus:outline-none focus:border-[#FF5C00] transition-colors"
             />
             <select
               value={newEvent.type}
               onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-3"
+              className="w-full bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-4 py-2.5 mb-3 text-[13px] focus:outline-none focus:border-[#FF5C00] transition-colors"
             >
               <option value="airdrop">Airdrop</option>
               <option value="snapshot">Snapshot</option>
@@ -1038,11 +1047,11 @@ export default function Home() {
               placeholder="Memo (optional)"
               value={newEvent.memo}
               onChange={(e) => setNewEvent({ ...newEvent, memo: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-4 h-24"
+              className="w-full bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-4 py-2.5 mb-4 h-24 text-[13px] placeholder:text-[#4A4A4E] focus:outline-none focus:border-[#FF5C00] transition-colors resize-none"
             />
             <div className="flex gap-2">
-              <button onClick={() => setShowEventModal(false)} className="flex-1 py-2 bg-[#2a2a2a] rounded-lg hover:bg-[#3a3a3a]">Cancel</button>
-              <button onClick={addEvent} className="flex-1 py-2 bg-[#6366f1] rounded-lg hover:bg-[#818cf8]">Add</button>
+              <button onClick={() => setShowEventModal(false)} className="flex-1 py-2.5 bg-[#1A1A1D] rounded-lg hover:bg-[#2A2A2E] text-[13px] font-medium text-[#ADADB0] transition-colors">Cancel</button>
+              <button onClick={addEvent} className="flex-1 py-2.5 bg-[#FF5C00] rounded-lg hover:bg-[#FF8A4C] text-[13px] font-medium transition-colors">Add</button>
             </div>
           </div>
         </div>
@@ -1050,29 +1059,29 @@ export default function Home() {
 
       {/* Event Detail Modal */}
       {showEventDetailModal && selectedEvent && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowEventDetailModal(false)}>
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 w-96" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowEventDetailModal(false)}>
+          <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6 w-96" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className={`w-3 h-3 rounded-full ${
-                  selectedEvent.type === 'snapshot' ? 'bg-yellow-400' :
-                  selectedEvent.type === 'tge' ? 'bg-green-400' :
-                  selectedEvent.type === 'airdrop' ? 'bg-purple-400' :
-                  'bg-gray-400'
+              <div className="flex items-center gap-2.5">
+                <span className={`w-2.5 h-2.5 rounded-full ${
+                  selectedEvent.type === 'snapshot' ? 'bg-[#f59e0b]' :
+                  selectedEvent.type === 'tge' ? 'bg-[#22c55e]' :
+                  selectedEvent.type === 'airdrop' ? 'bg-[#FF5C00]' :
+                  'bg-[#6B6B70]'
                 }`} />
-                <h3 className="text-lg font-semibold">{selectedEvent.title}</h3>
+                <h3 className="text-sm font-semibold">{selectedEvent.title}</h3>
               </div>
-              <span className="text-xs bg-[#2a2a2a] px-2 py-1 rounded">{selectedEvent.type.toUpperCase()}</span>
+              <span className="text-[10px] font-medium bg-[#1A1A1D] text-[#ADADB0] px-2.5 py-1 rounded-full tracking-wider">{selectedEvent.type.toUpperCase()}</span>
             </div>
-            <p className="text-gray-400 text-sm mb-3">{selectedEvent.date}</p>
+            <p className="text-[#6B6B70] text-[13px] font-mono-data mb-3">{selectedEvent.date}</p>
             {selectedEvent.memo && (
-              <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg p-3 mb-4">
-                <p className="text-sm whitespace-pre-wrap">{selectedEvent.memo}</p>
+              <div className="bg-[#0A0A0B] border border-[#1F1F23] rounded-lg p-4 mb-4">
+                <p className="text-[13px] text-[#ADADB0] whitespace-pre-wrap leading-relaxed">{selectedEvent.memo}</p>
               </div>
             )}
             <button
               onClick={() => setShowEventDetailModal(false)}
-              className="w-full py-2 bg-[#2a2a2a] rounded-lg hover:bg-[#3a3a3a]"
+              className="w-full py-2.5 bg-[#1A1A1D] rounded-lg hover:bg-[#2A2A2E] text-[13px] font-medium text-[#ADADB0] transition-colors"
             >Close</button>
           </div>
         </div>
@@ -1080,31 +1089,31 @@ export default function Home() {
 
       {/* Research Detail Modal - Full Screen */}
       {showResearchDetailModal && selectedResearch && (
-        <div className="fixed inset-0 bg-[#0f0f0f] z-50 overflow-y-auto">
+        <div className="fixed inset-0 bg-[#0A0A0B] z-50 overflow-y-auto">
           <div className="min-h-screen p-8 md:p-12 lg:p-16">
             {/* Header */}
-            <div className="flex items-center justify-between mb-8 sticky top-0 bg-[#0f0f0f] py-4 z-10">
+            <div className="flex items-center justify-between mb-10 sticky top-0 bg-[#0A0A0B] py-4 z-10 border-b border-[#1F1F23]">
               <div className="flex items-center gap-4">
-                <span className="font-bold text-2xl md:text-4xl">{selectedResearch.coin}</span>
-                <span className={`text-sm px-3 py-1 rounded ${
-                  selectedResearch.sentiment === 'bullish' ? 'bg-green-500/20 text-green-400' :
-                  selectedResearch.sentiment === 'bearish' ? 'bg-red-500/20 text-red-400' :
-                  'bg-gray-500/20 text-gray-400'
+                <span className="font-bold text-2xl md:text-4xl font-mono-data tracking-tight">{selectedResearch.coin}</span>
+                <span className={`text-[10px] font-medium px-3 py-1 rounded-full ${
+                  selectedResearch.sentiment === 'bullish' ? 'bg-[#22c55e]/10 text-[#22c55e]' :
+                  selectedResearch.sentiment === 'bearish' ? 'bg-[#ef4444]/10 text-[#ef4444]' :
+                  'bg-[#FF5C00]/10 text-[#FF5C00]'
                 }`}>
-                  {selectedResearch.sentiment === 'bullish' ? '🐂 Bullish' :
-                   selectedResearch.sentiment === 'bearish' ? '🐻 Bearish' : '😐 Neutral'}
+                  {selectedResearch.sentiment === 'bullish' ? 'Bullish' :
+                   selectedResearch.sentiment === 'bearish' ? 'Bearish' : 'Neutral'}
                 </span>
-                <span className="text-gray-500 text-sm">{selectedResearch.date}</span>
+                <span className="text-[#6B6B70] text-[11px] font-mono-data">{selectedResearch.date}</span>
               </div>
               <button
                 onClick={() => setShowResearchDetailModal(false)}
-                className="px-5 py-2.5 bg-[#2a2a2a] rounded-lg hover:bg-[#3a3a3a] text-sm font-medium"
-              >← 돌아가기</button>
+                className="px-5 py-2.5 bg-[#1F1F23] rounded-lg hover:bg-[#2A2A2E] text-[13px] font-medium text-[#ADADB0] transition-colors"
+              >&#8592; Back</button>
             </div>
 
-            {/* Content - Clean & Large */}
+            {/* Content */}
             <article className="max-w-3xl">
-              <div className="text-gray-100 text-lg md:text-xl leading-relaxed break-words" style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
+              <div className="text-[#e5e5e5] text-lg md:text-xl leading-relaxed break-words" style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
                 {selectedResearch.notes}
               </div>
             </article>
@@ -1114,35 +1123,34 @@ export default function Home() {
 
       {/* Add Task Modal */}
       {showTaskModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">
-              Add Task to {airdrops.find(a => a.id === selectedAirdropId)?.name}
-            </h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6 w-96">
+            <h3 className="text-sm font-semibold mb-1 tracking-wide">Add Task</h3>
+            <p className="text-[11px] text-[#6B6B70] mb-4">{airdrops.find(a => a.id === selectedAirdropId)?.name}</p>
             <input
               type="text"
               placeholder="Task name"
               value={newTask.name}
               onChange={(e) => setNewTask({ ...newTask, name: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-3"
+              className="w-full bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-4 py-2.5 mb-3 text-[13px] placeholder:text-[#4A4A4E] focus:outline-none focus:border-[#FF5C00] transition-colors"
               autoFocus
             />
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-gray-400">$</span>
+              <span className="text-[#6B6B70] font-mono-data text-sm">$</span>
               <input
                 type="number"
                 placeholder="Cost"
                 value={newTask.cost || ''}
                 onChange={(e) => setNewTask({ ...newTask, cost: parseFloat(e.target.value) || 0 })}
-                className="flex-1 bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2"
+                className="flex-1 bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-4 py-2.5 text-[13px] font-mono-data placeholder:text-[#4A4A4E] focus:outline-none focus:border-[#FF5C00] transition-colors"
               />
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => { setShowTaskModal(false); setSelectedAirdropId(null); setNewTask({ name: '', cost: 0 }); }}
-                className="flex-1 py-2 bg-[#2a2a2a] rounded-lg hover:bg-[#3a3a3a]"
+                className="flex-1 py-2.5 bg-[#1A1A1D] rounded-lg hover:bg-[#2A2A2E] text-[13px] font-medium text-[#ADADB0] transition-colors"
               >Cancel</button>
-              <button onClick={addTask} className="flex-1 py-2 bg-[#6366f1] rounded-lg hover:bg-[#818cf8]">Add</button>
+              <button onClick={addTask} className="flex-1 py-2.5 bg-[#FF5C00] rounded-lg hover:bg-[#FF8A4C] text-[13px] font-medium transition-colors">Add</button>
             </div>
           </div>
         </div>
@@ -1150,35 +1158,35 @@ export default function Home() {
 
       {/* Add Research Modal */}
       {showResearchModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">Add Research</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6 w-96">
+            <h3 className="text-sm font-semibold mb-4 tracking-wide">Add Research</h3>
             <input
               type="text"
               placeholder="Coin (e.g. ETH, BTC)"
               value={newResearch.coin}
               onChange={(e) => setNewResearch({ ...newResearch, coin: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-3"
+              className="w-full bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-4 py-2.5 mb-3 text-[13px] placeholder:text-[#4A4A4E] focus:outline-none focus:border-[#FF5C00] transition-colors"
               autoFocus
             />
             <textarea
               placeholder="Notes"
               value={newResearch.notes}
               onChange={(e) => setNewResearch({ ...newResearch, notes: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-3 h-24"
+              className="w-full bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-4 py-2.5 mb-3 h-24 text-[13px] placeholder:text-[#4A4A4E] focus:outline-none focus:border-[#FF5C00] transition-colors resize-none"
             />
             <select
               value={newResearch.sentiment}
               onChange={(e) => setNewResearch({ ...newResearch, sentiment: e.target.value })}
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-2 mb-4"
+              className="w-full bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-4 py-2.5 mb-4 text-[13px] focus:outline-none focus:border-[#FF5C00] transition-colors"
             >
-              <option value="bullish">🐂 Bullish</option>
-              <option value="neutral">😐 Neutral</option>
-              <option value="bearish">🐻 Bearish</option>
+              <option value="bullish">Bullish</option>
+              <option value="neutral">Neutral</option>
+              <option value="bearish">Bearish</option>
             </select>
             <div className="flex gap-2">
-              <button onClick={() => setShowResearchModal(false)} className="flex-1 py-2 bg-[#2a2a2a] rounded-lg hover:bg-[#3a3a3a]">Cancel</button>
-              <button onClick={addResearch} className="flex-1 py-2 bg-[#6366f1] rounded-lg hover:bg-[#818cf8]">Add</button>
+              <button onClick={() => setShowResearchModal(false)} className="flex-1 py-2.5 bg-[#1A1A1D] rounded-lg hover:bg-[#2A2A2E] text-[13px] font-medium text-[#ADADB0] transition-colors">Cancel</button>
+              <button onClick={addResearch} className="flex-1 py-2.5 bg-[#FF5C00] rounded-lg hover:bg-[#FF8A4C] text-[13px] font-medium transition-colors">Add</button>
             </div>
           </div>
         </div>
