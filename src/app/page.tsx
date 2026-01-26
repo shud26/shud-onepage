@@ -537,11 +537,11 @@ export default function Home() {
 
           {/* ===== HERO SECTION ===== */}
           <section className="text-center py-12 md:py-20">
-            <h1 className="font-display text-4xl md:text-6xl text-white tracking-tight leading-tight">
-              실시간 크립토 도구
+            <h1 className="font-display text-5xl md:text-7xl text-white tracking-tight leading-tight">
+              SHUD Crypto
             </h1>
             <p className="text-[#8B8B90] text-base md:text-lg mt-4 max-w-xl mx-auto">
-              김치 프리미엄 &middot; 고래 지갑 추적 &middot; 시세 모니터링
+              김프 &middot; 고래 추적 &middot; 실시간 시세
             </p>
 
             {/* 3 Feature Cards */}
