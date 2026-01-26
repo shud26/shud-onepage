@@ -512,7 +512,8 @@ export default function Home() {
             <a href="#prices" className="hover:text-white transition-colors">시세</a>
             <a href="#kimchi" className="hover:text-white transition-colors">김프</a>
             <a href="#whale" className="hover:text-white transition-colors">고래</a>
-            <a href="#dashboard" className="hover:text-white transition-colors">대시보드</a>
+            <a href="#airdrops" className="hover:text-white transition-colors">에어드랍</a>
+            <a href="#research" className="hover:text-white transition-colors">리서치</a>
           </div>
           <div className="flex items-center gap-3">
             {isAdmin && (
@@ -711,14 +712,210 @@ export default function Home() {
             )}
           </section>
 
-          {/* ===== PERSONAL DASHBOARD (PIN GATED) ===== */}
+          {/* ===== AIRDROP TRACKER (PUBLIC) ===== */}
+          <section id="airdrops" className="bg-[#111113] border border-[#1F1F23] rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-5">
+              <h2 className="text-lg font-semibold">에어드랍 트래커</h2>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] text-[#6B6B70] font-mono-data">{airdrops.filter(a => a.status === 'active').length} Active &middot; ${totalSpent} Spent</span>
+                {isAdmin && (
+                  <button
+                    onClick={() => setShowAirdropModal(true)}
+                    className="text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C]"
+                  >+ Add</button>
+                )}
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-[#6B6B70] border-b border-[#1F1F23] bg-[#0D0D0E] text-[11px] font-semibold tracking-wider uppercase">
+                    <th className="text-left py-3.5 px-6">프로젝트</th>
+                    <th className="text-left py-3.5 px-6">체인</th>
+                    <th className="text-right py-3.5 px-6">비용</th>
+                    <th className="text-right py-3.5 px-6">예상 수익</th>
+                    <th className="text-center py-3.5 px-6">진행률</th>
+                    <th className="text-center py-3.5 px-6">D-Day</th>
+                    {isAdmin && <th className="text-center py-3.5 px-6">삭제</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {airdrops.map(airdrop => {
+                    const progress = getProgressPercent(airdrop.tasks);
+                    const daysLeft = getDaysLeft(airdrop.deadline);
+                    return (
+                      <tr key={airdrop.id} className="border-b border-[#1F1F23]/50 hover:bg-[#0A0A0B] text-[13px]">
+                        <td className="py-3.5 px-6 font-medium text-white">{airdrop.name}</td>
+                        <td className="py-3.5 px-6 text-[#ADADB0]">{airdrop.chain}</td>
+                        <td className="py-3.5 px-6 text-right text-[#f59e0b] font-mono-data">${airdrop.total_cost || 0}</td>
+                        <td className="py-3.5 px-6 text-right text-[#22c55e] font-mono-data">{airdrop.expected_value}</td>
+                        <td className="py-3.5 px-6">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1.5 bg-[#1F1F23] rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-[#FF5C00] to-[#FF8A4C] rounded-full"
+                                style={{ width: `${progress}%` }}
+                              />
+                            </div>
+                            <span className="text-[11px] text-[#6B6B70] font-mono-data">{progress}%</span>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-6 text-center">
+                          {airdrop.deadline ? (
+                            <span className={`text-[10px] font-medium px-2.5 py-1 rounded-full ${
+                              daysLeft <= 7 ? 'bg-[#ef4444]/10 text-[#ef4444]' :
+                              daysLeft <= 30 ? 'bg-[#f59e0b]/10 text-[#f59e0b]' :
+                              'bg-[#22c55e]/10 text-[#22c55e]'
+                            }`}>
+                              D-{daysLeft}
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-[#6B6B70]">-</span>
+                          )}
+                        </td>
+                        {isAdmin && (
+                          <td className="py-3.5 px-6 text-center">
+                            <button
+                              onClick={() => deleteAirdrop(airdrop.id)}
+                              className="text-[#ef4444] hover:text-red-300 text-xs"
+                            >&#10005;</button>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t border-[#1F1F23] font-medium text-[13px]">
+                    <td className="py-3.5 px-6 text-[#ADADB0]">Total</td>
+                    <td className="px-6"></td>
+                    <td className="py-3.5 px-6 text-right text-[#f59e0b] font-mono-data">${totalSpent}</td>
+                    <td className="py-3.5 px-6 text-right text-[#6B6B70]">-</td>
+                    <td className="px-6"></td>
+                    <td className="px-6"></td>
+                    {isAdmin && <td className="px-6"></td>}
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            {/* Expanded tasks */}
+            <div className="px-6 pb-5 space-y-3">
+              {airdrops.map(airdrop => (
+                <details key={airdrop.id} className="bg-[#0A0A0B] border border-[#1F1F23] rounded-lg">
+                  <summary className="px-4 py-3 cursor-pointer hover:bg-[#111113] text-[13px] text-[#ADADB0]">
+                    {airdrop.name} Tasks ({airdrop.tasks.filter(t => t.done).length}/{airdrop.tasks.length})
+                  </summary>
+                  <div className="px-4 pb-3 space-y-2">
+                    {airdrop.tasks.map(task => (
+                      <div
+                        key={task.id}
+                        className="flex items-center justify-between text-[13px] group"
+                      >
+                        <label
+                          className="flex items-center gap-2.5 cursor-pointer flex-1"
+                          onClick={() => isAdmin ? toggleAirdropTask(airdrop.id, task.id) : undefined}
+                        >
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
+                            task.done ? 'border-[#22c55e] bg-[#22c55e]' : 'border-[#2A2A2E]'
+                          }`}>
+                            {task.done && <span className="text-white text-[10px]">&#10003;</span>}
+                          </div>
+                          <span className={task.done ? 'text-[#6B6B70] line-through' : 'text-[#ADADB0]'}>
+                            {task.name}
+                          </span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#6B6B70] font-mono-data text-xs">${task.cost}</span>
+                          {isAdmin && (
+                            <button
+                              onClick={() => deleteTask(airdrop.id, task.id)}
+                              className="text-[#ef4444] hover:text-red-300 text-xs opacity-0 group-hover:opacity-100"
+                            >&#10005;</button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {isAdmin && (
+                      <button
+                        onClick={() => openTaskModal(airdrop.id)}
+                        className="w-full mt-2 py-2 text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C] border border-dashed border-[#1F1F23] rounded-lg hover:border-[#FF5C00] transition-colors"
+                      >
+                        + Add Task
+                      </button>
+                    )}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </section>
+
+          {/* Ad Slot 1 */}
+          <div className="min-h-[90px] flex items-center justify-center">
+            <ins className="adsbygoogle" style={{ display: 'block' }} data-ad-format="auto" data-full-width-responsive="true"></ins>
+          </div>
+
+          {/* ===== COIN RESEARCH (PUBLIC) ===== */}
+          <section id="research" className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-semibold">코인 리서치</h2>
+              {isAdmin && (
+                <button
+                  onClick={() => setShowResearchModal(true)}
+                  className="text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C]"
+                >+ Add</button>
+              )}
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              {research.map(item => (
+                <div
+                  key={item.id}
+                  className="bg-[#0A0A0B] border border-[#1F1F23] rounded-xl p-5 relative group cursor-pointer hover:border-[#FF5C00] transition-colors"
+                  onClick={() => openResearchDetail(item)}
+                >
+                  {isAdmin && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteResearch(item.id); }}
+                      className="absolute top-3 right-3 text-[#ef4444] hover:text-red-300 text-xs opacity-0 group-hover:opacity-100"
+                    >&#10005;</button>
+                  )}
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-bold text-base font-mono-data tracking-tight">{item.coin}</span>
+                    <span className={`text-[10px] font-medium px-2.5 py-1 rounded-full ${
+                      item.sentiment === 'bullish' ? 'bg-[#22c55e]/10 text-[#22c55e]' :
+                      item.sentiment === 'bearish' ? 'bg-[#ef4444]/10 text-[#ef4444]' :
+                      'bg-[#FF5C00]/10 text-[#FF5C00]'
+                    }`}>
+                      {item.sentiment === 'bullish' ? 'Bullish' :
+                       item.sentiment === 'bearish' ? 'Bearish' : 'Neutral'}
+                    </span>
+                  </div>
+                  <p className="text-[13px] text-[#ADADB0] line-clamp-2 leading-relaxed">{item.notes}</p>
+                  <p className="text-[11px] text-[#6B6B70] mt-3 font-mono-data">{item.date}</p>
+                  {item.notes && item.notes.length > 80 && (
+                    <p className="text-[11px] text-[#FF5C00] mt-1.5 font-medium">더 보기...</p>
+                  )}
+                </div>
+              ))}
+              {research.length === 0 && (
+                <p className="text-[#6B6B70] text-[13px] col-span-3 text-center py-8">리서치 노트가 없습니다</p>
+              )}
+            </div>
+          </section>
+
+          {/* Ad Slot 2 */}
+          <div className="min-h-[90px] flex items-center justify-center">
+            <ins className="adsbygoogle" style={{ display: 'block' }} data-ad-format="auto" data-full-width-responsive="true"></ins>
+          </div>
+
+          {/* ===== PERSONAL DASHBOARD (PIN GATED - Calendar & Todo) ===== */}
           <section id="dashboard">
             {!isAdmin ? (
-              /* PIN Gate Card */
               <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-8 text-center">
                 <div className="text-3xl mb-4">&#x1F512;</div>
                 <h2 className="text-lg font-semibold text-white mb-2">개인 대시보드</h2>
-                <p className="text-[13px] text-[#6B6B70] mb-6">에어드랍 트래커, 캘린더, 할 일, 리서치 노트</p>
+                <p className="text-[13px] text-[#6B6B70] mb-6">캘린더, 할 일 관리</p>
                 <div className="max-w-xs mx-auto">
                   <input
                     type="password"
@@ -738,342 +935,133 @@ export default function Home() {
                 </div>
               </div>
             ) : (
-              /* Admin Dashboard Content */
-              <div className="space-y-7">
-                {/* Stats Overview */}
-                <div>
-                  <h2 className="text-xl font-semibold text-white mb-4">개인 대시보드</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
-                      <p className="text-xs font-semibold text-[#6B6B70] tracking-wider uppercase">Active Airdrops</p>
-                      <p className="text-3xl font-medium text-white mt-3 font-mono-data tracking-tight">{airdrops.filter(a => a.status === 'active').length}</p>
-                    </div>
-                    <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
-                      <p className="text-xs font-semibold text-[#6B6B70] tracking-wider uppercase">Tasks Done</p>
-                      <p className="text-3xl font-medium text-[#22c55e] mt-3 font-mono-data tracking-tight">{completedTasks}/{totalTasks}</p>
-                    </div>
-                    <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
-                      <p className="text-xs font-semibold text-[#6B6B70] tracking-wider uppercase">Total Spent</p>
-                      <p className="text-3xl font-medium text-white mt-3 font-mono-data tracking-tight">${totalSpent}</p>
-                    </div>
-                    <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
-                      <p className="text-xs font-semibold text-[#6B6B70] tracking-wider uppercase">Kimchi Premium</p>
-                      <p className={`text-3xl font-medium mt-3 font-mono-data tracking-tight ${prices[0]?.kimchiPremium > 0 ? 'text-[#FF5C00]' : 'text-green-400'}`}>
-                        {prices[0]?.kimchiPremium > 0 ? '+' : ''}{prices[0]?.kimchiPremium?.toFixed(2) || '0.00'}%
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Main Grid */}
-                <div className="grid lg:grid-cols-3 gap-6">
-                  {/* Airdrop Tracker */}
-                  <section className="lg:col-span-2 bg-[#111113] border border-[#1F1F23] rounded-xl overflow-hidden">
-                    <div className="flex items-center justify-between px-6 py-5">
-                      <h3 className="text-sm font-semibold tracking-wide">Airdrop Tracker</h3>
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-white">개인 대시보드</h2>
+                <div className="grid lg:grid-cols-2 gap-6">
+                  {/* Calendar */}
+                  <section className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-semibold tracking-wide">Calendar</h3>
+                        <div className="flex items-center gap-1 ml-2">
+                          <button onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1))} className="text-[#6B6B70] hover:text-white text-xs px-1">&lt;</button>
+                          <span className="text-xs text-[#ADADB0] font-mono-data">{selectedMonth.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })}</span>
+                          <button onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1))} className="text-[#6B6B70] hover:text-white text-xs px-1">&gt;</button>
+                        </div>
+                      </div>
                       <button
-                        onClick={() => setShowAirdropModal(true)}
+                        onClick={() => setShowEventModal(true)}
                         className="text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C]"
                       >+ Add</button>
                     </div>
-
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="text-[#6B6B70] border-b border-[#1F1F23] bg-[#0D0D0E] text-[11px] font-semibold tracking-wider uppercase">
-                            <th className="text-left py-3.5 px-6">프로젝트</th>
-                            <th className="text-left py-3.5 px-6">체인</th>
-                            <th className="text-right py-3.5 px-6">비용</th>
-                            <th className="text-right py-3.5 px-6">예상 수익</th>
-                            <th className="text-center py-3.5 px-6">진행률</th>
-                            <th className="text-center py-3.5 px-6">D-Day</th>
-                            <th className="text-center py-3.5 px-6">삭제</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {airdrops.map(airdrop => {
-                            const progress = getProgressPercent(airdrop.tasks);
-                            const daysLeft = getDaysLeft(airdrop.deadline);
-                            return (
-                              <tr key={airdrop.id} className="border-b border-[#1F1F23]/50 hover:bg-[#0A0A0B] text-[13px]">
-                                <td className="py-3.5 px-6 font-medium text-white">{airdrop.name}</td>
-                                <td className="py-3.5 px-6 text-[#ADADB0]">{airdrop.chain}</td>
-                                <td className="py-3.5 px-6 text-right text-[#f59e0b] font-mono-data">${airdrop.total_cost || 0}</td>
-                                <td className="py-3.5 px-6 text-right text-[#22c55e] font-mono-data">{airdrop.expected_value}</td>
-                                <td className="py-3.5 px-6">
-                                  <div className="flex items-center gap-2">
-                                    <div className="flex-1 h-1.5 bg-[#1F1F23] rounded-full overflow-hidden">
-                                      <div
-                                        className="h-full bg-gradient-to-r from-[#FF5C00] to-[#FF8A4C] rounded-full"
-                                        style={{ width: `${progress}%` }}
-                                      />
-                                    </div>
-                                    <span className="text-[11px] text-[#6B6B70] font-mono-data">{progress}%</span>
-                                  </div>
-                                </td>
-                                <td className="py-3.5 px-6 text-center">
-                                  {airdrop.deadline ? (
-                                    <span className={`text-[10px] font-medium px-2.5 py-1 rounded-full ${
-                                      daysLeft <= 7 ? 'bg-[#ef4444]/10 text-[#ef4444]' :
-                                      daysLeft <= 30 ? 'bg-[#f59e0b]/10 text-[#f59e0b]' :
-                                      'bg-[#22c55e]/10 text-[#22c55e]'
-                                    }`}>
-                                      D-{daysLeft}
-                                    </span>
-                                  ) : (
-                                    <span className="text-[11px] text-[#6B6B70]">-</span>
-                                  )}
-                                </td>
-                                <td className="py-3.5 px-6 text-center">
-                                  <button
-                                    onClick={() => deleteAirdrop(airdrop.id)}
-                                    className="text-[#ef4444] hover:text-red-300 text-xs"
-                                  >&#10005;</button>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                        <tfoot>
-                          <tr className="border-t border-[#1F1F23] font-medium text-[13px]">
-                            <td className="py-3.5 px-6 text-[#ADADB0]">Total</td>
-                            <td className="px-6"></td>
-                            <td className="py-3.5 px-6 text-right text-[#f59e0b] font-mono-data">${totalSpent}</td>
-                            <td className="py-3.5 px-6 text-right text-[#6B6B70]">-</td>
-                            <td className="px-6"></td>
-                            <td className="px-6"></td>
-                            <td className="px-6"></td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    </div>
-
-                    {/* Expanded tasks */}
-                    <div className="px-6 pb-5 space-y-3">
-                      {airdrops.map(airdrop => (
-                        <details key={airdrop.id} className="bg-[#0A0A0B] border border-[#1F1F23] rounded-lg">
-                          <summary className="px-4 py-3 cursor-pointer hover:bg-[#111113] text-[13px] text-[#ADADB0]">
-                            {airdrop.name} Tasks ({airdrop.tasks.filter(t => t.done).length}/{airdrop.tasks.length})
-                          </summary>
-                          <div className="px-4 pb-3 space-y-2">
-                            {airdrop.tasks.map(task => (
-                              <div
-                                key={task.id}
-                                className="flex items-center justify-between text-[13px] group"
-                              >
-                                <label
-                                  className="flex items-center gap-2.5 cursor-pointer flex-1"
-                                  onClick={() => toggleAirdropTask(airdrop.id, task.id)}
-                                >
-                                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
-                                    task.done ? 'border-[#22c55e] bg-[#22c55e]' : 'border-[#2A2A2E]'
-                                  }`}>
-                                    {task.done && <span className="text-white text-[10px]">&#10003;</span>}
-                                  </div>
-                                  <span className={task.done ? 'text-[#6B6B70] line-through' : 'text-[#ADADB0]'}>
-                                    {task.name}
-                                  </span>
-                                </label>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[#6B6B70] font-mono-data text-xs">${task.cost}</span>
-                                  <button
-                                    onClick={() => deleteTask(airdrop.id, task.id)}
-                                    className="text-[#ef4444] hover:text-red-300 text-xs opacity-0 group-hover:opacity-100"
-                                  >&#10005;</button>
-                                </div>
+                    <div className="grid grid-cols-7 gap-1 text-center text-[11px]">
+                      {['일', '월', '화', '수', '목', '금', '토'].map(day => (
+                        <div key={day} className="text-[#6B6B70] py-1 font-medium">{day}</div>
+                      ))}
+                      {Array.from({ length: firstDay }).map((_, i) => (
+                        <div key={`empty-${i}`} />
+                      ))}
+                      {Array.from({ length: daysInMonth }).map((_, i) => {
+                        const day = i + 1;
+                        const isToday = day === currentDate.getDate() &&
+                          selectedMonth.getMonth() === currentDate.getMonth() &&
+                          selectedMonth.getFullYear() === currentDate.getFullYear();
+                        const dayEvents = getEventsForDay(day);
+                        return (
+                          <div
+                            key={day}
+                            className={`py-1.5 rounded-md cursor-pointer hover:bg-[#1A1A1D] relative text-[#ADADB0] ${
+                              isToday ? 'bg-[#FF5C00] !text-white font-bold' : ''
+                            }`}
+                          >
+                            {day}
+                            {dayEvents.length > 0 && (
+                              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex gap-0.5">
+                                {dayEvents.map(e => (
+                                  <div
+                                    key={e.id}
+                                    className={`w-1 h-1 rounded-full ${
+                                      e.type === 'snapshot' ? 'bg-[#f59e0b]' :
+                                      e.type === 'tge' ? 'bg-[#22c55e]' :
+                                      e.type === 'airdrop' ? 'bg-[#FF5C00]' :
+                                      'bg-[#6B6B70]'
+                                    }`}
+                                  />
+                                ))}
                               </div>
-                            ))}
-                            <button
-                              onClick={() => openTaskModal(airdrop.id)}
-                              className="w-full mt-2 py-2 text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C] border border-dashed border-[#1F1F23] rounded-lg hover:border-[#FF5C00] transition-colors"
-                            >
-                              + Add Task
-                            </button>
+                            )}
                           </div>
-                        </details>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-[#1F1F23] space-y-1.5">
+                      <p className="text-[11px] text-[#6B6B70] font-semibold tracking-wider uppercase mb-2">다가오는 일정</p>
+                      {events.slice(0, 5).map(event => (
+                        <div
+                          key={event.id}
+                          className="flex items-center justify-between text-[13px] bg-[#0A0A0B] px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1A1A1D] transition-colors"
+                          onClick={() => openEventDetail(event)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                              event.type === 'snapshot' ? 'bg-[#f59e0b]' :
+                              event.type === 'tge' ? 'bg-[#22c55e]' :
+                              event.type === 'airdrop' ? 'bg-[#FF5C00]' :
+                              'bg-[#6B6B70]'
+                            }`} />
+                            <span className="text-[#ADADB0]">{event.title}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[#6B6B70] font-mono-data text-[11px]">{event.date}</span>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); deleteEvent(event.id); }}
+                              className="text-[#ef4444] hover:text-red-300 text-xs"
+                            >&#10005;</button>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </section>
 
-                  {/* Right Column */}
-                  <div className="space-y-6">
-                    {/* Calendar */}
-                    <section className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-semibold tracking-wide">Calendar</h3>
-                          <div className="flex items-center gap-1 ml-2">
-                            <button onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1))} className="text-[#6B6B70] hover:text-white text-xs px-1">&lt;</button>
-                            <span className="text-xs text-[#ADADB0] font-mono-data">{selectedMonth.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })}</span>
-                            <button onClick={() => setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1))} className="text-[#6B6B70] hover:text-white text-xs px-1">&gt;</button>
-                          </div>
+                  {/* Todo */}
+                  <section className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-semibold tracking-wide">Todo</h3>
+                      <button
+                        onClick={() => setShowTodoModal(true)}
+                        className="text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C]"
+                      >+ Add</button>
+                    </div>
+                    <div className="space-y-1">
+                      {todos.map(todo => (
+                        <div
+                          key={todo.id}
+                          className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-[#0A0A0B] group transition-colors"
+                        >
+                          <label
+                            className="flex items-center gap-3 cursor-pointer flex-1"
+                            onClick={() => toggleTodo(todo.id)}
+                          >
+                            <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors ${
+                              todo.done ? 'border-[#22c55e] bg-[#22c55e]' : 'border-[#2A2A2E] group-hover:border-[#FF5C00]'
+                            }`}>
+                              {todo.done && <span className="text-white text-[10px]">&#10003;</span>}
+                            </div>
+                            <span className={`text-[13px] ${todo.done ? 'text-[#6B6B70] line-through' : 'text-[#ADADB0]'}`}>
+                              {todo.text}
+                            </span>
+                          </label>
+                          <button onClick={() => deleteTodo(todo.id)} className="text-[#ef4444] hover:text-red-300 text-xs opacity-0 group-hover:opacity-100">&#10005;</button>
                         </div>
-                        <button
-                          onClick={() => setShowEventModal(true)}
-                          className="text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C]"
-                        >+ Add</button>
-                      </div>
-                      <div className="grid grid-cols-7 gap-1 text-center text-[11px]">
-                        {['일', '월', '화', '수', '목', '금', '토'].map(day => (
-                          <div key={day} className="text-[#6B6B70] py-1 font-medium">{day}</div>
-                        ))}
-                        {Array.from({ length: firstDay }).map((_, i) => (
-                          <div key={`empty-${i}`} />
-                        ))}
-                        {Array.from({ length: daysInMonth }).map((_, i) => {
-                          const day = i + 1;
-                          const isToday = day === currentDate.getDate() &&
-                            selectedMonth.getMonth() === currentDate.getMonth() &&
-                            selectedMonth.getFullYear() === currentDate.getFullYear();
-                          const dayEvents = getEventsForDay(day);
-                          return (
-                            <div
-                              key={day}
-                              className={`py-1.5 rounded-md cursor-pointer hover:bg-[#1A1A1D] relative text-[#ADADB0] ${
-                                isToday ? 'bg-[#FF5C00] !text-white font-bold' : ''
-                              }`}
-                            >
-                              {day}
-                              {dayEvents.length > 0 && (
-                                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex gap-0.5">
-                                  {dayEvents.map(e => (
-                                    <div
-                                      key={e.id}
-                                      className={`w-1 h-1 rounded-full ${
-                                        e.type === 'snapshot' ? 'bg-[#f59e0b]' :
-                                        e.type === 'tge' ? 'bg-[#22c55e]' :
-                                        e.type === 'airdrop' ? 'bg-[#FF5C00]' :
-                                        'bg-[#6B6B70]'
-                                      }`}
-                                    />
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Upcoming events */}
-                      <div className="mt-4 pt-4 border-t border-[#1F1F23] space-y-1.5">
-                        <p className="text-[11px] text-[#6B6B70] font-semibold tracking-wider uppercase mb-2">다가오는 일정</p>
-                        {events.slice(0, 5).map(event => (
-                          <div
-                            key={event.id}
-                            className="flex items-center justify-between text-[13px] bg-[#0A0A0B] px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1A1A1D] transition-colors"
-                            onClick={() => openEventDetail(event)}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className={`w-1.5 h-1.5 rounded-full ${
-                                event.type === 'snapshot' ? 'bg-[#f59e0b]' :
-                                event.type === 'tge' ? 'bg-[#22c55e]' :
-                                event.type === 'airdrop' ? 'bg-[#FF5C00]' :
-                                'bg-[#6B6B70]'
-                              }`} />
-                              <span className="text-[#ADADB0]">{event.title}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[#6B6B70] font-mono-data text-[11px]">{event.date}</span>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); deleteEvent(event.id); }}
-                                className="text-[#ef4444] hover:text-red-300 text-xs"
-                              >&#10005;</button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-
-                    {/* Today's Todo */}
-                    <section className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-semibold tracking-wide">Todo</h3>
-                        <button
-                          onClick={() => setShowTodoModal(true)}
-                          className="text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C]"
-                        >+ Add</button>
-                      </div>
-                      <div className="space-y-1">
-                        {todos.map(todo => (
-                          <div
-                            key={todo.id}
-                            className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-[#0A0A0B] group transition-colors"
-                          >
-                            <label
-                              className="flex items-center gap-3 cursor-pointer flex-1"
-                              onClick={() => toggleTodo(todo.id)}
-                            >
-                              <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors ${
-                                todo.done ? 'border-[#22c55e] bg-[#22c55e]' : 'border-[#2A2A2E] group-hover:border-[#FF5C00]'
-                              }`}>
-                                {todo.done && <span className="text-white text-[10px]">&#10003;</span>}
-                              </div>
-                              <span className={`text-[13px] ${todo.done ? 'text-[#6B6B70] line-through' : 'text-[#ADADB0]'}`}>
-                                {todo.text}
-                              </span>
-                            </label>
-                            <button onClick={() => deleteTodo(todo.id)} className="text-[#ef4444] hover:text-red-300 text-xs opacity-0 group-hover:opacity-100">&#10005;</button>
-                          </div>
-                        ))}
-                        {todos.length === 0 && (
-                          <p className="text-[#6B6B70] text-[13px] text-center py-6">할 일이 없습니다</p>
-                        )}
-                      </div>
-                    </section>
-                  </div>
+                      ))}
+                      {todos.length === 0 && (
+                        <p className="text-[#6B6B70] text-[13px] text-center py-6">할 일이 없습니다</p>
+                      )}
+                    </div>
+                  </section>
                 </div>
-
-                {/* Research Section */}
-                <section className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6">
-                  <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-sm font-semibold tracking-wide">Coin Research</h3>
-                    <button
-                      onClick={() => setShowResearchModal(true)}
-                      className="text-xs font-medium text-[#FF5C00] hover:text-[#FF8A4C]"
-                    >+ Add</button>
-                  </div>
-                  <div className="grid md:grid-cols-3 gap-4">
-                    {research.map(item => (
-                      <div
-                        key={item.id}
-                        className="bg-[#0A0A0B] border border-[#1F1F23] rounded-xl p-5 relative group cursor-pointer hover:border-[#FF5C00] transition-colors"
-                        onClick={() => openResearchDetail(item)}
-                      >
-                        <button
-                          onClick={(e) => { e.stopPropagation(); deleteResearch(item.id); }}
-                          className="absolute top-3 right-3 text-[#ef4444] hover:text-red-300 text-xs opacity-0 group-hover:opacity-100"
-                        >&#10005;</button>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="font-bold text-base font-mono-data tracking-tight">{item.coin}</span>
-                          <span className={`text-[10px] font-medium px-2.5 py-1 rounded-full ${
-                            item.sentiment === 'bullish' ? 'bg-[#22c55e]/10 text-[#22c55e]' :
-                            item.sentiment === 'bearish' ? 'bg-[#ef4444]/10 text-[#ef4444]' :
-                            'bg-[#FF5C00]/10 text-[#FF5C00]'
-                          }`}>
-                            {item.sentiment === 'bullish' ? 'Bullish' :
-                             item.sentiment === 'bearish' ? 'Bearish' : 'Neutral'}
-                          </span>
-                        </div>
-                        <p className="text-[13px] text-[#ADADB0] line-clamp-2 leading-relaxed">{item.notes}</p>
-                        <p className="text-[11px] text-[#6B6B70] mt-3 font-mono-data">{item.date}</p>
-                        {item.notes && item.notes.length > 80 && (
-                          <p className="text-[11px] text-[#FF5C00] mt-1.5 font-medium">더 보기...</p>
-                        )}
-                      </div>
-                    ))}
-                    {research.length === 0 && (
-                      <p className="text-[#6B6B70] text-[13px] col-span-3 text-center py-8">리서치 노트가 없습니다</p>
-                    )}
-                  </div>
-                </section>
               </div>
             )}
-          </section>
-
-          {/* Ad Banner */}
-          <section className="bg-[#111113] border border-[#1F1F23] border-dashed rounded-xl p-8 text-center">
-            <p className="text-[#6B6B70] text-[13px]">Ad Space</p>
-            <p className="text-[11px] text-[#4A4A4E] mt-1">Google AdSense or Sponsor Banner</p>
           </section>
         </div>
       </main>

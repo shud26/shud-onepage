@@ -43,6 +43,12 @@ export default function RootLayout({
       <head>
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://tftchess.com" />
+        {/* Google AdSense - Replace ca-pub-XXXXXXX with your publisher ID */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXX"
+          crossOrigin="anonymous"
+        />
       </head>
       <body
         className={`${inter.variable} ${dmMono.variable} ${instrumentSerif.variable} antialiased min-h-screen`}
