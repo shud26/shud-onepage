@@ -31,6 +31,14 @@ export const metadata: Metadata = {
     locale: "ko_KR",
     siteName: "SHUD Crypto Tools",
   },
+  twitter: {
+    card: "summary",
+    title: "실시간 김치프리미엄 · 고래지갑 추적 | SHUD Crypto Tools",
+    description: "김치 프리미엄 실시간 확인, 고래 지갑 추적, 암호화폐 시세 모니터링.",
+  },
+  alternates: {
+    canonical: "https://tftchess.com",
+  },
 };
 
 export default function RootLayout({
@@ -42,7 +50,6 @@ export default function RootLayout({
     <html lang="ko">
       <head>
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://tftchess.com" />
         {/* Google AdSense - Replace ca-pub-XXXXXXX with your publisher ID */}
         <script
           async
