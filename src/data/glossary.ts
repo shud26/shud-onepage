@@ -1,0 +1,491 @@
+export interface GlossaryTerm {
+  slug: string;
+  term: string;
+  termEn: string;
+  definition: string;
+  description: string;
+  example?: string;
+  category: 'basic' | 'trading' | 'defi' | 'nft' | 'wallet' | 'mining' | 'layer2';
+  relatedTerms?: string[];
+}
+
+export const categories: Record<string, { label: string; color: string }> = {
+  basic: { label: '기본 개념', color: '#3b82f6' },
+  trading: { label: '트레이딩', color: '#ef4444' },
+  defi: { label: 'DeFi', color: '#8b5cf6' },
+  nft: { label: 'NFT', color: '#ec4899' },
+  wallet: { label: '지갑', color: '#22c55e' },
+  mining: { label: '채굴/검증', color: '#f59e0b' },
+  layer2: { label: '레이어2', color: '#06b6d4' },
+};
+
+export const glossaryTerms: GlossaryTerm[] = [
+  // === 기본 개념 ===
+  {
+    slug: 'blockchain',
+    term: '블록체인',
+    termEn: 'Blockchain',
+    definition: '거래 기록을 블록 단위로 연결한 분산 원장 기술',
+    description: '블록체인은 거래 정보를 담은 블록들이 체인처럼 연결된 데이터 구조입니다. 한 번 기록된 데이터는 변경이 거의 불가능하며, 전 세계 컴퓨터에 분산 저장되어 중앙 서버 없이도 신뢰할 수 있는 거래가 가능합니다. 비트코인, 이더리움 등 대부분의 암호화폐가 블록체인 기술을 사용합니다.',
+    example: '비트코인 블록체인에는 2009년부터의 모든 거래 기록이 저장되어 있습니다.',
+    category: 'basic',
+    relatedTerms: ['bitcoin', 'ethereum', 'decentralization'],
+  },
+  {
+    slug: 'bitcoin',
+    term: '비트코인',
+    termEn: 'Bitcoin (BTC)',
+    definition: '2009년 사토시 나카모토가 만든 최초의 암호화폐',
+    description: '비트코인은 중앙은행 없이 P2P 네트워크에서 작동하는 디지털 화폐입니다. 총 발행량이 2,100만 개로 제한되어 있어 "디지털 금"이라고도 불립니다. 작업증명(PoW) 방식으로 채굴되며, 암호화폐 시장에서 가장 큰 시가총액을 가지고 있습니다.',
+    example: '비트코인 1개 = 약 1억원 (2024년 기준, 시세는 변동됨)',
+    category: 'basic',
+    relatedTerms: ['blockchain', 'mining', 'halving'],
+  },
+  {
+    slug: 'ethereum',
+    term: '이더리움',
+    termEn: 'Ethereum (ETH)',
+    definition: '스마트 컨트랙트를 지원하는 2세대 블록체인 플랫폼',
+    description: '이더리움은 비탈릭 부테린이 2015년에 만든 블록체인 플랫폼입니다. 단순한 송금 외에도 스마트 컨트랙트를 통해 다양한 탈중앙화 애플리케이션(DApp)을 만들 수 있습니다. DeFi, NFT 등 대부분의 Web3 서비스가 이더리움 위에서 작동합니다.',
+    example: 'OpenSea, Uniswap 등 대부분의 DeFi/NFT 서비스가 이더리움 기반입니다.',
+    category: 'basic',
+    relatedTerms: ['smart-contract', 'gas', 'defi'],
+  },
+  {
+    slug: 'altcoin',
+    term: '알트코인',
+    termEn: 'Altcoin',
+    definition: '비트코인을 제외한 모든 암호화폐의 통칭',
+    description: 'Alternative Coin의 줄임말로, 비트코인이 아닌 모든 암호화폐를 말합니다. 이더리움, 솔라나, 리플 등이 대표적인 알트코인입니다. 알트코인은 비트코인보다 변동성이 크고, 상승장에서는 비트코인보다 더 큰 수익을 낼 수 있지만 위험도도 높습니다.',
+    example: '이더리움, 솔라나, 도지코인 등이 모두 알트코인입니다.',
+    category: 'basic',
+    relatedTerms: ['bitcoin', 'ethereum', 'memecoin'],
+  },
+  {
+    slug: 'decentralization',
+    term: '탈중앙화',
+    termEn: 'Decentralization',
+    definition: '중앙 권력 없이 참여자들이 직접 운영하는 시스템',
+    description: '기존 금융 시스템은 은행이라는 중앙 기관이 모든 거래를 관리합니다. 반면 탈중앙화된 시스템에서는 전 세계의 참여자들이 함께 네트워크를 운영하고 검증합니다. 이를 통해 단일 실패점이 없고, 검열에 강하며, 누구나 참여할 수 있는 개방형 시스템이 됩니다.',
+    category: 'basic',
+    relatedTerms: ['blockchain', 'defi', 'dao'],
+  },
+  {
+    slug: 'whitepaper',
+    term: '백서',
+    termEn: 'Whitepaper',
+    definition: '암호화폐 프로젝트의 기술과 비전을 설명하는 공식 문서',
+    description: '백서는 프로젝트가 해결하려는 문제, 기술적 방법, 토큰 경제 구조, 로드맵 등을 상세히 설명합니다. 투자 전 백서를 읽어보면 프로젝트의 진정성과 기술력을 판단하는 데 도움이 됩니다. 비트코인 백서는 단 9페이지로 블록체인 혁명을 시작했습니다.',
+    example: '비트코인 백서 제목: "Bitcoin: A Peer-to-Peer Electronic Cash System"',
+    category: 'basic',
+    relatedTerms: ['bitcoin', 'tokenomics'],
+  },
+
+  // === 트레이딩 ===
+  {
+    slug: 'kimchi-premium',
+    term: '김치 프리미엄',
+    termEn: 'Kimchi Premium',
+    definition: '한국 거래소 가격이 해외보다 높은 현상',
+    description: '한국 거래소(업비트, 빗썸 등)의 코인 가격이 해외 거래소(바이낸스 등)보다 높게 형성되는 현상입니다. 주로 한국 투자자들의 매수세가 강할 때 발생합니다. 김프가 높으면 해외에서 사서 국내에서 파는 차익거래 기회가 생기지만, 자금 이동 규제로 실제 실행은 어렵습니다.',
+    example: '김프 5% = 해외 $100,000이면 국내 약 1억 500만원',
+    category: 'trading',
+    relatedTerms: ['arbitrage', 'exchange'],
+  },
+  {
+    slug: 'leverage',
+    term: '레버리지',
+    termEn: 'Leverage',
+    definition: '빌린 돈으로 투자금을 늘려 수익/손실을 확대하는 거래',
+    description: '10배 레버리지는 1만원으로 10만원어치 거래하는 것입니다. 가격이 10% 오르면 100% 수익(원금 2배)이지만, 10% 내리면 원금을 모두 잃습니다(청산). 고수익 가능성만큼 고위험이며, 초보자에게는 권장하지 않습니다.',
+    example: '10배 롱 포지션: 10% 상승 시 +100% 수익, 10% 하락 시 청산',
+    category: 'trading',
+    relatedTerms: ['liquidation', 'futures', 'margin'],
+  },
+  {
+    slug: 'liquidation',
+    term: '청산',
+    termEn: 'Liquidation',
+    definition: '레버리지 거래에서 손실이 커서 포지션이 강제로 종료되는 것',
+    description: '레버리지 거래 시 담보(증거금)보다 손실이 커지면 거래소가 자동으로 포지션을 정리합니다. 이를 강제 청산이라고 합니다. 청산되면 투자한 증거금을 대부분 또는 전부 잃게 됩니다. 변동성 큰 시장에서는 순식간에 청산될 수 있어 주의가 필요합니다.',
+    example: '100x 레버리지는 1%만 반대로 움직여도 청산됩니다.',
+    category: 'trading',
+    relatedTerms: ['leverage', 'margin', 'futures'],
+  },
+  {
+    slug: 'futures',
+    term: '선물 거래',
+    termEn: 'Futures Trading',
+    definition: '미래 가격을 예측하여 매매하는 파생상품 거래',
+    description: '현물 거래는 실제 코인을 사고파는 것이고, 선물 거래는 미래 가격 방향에 베팅하는 것입니다. 가격이 오를 것 같으면 롱(Long), 내릴 것 같으면 숏(Short) 포지션을 잡습니다. 레버리지를 사용할 수 있어 적은 돈으로 큰 거래가 가능하지만, 그만큼 위험합니다.',
+    example: '비트코인 선물 10x 롱 = BTC가 오르면 10배 수익',
+    category: 'trading',
+    relatedTerms: ['leverage', 'liquidation', 'funding-rate'],
+  },
+  {
+    slug: 'funding-rate',
+    term: '펀딩비',
+    termEn: 'Funding Rate',
+    definition: '선물 거래에서 롱/숏 포지션 간 주기적으로 정산되는 수수료',
+    description: '무기한 선물 거래소는 8시간마다 펀딩비를 정산합니다. 롱이 많으면 롱이 숏에게, 숏이 많으면 숏이 롱에게 수수료를 지불합니다. 이를 통해 선물 가격이 현물 가격과 비슷하게 유지됩니다. 펀딩비 차이를 이용한 차익거래 전략도 있습니다.',
+    example: '펀딩비 +0.01% = 롱 포지션이 숏 포지션에게 0.01% 지불',
+    category: 'trading',
+    relatedTerms: ['futures', 'arbitrage'],
+  },
+  {
+    slug: 'arbitrage',
+    term: '차익거래',
+    termEn: 'Arbitrage',
+    definition: '거래소 간 가격 차이를 이용해 무위험 수익을 얻는 전략',
+    description: '같은 코인이라도 거래소마다 가격이 조금씩 다릅니다. A 거래소에서 싸게 사서 B 거래소에서 비싸게 팔면 차익을 얻을 수 있습니다. 하지만 전송 시간, 수수료, 슬리피지 등을 고려하면 실제 수익은 생각보다 적거나 없을 수 있습니다.',
+    example: '바이낸스에서 BTC 매수 → 업비트로 전송 → 김프 붙여서 매도',
+    category: 'trading',
+    relatedTerms: ['kimchi-premium', 'funding-rate'],
+  },
+  {
+    slug: 'whale',
+    term: '고래',
+    termEn: 'Whale',
+    definition: '대량의 암호화폐를 보유한 큰손 투자자',
+    description: '수천~수만 BTC를 보유한 대형 투자자를 고래라고 부릅니다. 고래의 매수/매도는 시장에 큰 영향을 줄 수 있어, 많은 트레이더들이 고래 지갑을 추적합니다. 고래가 거래소로 코인을 보내면 매도 신호, 거래소에서 빼면 장기 보유 신호로 해석하기도 합니다.',
+    example: '1,000 BTC 이상 보유 지갑을 고래 지갑이라고 부릅니다.',
+    category: 'trading',
+    relatedTerms: ['wallet'],
+  },
+  {
+    slug: 'fomo',
+    term: '포모',
+    termEn: 'FOMO (Fear Of Missing Out)',
+    definition: '상승장을 놓칠까 두려워 충동적으로 매수하는 심리',
+    description: '가격이 급등할 때 "나만 못 타면 어떡하지?"라는 두려움에 높은 가격에 매수하는 것을 FOMO라고 합니다. 대부분 고점에 물리는 결과로 이어집니다. 성공적인 투자를 위해서는 FOMO를 경계하고 냉정하게 판단해야 합니다.',
+    example: '급등 뉴스 보고 새벽에 일어나서 매수 → 전형적인 FOMO',
+    category: 'trading',
+    relatedTerms: ['fud'],
+  },
+  {
+    slug: 'fud',
+    term: '퍼드',
+    termEn: 'FUD (Fear, Uncertainty, Doubt)',
+    definition: '공포, 불확실성, 의심을 유발하는 부정적 정보',
+    description: 'FUD는 시장에 공포를 조성하는 뉴스나 루머를 말합니다. 가격 하락을 노리고 의도적으로 FUD를 퍼뜨리는 경우도 있습니다. 모든 부정적 뉴스가 FUD는 아니지만, 출처와 맥락을 확인하고 냉정하게 판단하는 것이 중요합니다.',
+    example: '"중국이 비트코인 금지" - 수년간 반복된 대표적 FUD',
+    category: 'trading',
+    relatedTerms: ['fomo'],
+  },
+  {
+    slug: 'dyor',
+    term: 'DYOR',
+    termEn: 'Do Your Own Research',
+    definition: '투자 전 스스로 조사하고 판단하라는 의미',
+    description: '암호화폐 커뮤니티에서 자주 쓰는 표현으로, 남의 말만 듣고 투자하지 말고 직접 공부하라는 뜻입니다. 백서 읽기, 팀 확인, 토크노믹스 분석, 커뮤니티 활동 등을 통해 프로젝트를 검증해야 합니다.',
+    category: 'trading',
+    relatedTerms: ['whitepaper'],
+  },
+
+  // === DeFi ===
+  {
+    slug: 'defi',
+    term: '디파이',
+    termEn: 'DeFi (Decentralized Finance)',
+    definition: '은행 없이 블록체인에서 작동하는 탈중앙화 금융 서비스',
+    description: 'DeFi는 스마트 컨트랙트를 통해 예금, 대출, 거래 등 금융 서비스를 제공합니다. 은행 같은 중개자 없이 코드로 자동 실행되며, 24시간 전 세계 누구나 이용 가능합니다. Uniswap(거래), Aave(대출), Lido(스테이킹) 등이 대표적입니다.',
+    example: 'Uniswap에서 ETH를 USDC로 교환 - 중앙 거래소 없이 스마트 컨트랙트가 처리',
+    category: 'defi',
+    relatedTerms: ['smart-contract', 'dex', 'yield-farming'],
+  },
+  {
+    slug: 'smart-contract',
+    term: '스마트 컨트랙트',
+    termEn: 'Smart Contract',
+    definition: '조건이 충족되면 자동으로 실행되는 블록체인 프로그램',
+    description: '스마트 컨트랙트는 "만약 A가 발생하면 B를 실행"하는 코드입니다. 한 번 배포되면 누구도 변경할 수 없고, 조건만 맞으면 자동 실행됩니다. 이를 통해 중개자 없이 신뢰할 수 있는 거래가 가능합니다. DeFi, NFT 등 대부분의 Web3 서비스가 스마트 컨트랙트로 작동합니다.',
+    example: 'NFT 판매: 누군가 ETH를 보내면 자동으로 NFT가 전송됨',
+    category: 'defi',
+    relatedTerms: ['ethereum', 'defi', 'gas'],
+  },
+  {
+    slug: 'dex',
+    term: '탈중앙화 거래소',
+    termEn: 'DEX (Decentralized Exchange)',
+    definition: '중앙 운영자 없이 스마트 컨트랙트로 운영되는 거래소',
+    description: '업비트, 바이낸스 같은 중앙화 거래소(CEX)와 달리, DEX는 회사가 운영하지 않습니다. 스마트 컨트랙트가 거래를 처리하고, 사용자가 직접 지갑을 연결해 거래합니다. 회원가입이나 KYC 없이 누구나 사용 가능하지만, 거래 속도가 느리고 사용이 복잡할 수 있습니다.',
+    example: 'Uniswap, SushiSwap, PancakeSwap 등이 대표적인 DEX',
+    category: 'defi',
+    relatedTerms: ['defi', 'smart-contract', 'amm'],
+  },
+  {
+    slug: 'amm',
+    term: 'AMM',
+    termEn: 'Automated Market Maker',
+    definition: '유동성 풀을 이용해 자동으로 가격을 결정하는 시스템',
+    description: '기존 거래소는 주문서(오더북) 방식으로 매수/매도를 매칭합니다. AMM은 유동성 풀에 예치된 토큰을 수학 공식으로 교환합니다. 누구나 풀에 유동성을 제공하고 거래 수수료를 받을 수 있습니다. Uniswap이 AMM을 대중화시켰습니다.',
+    example: 'ETH/USDC 풀에 유동성 제공 → 거래 수수료 0.3% 수익',
+    category: 'defi',
+    relatedTerms: ['dex', 'liquidity-pool', 'yield-farming'],
+  },
+  {
+    slug: 'liquidity-pool',
+    term: '유동성 풀',
+    termEn: 'Liquidity Pool',
+    definition: '거래가 가능하도록 토큰을 예치해 놓은 공동 자금 풀',
+    description: 'DEX에서 거래가 일어나려면 거래할 토큰이 있어야 합니다. 유동성 공급자(LP)들이 토큰을 예치하면 이를 사용해 다른 사람들이 거래합니다. LP들은 대가로 거래 수수료를 나눠 받습니다. ETH/USDC 풀에 각각 50:50 비율로 예치하는 것이 일반적입니다.',
+    example: 'ETH $5,000 + USDC $5,000 예치 → LP 토큰 수령 → 수수료 수익',
+    category: 'defi',
+    relatedTerms: ['amm', 'dex', 'impermanent-loss'],
+  },
+  {
+    slug: 'yield-farming',
+    term: '이자 농사',
+    termEn: 'Yield Farming',
+    definition: 'DeFi 프로토콜에 자금을 예치하고 이자를 받는 투자 전략',
+    description: '유동성 풀에 자금을 넣거나, 대출 프로토콜에 예치하거나, 스테이킹을 하면 보상을 받습니다. 여러 프로토콜을 조합해 수익을 극대화하는 것을 이자 농사라고 합니다. 높은 APY가 매력적이지만, 스마트 컨트랙트 해킹, 비영구적 손실 등의 위험도 있습니다.',
+    example: 'Aave에 USDC 예치 → 이자 + AAVE 토큰 보상',
+    category: 'defi',
+    relatedTerms: ['liquidity-pool', 'staking', 'apy'],
+  },
+  {
+    slug: 'staking',
+    term: '스테이킹',
+    termEn: 'Staking',
+    definition: '코인을 예치하고 네트워크 운영에 참여해 보상받는 것',
+    description: 'PoS(지분증명) 방식의 블록체인에서 코인을 스테이킹하면 네트워크 검증에 참여하게 되고, 그 대가로 추가 코인을 받습니다. 은행 예금의 이자와 비슷하지만, 보통 더 높은 수익률을 제공합니다. 이더리움은 32 ETH를 스테이킹하면 검증자가 될 수 있습니다.',
+    example: '이더리움 스테이킹 APY 약 4~5%',
+    category: 'defi',
+    relatedTerms: ['pos', 'yield-farming', 'apy'],
+  },
+  {
+    slug: 'apy',
+    term: 'APY',
+    termEn: 'Annual Percentage Yield',
+    definition: '복리를 포함한 연간 수익률',
+    description: 'APY는 복리 효과를 포함한 실제 연간 수익률입니다. APR(단리)과 구분됩니다. 예를 들어 APR 10%를 매일 복리로 받으면 APY는 약 10.5%가 됩니다. DeFi에서는 APY가 100%를 넘는 경우도 있지만, 대부분 지속 불가능하고 토큰 가격 하락 위험이 있습니다.',
+    example: 'APR 10% (단리) → APY 약 10.5% (일일 복리 시)',
+    category: 'defi',
+    relatedTerms: ['staking', 'yield-farming'],
+  },
+  {
+    slug: 'impermanent-loss',
+    term: '비영구적 손실',
+    termEn: 'Impermanent Loss',
+    definition: '유동성 풀에 예치한 자산의 가격 변동으로 발생하는 손실',
+    description: 'AMM 유동성 풀에 토큰을 예치하면, 가격이 변할 때 손실이 발생할 수 있습니다. 예치하지 않고 그냥 들고 있었을 때보다 가치가 낮아지는 것입니다. 가격이 원래대로 돌아오면 손실이 사라져서 "비영구적"이라고 합니다. 수수료 수익이 이 손실을 상쇄하면 여전히 이득입니다.',
+    example: 'ETH 가격 2배 상승 시 → 약 5.7% 비영구적 손실 발생',
+    category: 'defi',
+    relatedTerms: ['liquidity-pool', 'amm'],
+  },
+  {
+    slug: 'tvl',
+    term: 'TVL',
+    termEn: 'Total Value Locked',
+    definition: 'DeFi 프로토콜에 예치된 총 자산 가치',
+    description: 'TVL은 해당 프로토콜의 인기와 신뢰도를 나타내는 지표입니다. TVL이 높을수록 많은 사람들이 자금을 맡기고 있다는 의미입니다. 다만, TVL이 높다고 반드시 안전한 것은 아니며, 스마트 컨트랙트 위험은 항상 존재합니다.',
+    example: 'Aave TVL $10B = 100억 달러 상당의 자산이 예치됨',
+    category: 'defi',
+    relatedTerms: ['defi'],
+  },
+
+  // === 에어드랍/토큰 ===
+  {
+    slug: 'airdrop',
+    term: '에어드랍',
+    termEn: 'Airdrop',
+    definition: '프로젝트가 토큰을 무료로 배포하는 이벤트',
+    description: '에어드랍은 프로젝트가 마케팅이나 커뮤니티 보상 목적으로 토큰을 무료 배포하는 것입니다. 보통 초기 사용자, 테스트넷 참여자, NFT 홀더 등에게 제공됩니다. Uniswap, Arbitrum 에어드랍처럼 수백~수천만원 가치의 토큰을 받은 사례도 있습니다.',
+    example: 'Arbitrum 에어드랍: 초기 사용자에게 최대 10,000 ARB (약 1,000만원+) 지급',
+    category: 'basic',
+    relatedTerms: ['tokenomics'],
+  },
+  {
+    slug: 'tokenomics',
+    term: '토크노믹스',
+    termEn: 'Tokenomics',
+    definition: '토큰의 발행량, 분배, 소각 등 경제 구조',
+    description: '토크노믹스는 토큰의 경제적 설계입니다. 총 발행량, 초기 분배 비율(팀/투자자/커뮤니티), 언락 일정, 인플레이션율, 소각 메커니즘 등을 포함합니다. 좋은 토크노믹스는 장기적으로 토큰 가치를 유지하는 데 중요합니다.',
+    example: '비트코인 토크노믹스: 총 2,100만 개, 4년마다 반감기',
+    category: 'basic',
+    relatedTerms: ['airdrop', 'whitepaper'],
+  },
+
+  // === NFT ===
+  {
+    slug: 'nft',
+    term: 'NFT',
+    termEn: 'Non-Fungible Token',
+    definition: '블록체인에 저장된 고유하고 대체 불가능한 디지털 자산',
+    description: '비트코인은 1 BTC가 다른 1 BTC와 같지만, NFT는 각각이 고유합니다. 디지털 아트, 게임 아이템, 멤버십 등을 NFT로 만들 수 있습니다. 소유권이 블록체인에 기록되어 위조가 불가능합니다. 2021년 NFT 붐 이후 시장이 많이 냉각되었지만, 여전히 다양한 분야에서 활용되고 있습니다.',
+    example: 'Bored Ape Yacht Club NFT: 한 때 수십억원에 거래됨',
+    category: 'nft',
+    relatedTerms: ['smart-contract', 'wallet'],
+  },
+  {
+    slug: 'mint',
+    term: '민팅',
+    termEn: 'Minting',
+    definition: 'NFT나 토큰을 새로 생성(발행)하는 것',
+    description: '민팅은 블록체인에 새로운 NFT를 기록하는 것입니다. NFT 프로젝트에서 "민트"한다고 하면 새 NFT를 구매하는 것을 의미합니다. 민팅 가격 + 가스비를 지불하면 랜덤하게 NFT가 생성됩니다.',
+    example: 'NFT 민팅 가격 0.08 ETH + 가스비 → 새 NFT 획득',
+    category: 'nft',
+    relatedTerms: ['nft', 'gas'],
+  },
+
+  // === 지갑 ===
+  {
+    slug: 'wallet',
+    term: '지갑',
+    termEn: 'Wallet',
+    definition: '암호화폐를 저장하고 관리하는 소프트웨어 또는 하드웨어',
+    description: '암호화폐 지갑은 실제로 코인을 저장하는 게 아니라, 블록체인에 접근하는 개인키를 관리합니다. 메타마스크 같은 소프트웨어 지갑(핫월렛)과 렛저 같은 하드웨어 지갑(콜드월렛)이 있습니다. 거래소에 맡기지 않고 직접 보관하면 해킹 위험에서 자유롭지만, 시드구문을 잃으면 복구가 불가능합니다.',
+    example: 'MetaMask, Trust Wallet, Ledger Nano 등',
+    category: 'wallet',
+    relatedTerms: ['seed-phrase', 'private-key'],
+  },
+  {
+    slug: 'seed-phrase',
+    term: '시드 구문',
+    termEn: 'Seed Phrase',
+    definition: '지갑을 복구할 때 사용하는 12~24개의 영단어 조합',
+    description: '시드 구문은 지갑의 마스터 키입니다. 이 단어들만 있으면 어디서든 지갑을 복구할 수 있습니다. 그만큼 절대로 누구에게도 공개하면 안 됩니다. 시드 구문을 요구하는 것은 100% 사기입니다. 종이에 적어 안전한 곳에 보관하세요.',
+    example: 'apple banana cherry ... (12개 또는 24개 영단어)',
+    category: 'wallet',
+    relatedTerms: ['wallet', 'private-key'],
+  },
+  {
+    slug: 'private-key',
+    term: '개인키',
+    termEn: 'Private Key',
+    definition: '암호화폐를 사용할 수 있는 비밀번호 같은 고유 문자열',
+    description: '개인키는 64자리 16진수 문자열로, 이를 가진 사람이 해당 지갑의 암호화폐를 사용할 수 있습니다. 시드 구문에서 개인키가 생성됩니다. 절대 공개하면 안 되며, 유출되면 모든 자산을 잃을 수 있습니다.',
+    category: 'wallet',
+    relatedTerms: ['wallet', 'seed-phrase'],
+  },
+  {
+    slug: 'gas',
+    term: '가스비',
+    termEn: 'Gas Fee',
+    definition: '블록체인 거래를 처리하는 데 드는 수수료',
+    description: '이더리움에서 거래나 스마트 컨트랙트를 실행하려면 가스비를 지불해야 합니다. 네트워크가 혼잡할수록 가스비가 높아집니다. 가스비는 ETH로 지불하며, 복잡한 작업일수록 더 많은 가스가 필요합니다.',
+    example: 'ETH 전송: ~$1, NFT 민팅: ~$5-50, 복잡한 DeFi: ~$10-100+',
+    category: 'wallet',
+    relatedTerms: ['ethereum', 'smart-contract'],
+  },
+
+  // === 채굴/검증 ===
+  {
+    slug: 'mining',
+    term: '채굴',
+    termEn: 'Mining',
+    definition: '컴퓨터 연산으로 블록을 생성하고 보상받는 것',
+    description: 'PoW(작업증명) 방식에서 채굴자들은 복잡한 수학 문제를 풀어 새 블록을 생성합니다. 가장 먼저 푼 채굴자가 블록 보상(새 코인)을 받습니다. 비트코인 채굴에는 엄청난 전력이 필요해 환경 문제가 제기되기도 합니다.',
+    example: '비트코인 블록 보상: 현재 3.125 BTC (반감기마다 절반으로)',
+    category: 'mining',
+    relatedTerms: ['pow', 'halving', 'bitcoin'],
+  },
+  {
+    slug: 'pow',
+    term: '작업증명',
+    termEn: 'Proof of Work (PoW)',
+    definition: '컴퓨터 연산 능력으로 블록을 검증하는 합의 방식',
+    description: '비트코인이 사용하는 합의 알고리즘입니다. 채굴자들이 컴퓨터로 복잡한 계산을 수행하고, 가장 먼저 답을 찾은 채굴자가 블록을 생성합니다. 많은 전력을 소비하지만, 가장 오래 검증된 방식입니다.',
+    category: 'mining',
+    relatedTerms: ['mining', 'pos', 'bitcoin'],
+  },
+  {
+    slug: 'pos',
+    term: '지분증명',
+    termEn: 'Proof of Stake (PoS)',
+    definition: '보유 지분에 따라 블록을 검증하는 합의 방식',
+    description: '이더리움이 2022년에 PoW에서 PoS로 전환했습니다. 코인을 스테이킹한 검증자 중에서 랜덤하게 블록 생성자가 선정됩니다. PoW보다 에너지 효율적이고, 스테이킹한 코인이 담보 역할을 해서 악의적 행동을 방지합니다.',
+    category: 'mining',
+    relatedTerms: ['staking', 'pow', 'ethereum'],
+  },
+  {
+    slug: 'halving',
+    term: '반감기',
+    termEn: 'Halving',
+    definition: '비트코인 채굴 보상이 절반으로 줄어드는 이벤트',
+    description: '비트코인은 약 4년(21만 블록)마다 채굴 보상이 절반으로 줄어듭니다. 공급이 줄어들면서 희소성이 높아지고, 역사적으로 반감기 이후 가격이 상승하는 패턴이 있었습니다. 최근 반감기는 2024년 4월이었습니다.',
+    example: '2024년 반감기: 블록 보상 6.25 BTC → 3.125 BTC',
+    category: 'mining',
+    relatedTerms: ['bitcoin', 'mining'],
+  },
+
+  // === 레이어2 ===
+  {
+    slug: 'layer2',
+    term: '레이어2',
+    termEn: 'Layer 2',
+    definition: '메인 블록체인 위에서 작동하는 확장 솔루션',
+    description: '이더리움 같은 메인넷(레이어1)은 느리고 비쌉니다. 레이어2는 거래를 메인넷 밖에서 처리하고, 결과만 메인넷에 기록해서 속도와 비용을 개선합니다. Arbitrum, Optimism, Base 등이 대표적인 이더리움 레이어2입니다.',
+    example: 'Arbitrum: 이더리움보다 10~100배 저렴한 가스비',
+    category: 'layer2',
+    relatedTerms: ['ethereum', 'rollup'],
+  },
+  {
+    slug: 'rollup',
+    term: '롤업',
+    termEn: 'Rollup',
+    definition: '여러 거래를 묶어서 메인넷에 기록하는 레이어2 기술',
+    description: '롤업은 수백~수천 개의 거래를 하나로 묶어서(roll up) 이더리움에 기록합니다. 개별 거래보다 훨씬 저렴하고 빠릅니다. Optimistic Rollup(Arbitrum, Optimism)과 ZK Rollup(zkSync, Starknet) 두 가지 방식이 있습니다.',
+    category: 'layer2',
+    relatedTerms: ['layer2', 'ethereum'],
+  },
+  {
+    slug: 'bridge',
+    term: '브릿지',
+    termEn: 'Bridge',
+    definition: '서로 다른 블록체인 간에 자산을 이동시키는 서비스',
+    description: '이더리움의 ETH를 Arbitrum으로 옮기려면 브릿지를 사용합니다. 원래 체인에서 자산을 잠그고, 대상 체인에서 동일한 가치의 토큰을 발행하는 방식입니다. 브릿지 해킹 사고가 많아서 신뢰할 수 있는 브릿지를 사용하는 것이 중요합니다.',
+    example: '이더리움 ETH → Arbitrum으로 브릿지 → Arbitrum에서 저렴하게 거래',
+    category: 'layer2',
+    relatedTerms: ['layer2'],
+  },
+
+  // === 기타 ===
+  {
+    slug: 'dao',
+    term: 'DAO',
+    termEn: 'Decentralized Autonomous Organization',
+    definition: '토큰 보유자들이 투표로 운영하는 탈중앙화 조직',
+    description: 'DAO는 회사의 CEO나 이사회 대신 토큰 보유자들이 제안과 투표로 의사결정을 합니다. 스마트 컨트랙트로 자동 실행되어 투명합니다. Uniswap, Aave 같은 DeFi 프로토콜 대부분이 DAO로 운영됩니다.',
+    example: 'Uniswap DAO: UNI 토큰 보유자가 프로토콜 방향 결정',
+    category: 'defi',
+    relatedTerms: ['decentralization', 'defi'],
+  },
+  {
+    slug: 'memecoin',
+    term: '밈코인',
+    termEn: 'Memecoin',
+    definition: '밈이나 유머에서 시작된 암호화폐',
+    description: '도지코인이 대표적인 밈코인입니다. 기술적 혁신보다는 커뮤니티와 바이럴에 의존합니다. 단기간에 수십~수백 배 오르기도 하지만, 대부분의 밈코인은 결국 0에 수렴합니다. 매우 위험한 투기 자산입니다.',
+    example: 'DOGE, SHIB, PEPE 등',
+    category: 'basic',
+    relatedTerms: ['altcoin'],
+  },
+];
+
+// Get term by slug
+export function getTermBySlug(slug: string): GlossaryTerm | undefined {
+  return glossaryTerms.find(t => t.slug === slug);
+}
+
+// Get related terms
+export function getRelatedTerms(slugs: string[] = []): GlossaryTerm[] {
+  return slugs
+    .map(s => glossaryTerms.find(t => t.slug === s))
+    .filter((t): t is GlossaryTerm => t !== undefined);
+}
+
+// Search terms
+export function searchTerms(query: string): GlossaryTerm[] {
+  const q = query.toLowerCase();
+  return glossaryTerms.filter(t =>
+    t.term.toLowerCase().includes(q) ||
+    t.termEn.toLowerCase().includes(q) ||
+    t.definition.toLowerCase().includes(q)
+  );
+}
+
+// Get terms by category
+export function getTermsByCategory(category: string): GlossaryTerm[] {
+  return glossaryTerms.filter(t => t.category === category);
+}
