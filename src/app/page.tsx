@@ -1144,6 +1144,7 @@ export default function Home() {
                 <li><a href="#whale" className="hover:text-[#FF5C00] transition-colors">고래 지갑 추적 &amp; 조회</a></li>
                 <li><a href="#prices" className="hover:text-[#FF5C00] transition-colors">암호화폐 실시간 시세</a></li>
                 <li><Link href="/whales" className="hover:text-[#FF5C00] transition-colors">고래 지갑 상세 분석</Link></li>
+                <li><Link href="/liquidations" className="hover:text-[#FF5C00] transition-colors">실시간 청산 트래커</Link></li>
                 <li><Link href="/research" className="hover:text-[#FF5C00] transition-colors">코인 리서치 노트</Link></li>
                 <li><Link href="/blog" className="hover:text-[#FF5C00] transition-colors">개발 블로그</Link></li>
               </ul>
