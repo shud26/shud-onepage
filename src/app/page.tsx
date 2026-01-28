@@ -1149,18 +1149,20 @@ export default function Home() {
               </ul>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-white mb-3">관련 키워드</h3>
-              <p className="text-[12px] text-[#6B6B70] leading-relaxed">
-                김치 프리미엄 확인, 김프 실시간, 크립토 고래 추적, 이더리움 고래 지갑, 비트코인 실시간 가격, 암호화폐 시세, BTC ETH SOL 가격, 차익거래 기회
-              </p>
+              <h3 className="text-sm font-semibold text-white mb-3">안내</h3>
+              <ul className="space-y-2 text-[12px] text-[#6B6B70]">
+                <li><Link href="/about" className="hover:text-[#FF5C00] transition-colors">소개</Link></li>
+                <li><Link href="/contact" className="hover:text-[#FF5C00] transition-colors">문의</Link></li>
+                <li><Link href="/privacy" className="hover:text-[#FF5C00] transition-colors">개인정보처리방침</Link></li>
+              </ul>
             </div>
           </div>
-          <div className="border-t border-[#1F1F23] pt-6 flex items-center justify-center gap-2 text-[#6B6B70] text-[11px] font-mono-data tracking-wide">
+          <div className="border-t border-[#1F1F23] pt-6 flex items-center justify-center flex-wrap gap-2 text-[#6B6B70] text-[11px] font-mono-data tracking-wide">
             <span>무료 크립토 도구 - SHUD</span>
             <span className="w-1 h-1 rounded-full bg-[#2A2A2E]"></span>
-            <span>Built with Claude Code</span>
+            <Link href="/privacy" className="hover:text-[#FF5C00] transition-colors">개인정보처리방침</Link>
             <span className="w-1 h-1 rounded-full bg-[#2A2A2E]"></span>
-            <span>shud26</span>
+            <span>Built with Claude Code</span>
           </div>
         </div>
       </footer>
