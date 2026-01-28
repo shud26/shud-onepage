@@ -50,10 +50,10 @@ export default function RootLayout({
     <html lang="ko">
       <head>
         <meta name="robots" content="index, follow" />
-        {/* Google AdSense - Replace ca-pub-XXXXXXX with your publisher ID */}
+        {/* Google AdSense */}
         <script
           async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXX"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8600828705366909"
           crossOrigin="anonymous"
         />
       </head>
