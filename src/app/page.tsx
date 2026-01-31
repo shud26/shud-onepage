@@ -16,6 +16,16 @@ interface PriceData {
   change24h: number;
 }
 
+// MM Signal type
+interface MMSignal {
+  score: number;
+  volatility: { value: number; status: 'low' | 'medium' | 'high'; percent: number };
+  spread: { value: number; status: 'good' | 'ok' | 'bad'; percent: number };
+  trend: { value: string; status: 'good' | 'ok' | 'bad'; percent: number };
+  volume: { value: string; status: 'high' | 'medium' | 'low'; percent: number };
+  verdict: 'go' | 'caution' | 'stop';
+}
+
 // Extended types with tasks
 interface AirdropWithTasks extends Airdrop {
   tasks: AirdropTask[];
@@ -49,6 +59,8 @@ export default function Home() {
   const [krwRate, setKrwRate] = useState(1350);
   const [loading, setLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(true);
+  const [mmSignal, setMmSignal] = useState<MMSignal | null>(null);
+  const [mmLoading, setMmLoading] = useState(true);
 
   // Whale quick lookup
   const [whaleAddress, setWhaleAddress] = useState('');
@@ -217,6 +229,89 @@ export default function Home() {
       .then(data => setKrwRate(data.rates.KRW))
       .catch(() => setKrwRate(1350));
   }, []);
+
+  // Fetch MM Signal data
+  const fetchMMSignal = useCallback(async () => {
+    setMmLoading(true);
+    try {
+      // Get BTC klines for ATR calculation (1h candles, last 24)
+      const klinesRes = await fetch('https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=1h&limit=24');
+      const klines = await klinesRes.json();
+
+      // Calculate ATR (Average True Range)
+      let trSum = 0;
+      for (let i = 1; i < klines.length; i++) {
+        const high = parseFloat(klines[i][2]);
+        const low = parseFloat(klines[i][3]);
+        const prevClose = parseFloat(klines[i - 1][4]);
+        const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
+        trSum += tr;
+      }
+      const atr = trSum / (klines.length - 1);
+      const currentPrice = parseFloat(klines[klines.length - 1][4]);
+      const atrPercent = (atr / currentPrice) * 100;
+
+      // Get orderbook for spread
+      const bookRes = await fetch('https://fapi.binance.com/fapi/v1/depth?symbol=BTCUSDT&limit=5');
+      const book = await bookRes.json();
+      const bestBid = parseFloat(book.bids[0][0]);
+      const bestAsk = parseFloat(book.asks[0][0]);
+      const spreadPercent = ((bestAsk - bestBid) / bestBid) * 100;
+
+      // Calculate 24h trend
+      const openPrice = parseFloat(klines[0][1]);
+      const priceChange = ((currentPrice - openPrice) / openPrice) * 100;
+
+      // Get 24h volume
+      const tickerRes = await fetch('https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=BTCUSDT');
+      const ticker = await tickerRes.json();
+      const volume24h = parseFloat(ticker.quoteVolume);
+
+      // Calculate scores
+      const volatilityScore = atrPercent < 1.5 ? 90 : atrPercent < 2.5 ? 70 : atrPercent < 4 ? 50 : 30;
+      const spreadScore = spreadPercent < 0.02 ? 95 : spreadPercent < 0.05 ? 80 : spreadPercent < 0.1 ? 60 : 40;
+      const trendScore = Math.abs(priceChange) < 1 ? 90 : Math.abs(priceChange) < 2 ? 70 : Math.abs(priceChange) < 4 ? 50 : 30;
+      const volumeScore = volume24h > 50000000000 ? 90 : volume24h > 30000000000 ? 70 : volume24h > 10000000000 ? 50 : 30;
+
+      const totalScore = Math.round((volatilityScore * 0.35 + spreadScore * 0.25 + trendScore * 0.25 + volumeScore * 0.15));
+
+      const signal: MMSignal = {
+        score: totalScore,
+        volatility: {
+          value: atrPercent,
+          status: atrPercent < 2 ? 'low' : atrPercent < 4 ? 'medium' : 'high',
+          percent: volatilityScore
+        },
+        spread: {
+          value: spreadPercent,
+          status: spreadPercent < 0.03 ? 'good' : spreadPercent < 0.08 ? 'ok' : 'bad',
+          percent: spreadScore
+        },
+        trend: {
+          value: Math.abs(priceChange) < 1 ? 'Sideways' : priceChange > 0 ? 'Bullish' : 'Bearish',
+          status: Math.abs(priceChange) < 2 ? 'good' : Math.abs(priceChange) < 4 ? 'ok' : 'bad',
+          percent: trendScore
+        },
+        volume: {
+          value: volume24h > 50000000000 ? 'High' : volume24h > 20000000000 ? 'Medium' : 'Low',
+          status: volume24h > 40000000000 ? 'high' : volume24h > 20000000000 ? 'medium' : 'low',
+          percent: volumeScore
+        },
+        verdict: totalScore >= 80 ? 'go' : totalScore >= 60 ? 'caution' : 'stop'
+      };
+
+      setMmSignal(signal);
+    } catch (error) {
+      console.error('MM Signal fetch error:', error);
+    }
+    setMmLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchMMSignal();
+    const interval = setInterval(fetchMMSignal, 30000); // 30초마다 업데이트
+    return () => clearInterval(interval);
+  }, [fetchMMSignal]);
 
   // Whale quick lookup
   const fetchWhaleBalance = async () => {
@@ -518,6 +613,7 @@ export default function Home() {
             <span className="w-1.5 h-1.5 rounded-full bg-[#FF5C00]"></span>
           </div>
           <div className="hidden md:flex items-center gap-6 text-[13px] text-[#8B8B90]">
+            <a href="#mm-signal" className="hover:text-white transition-colors">MM</a>
             <a href="#prices" className="hover:text-white transition-colors">시세</a>
             <a href="#kimchi" className="hover:text-white transition-colors">김프</a>
             <a href="#whale" className="hover:text-white transition-colors">고래</a>
@@ -615,6 +711,218 @@ export default function Home() {
               ))}
             </div>
             <p className="text-[11px] text-[#4A4A4E] mt-2 font-mono-data">60초 자동 새로고침 &middot; CoinGecko &amp; Binance</p>
+          </section>
+
+          {/* ===== MM TIMING SIGNAL ===== */}
+          <section id="mm-signal" className="bg-[#111113] border border-[#1F1F23] rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[#1F1F23]">
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold">MM Timing</h2>
+                <span className="text-xs text-[#6B6B70] font-mono-data">BTC/USDC</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-full bg-[#22c55e]/10 text-[#22c55e]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse"></span>
+                  LIVE
+                </span>
+                <button
+                  onClick={fetchMMSignal}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#1A1A1D] hover:bg-[#2A2A2E] transition-colors text-[#ADADB0]"
+                >
+                  &#8635;
+                </button>
+              </div>
+            </div>
+
+            {mmLoading ? (
+              <div className="px-6 py-12 text-center">
+                <div className="w-6 h-6 border-2 border-[#FF5C00] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                <p className="text-[#6B6B70] text-sm">Calculating...</p>
+              </div>
+            ) : mmSignal && (
+              <div className="p-6">
+                <div className="flex flex-col md:flex-row gap-6">
+                  {/* Score Circle */}
+                  <div className="flex-shrink-0 flex flex-col items-center justify-center">
+                    <div className={`relative w-28 h-28 rounded-full border-4 flex items-center justify-center ${
+                      mmSignal.verdict === 'go' ? 'border-[#22c55e] bg-[#22c55e]/5' :
+                      mmSignal.verdict === 'caution' ? 'border-[#f59e0b] bg-[#f59e0b]/5' :
+                      'border-[#ef4444] bg-[#ef4444]/5'
+                    }`}>
+                      <div className="text-center">
+                        <span className="text-3xl font-bold text-white font-mono-data">{mmSignal.score}</span>
+                        <span className="text-sm text-[#6B6B70]">/100</span>
+                      </div>
+                    </div>
+                    <div className={`mt-4 px-5 py-2 rounded-lg text-sm font-bold tracking-wide ${
+                      mmSignal.verdict === 'go' ? 'bg-[#22c55e]/20 text-[#22c55e]' :
+                      mmSignal.verdict === 'caution' ? 'bg-[#f59e0b]/20 text-[#f59e0b]' :
+                      'bg-[#ef4444]/20 text-[#ef4444]'
+                    }`}>
+                      {mmSignal.verdict === 'go' ? '✓ MM 가능' :
+                       mmSignal.verdict === 'caution' ? '⚠ 주의' : '✕ 위험'}
+                    </div>
+                  </div>
+
+                  {/* Metrics */}
+                  <div className="flex-1 space-y-4">
+                    {/* Volatility */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#8B8B90]">Volatility (ATR)</span>
+                          <span className="text-[10px] text-[#4A4A4E]">낮을수록 MM에 유리</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-mono-data">{mmSignal.volatility.value.toFixed(2)}%</span>
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${
+                            mmSignal.volatility.status === 'low' ? 'bg-[#22c55e]/20 text-[#22c55e]' :
+                            mmSignal.volatility.status === 'medium' ? 'bg-[#f59e0b]/20 text-[#f59e0b]' :
+                            'bg-[#ef4444]/20 text-[#ef4444]'
+                          }`}>
+                            {mmSignal.volatility.status.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="h-2 bg-[#1F1F23] rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            mmSignal.volatility.status === 'low' ? 'bg-gradient-to-r from-[#22c55e] to-[#4ade80]' :
+                            mmSignal.volatility.status === 'medium' ? 'bg-gradient-to-r from-[#f59e0b] to-[#fbbf24]' :
+                            'bg-gradient-to-r from-[#ef4444] to-[#f87171]'
+                          }`}
+                          style={{ width: `${mmSignal.volatility.percent}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Spread */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#8B8B90]">Spread</span>
+                          <span className="text-[10px] text-[#4A4A4E]">매수/매도 차이, 넓으면 수익 기회</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-mono-data">{mmSignal.spread.value.toFixed(4)}%</span>
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${
+                            mmSignal.spread.status === 'good' ? 'bg-[#22c55e]/20 text-[#22c55e]' :
+                            mmSignal.spread.status === 'ok' ? 'bg-[#f59e0b]/20 text-[#f59e0b]' :
+                            'bg-[#ef4444]/20 text-[#ef4444]'
+                          }`}>
+                            {mmSignal.spread.status.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="h-2 bg-[#1F1F23] rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            mmSignal.spread.status === 'good' ? 'bg-gradient-to-r from-[#22c55e] to-[#4ade80]' :
+                            mmSignal.spread.status === 'ok' ? 'bg-gradient-to-r from-[#f59e0b] to-[#fbbf24]' :
+                            'bg-gradient-to-r from-[#ef4444] to-[#f87171]'
+                          }`}
+                          style={{ width: `${mmSignal.spread.percent}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Trend */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#8B8B90]">24h Trend</span>
+                          <span className="text-[10px] text-[#4A4A4E]">횡보일수록 안전</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-mono-data">{mmSignal.trend.value}</span>
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${
+                            mmSignal.trend.status === 'good' ? 'bg-[#22c55e]/20 text-[#22c55e]' :
+                            mmSignal.trend.status === 'ok' ? 'bg-[#f59e0b]/20 text-[#f59e0b]' :
+                            'bg-[#ef4444]/20 text-[#ef4444]'
+                          }`}>
+                            {mmSignal.trend.status === 'good' ? 'STABLE' : mmSignal.trend.status === 'ok' ? 'MOVING' : 'VOLATILE'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="h-2 bg-[#1F1F23] rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            mmSignal.trend.status === 'good' ? 'bg-gradient-to-r from-[#22c55e] to-[#4ade80]' :
+                            mmSignal.trend.status === 'ok' ? 'bg-gradient-to-r from-[#f59e0b] to-[#fbbf24]' :
+                            'bg-gradient-to-r from-[#ef4444] to-[#f87171]'
+                          }`}
+                          style={{ width: `${mmSignal.trend.percent}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Volume */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#8B8B90]">Volume</span>
+                          <span className="text-[10px] text-[#4A4A4E]">높을수록 체결 잘 됨</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-mono-data">{mmSignal.volume.value}</span>
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${
+                            mmSignal.volume.status === 'high' ? 'bg-[#22c55e]/20 text-[#22c55e]' :
+                            mmSignal.volume.status === 'medium' ? 'bg-[#f59e0b]/20 text-[#f59e0b]' :
+                            'bg-[#ef4444]/20 text-[#ef4444]'
+                          }`}>
+                            {mmSignal.volume.status.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="h-2 bg-[#1F1F23] rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            mmSignal.volume.status === 'high' ? 'bg-gradient-to-r from-[#22c55e] to-[#4ade80]' :
+                            mmSignal.volume.status === 'medium' ? 'bg-gradient-to-r from-[#f59e0b] to-[#fbbf24]' :
+                            'bg-gradient-to-r from-[#ef4444] to-[#f87171]'
+                          }`}
+                          style={{ width: `${mmSignal.volume.percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Guide */}
+                <div className="mt-6 pt-4 border-t border-[#1F1F23]">
+                  <details className="group">
+                    <summary className="cursor-pointer text-[12px] text-[#6B6B70] hover:text-[#ADADB0] transition-colors flex items-center gap-2">
+                      <span>📖 해석 가이드</span>
+                      <span className="text-[10px]">(클릭해서 펼치기)</span>
+                    </summary>
+                    <div className="mt-4 grid md:grid-cols-2 gap-4 text-[12px]">
+                      <div className="bg-[#0A0A0B] rounded-lg p-4 space-y-2">
+                        <h4 className="font-semibold text-[#ADADB0]">🟢 80점 이상 = MM 가능</h4>
+                        <p className="text-[#6B6B70]">변동성 낮고 안정적. 봇 돌려도 됨!</p>
+                      </div>
+                      <div className="bg-[#0A0A0B] rounded-lg p-4 space-y-2">
+                        <h4 className="font-semibold text-[#ADADB0]">🟡 60~79점 = 주의</h4>
+                        <p className="text-[#6B6B70]">약간 불안정. 소액으로 테스트하거나 대기</p>
+                      </div>
+                      <div className="bg-[#0A0A0B] rounded-lg p-4 space-y-2">
+                        <h4 className="font-semibold text-[#ADADB0]">🔴 60점 미만 = 위험</h4>
+                        <p className="text-[#6B6B70]">변동성 높음. MM 봇 끄고 관망!</p>
+                      </div>
+                      <div className="bg-[#0A0A0B] rounded-lg p-4 space-y-2">
+                        <h4 className="font-semibold text-[#ADADB0]">💡 팁</h4>
+                        <p className="text-[#6B6B70]">CPI, FOMC 발표일엔 무조건 OFF</p>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+
+                {/* Info */}
+                <div className="mt-4 pt-4 border-t border-[#1F1F23] flex items-center justify-between text-[11px] text-[#6B6B70]">
+                  <span>30초 자동 업데이트 · Binance Futures 데이터</span>
+                  <span className="font-mono-data">Score = ATR(35%) + Spread(25%) + Trend(25%) + Vol(15%)</span>
+                </div>
+              </div>
+            )}
           </section>
 
           {/* ===== KIMCHI PREMIUM & ARBITRAGE ===== */}
