@@ -26,6 +26,13 @@ interface MMSignal {
   verdict: 'go' | 'caution' | 'stop';
 }
 
+// Fear & Greed Index type
+interface FearGreedData {
+  value: number;
+  classification: string;
+  timestamp: number;
+}
+
 // Extended types with tasks
 interface AirdropWithTasks extends Airdrop {
   tasks: AirdropTask[];
@@ -61,6 +68,8 @@ export default function Home() {
   const [dataLoading, setDataLoading] = useState(true);
   const [mmSignal, setMmSignal] = useState<MMSignal | null>(null);
   const [mmLoading, setMmLoading] = useState(true);
+  const [fearGreed, setFearGreed] = useState<FearGreedData | null>(null);
+  const [fearGreedLoading, setFearGreedLoading] = useState(true);
 
   // Whale quick lookup
   const [whaleAddress, setWhaleAddress] = useState('');
@@ -307,11 +316,36 @@ export default function Home() {
     setMmLoading(false);
   }, []);
 
+  // Fetch Fear & Greed Index
+  const fetchFearGreed = useCallback(async () => {
+    setFearGreedLoading(true);
+    try {
+      const res = await fetch('https://api.alternative.me/fng/?limit=1');
+      const data = await res.json();
+      if (data.data && data.data[0]) {
+        setFearGreed({
+          value: parseInt(data.data[0].value),
+          classification: data.data[0].value_classification,
+          timestamp: parseInt(data.data[0].timestamp)
+        });
+      }
+    } catch (error) {
+      console.error('Fear & Greed fetch error:', error);
+    }
+    setFearGreedLoading(false);
+  }, []);
+
   useEffect(() => {
     fetchMMSignal();
     const interval = setInterval(fetchMMSignal, 30000); // 30초마다 업데이트
     return () => clearInterval(interval);
   }, [fetchMMSignal]);
+
+  useEffect(() => {
+    fetchFearGreed();
+    const interval = setInterval(fetchFearGreed, 60000); // 60초마다 업데이트
+    return () => clearInterval(interval);
+  }, [fetchFearGreed]);
 
   // Whale quick lookup
   const fetchWhaleBalance = async () => {
@@ -920,6 +954,127 @@ export default function Home() {
                 <div className="mt-4 pt-4 border-t border-[#1F1F23] flex items-center justify-between text-[11px] text-[#6B6B70]">
                   <span>30초 자동 업데이트 · Binance Futures 데이터</span>
                   <span className="font-mono-data">Score = ATR(35%) + Spread(25%) + Trend(25%) + Vol(15%)</span>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* ===== FEAR & GREED INDEX ===== */}
+          <section id="fear-greed" className="bg-[#111113] border border-[#1F1F23] rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[#1F1F23]">
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold">공포 탐욕 지수</h2>
+                <span className="text-xs text-[#6B6B70] font-mono-data">Crypto Fear & Greed</span>
+              </div>
+              <button
+                onClick={fetchFearGreed}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#1A1A1D] hover:bg-[#2A2A2E] transition-colors text-[#ADADB0]"
+              >
+                &#8635;
+              </button>
+            </div>
+
+            {fearGreedLoading ? (
+              <div className="px-6 py-12 text-center">
+                <div className="w-6 h-6 border-2 border-[#FF5C00] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                <p className="text-[#6B6B70] text-sm">Loading...</p>
+              </div>
+            ) : fearGreed && (
+              <div className="p-6">
+                <div className="flex flex-col md:flex-row gap-6 items-center">
+                  {/* Gauge Circle */}
+                  <div className="flex-shrink-0 flex flex-col items-center justify-center">
+                    <div className={`relative w-32 h-32 rounded-full border-4 flex items-center justify-center ${
+                      fearGreed.value <= 25 ? 'border-[#ef4444] bg-[#ef4444]/5' :
+                      fearGreed.value <= 45 ? 'border-[#f97316] bg-[#f97316]/5' :
+                      fearGreed.value <= 55 ? 'border-[#eab308] bg-[#eab308]/5' :
+                      fearGreed.value <= 75 ? 'border-[#84cc16] bg-[#84cc16]/5' :
+                      'border-[#22c55e] bg-[#22c55e]/5'
+                    }`}>
+                      <div className="text-center">
+                        <span className={`text-4xl font-bold font-mono-data ${
+                          fearGreed.value <= 25 ? 'text-[#ef4444]' :
+                          fearGreed.value <= 45 ? 'text-[#f97316]' :
+                          fearGreed.value <= 55 ? 'text-[#eab308]' :
+                          fearGreed.value <= 75 ? 'text-[#84cc16]' :
+                          'text-[#22c55e]'
+                        }`}>{fearGreed.value}</span>
+                      </div>
+                    </div>
+                    <div className={`mt-4 px-5 py-2 rounded-lg text-sm font-bold tracking-wide ${
+                      fearGreed.value <= 25 ? 'bg-[#ef4444]/20 text-[#ef4444]' :
+                      fearGreed.value <= 45 ? 'bg-[#f97316]/20 text-[#f97316]' :
+                      fearGreed.value <= 55 ? 'bg-[#eab308]/20 text-[#eab308]' :
+                      fearGreed.value <= 75 ? 'bg-[#84cc16]/20 text-[#84cc16]' :
+                      'bg-[#22c55e]/20 text-[#22c55e]'
+                    }`}>
+                      {fearGreed.value <= 25 ? '😱 극단적 공포' :
+                       fearGreed.value <= 45 ? '😰 공포' :
+                       fearGreed.value <= 55 ? '😐 중립' :
+                       fearGreed.value <= 75 ? '😊 탐욕' : '🤑 극단적 탐욕'}
+                    </div>
+                  </div>
+
+                  {/* Progress Bar & Info */}
+                  <div className="flex-1 w-full space-y-4">
+                    {/* Progress Bar */}
+                    <div className="space-y-2">
+                      <div className="h-3 bg-[#1F1F23] rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-700 ${
+                            fearGreed.value <= 25 ? 'bg-gradient-to-r from-[#ef4444] to-[#f87171]' :
+                            fearGreed.value <= 45 ? 'bg-gradient-to-r from-[#f97316] to-[#fb923c]' :
+                            fearGreed.value <= 55 ? 'bg-gradient-to-r from-[#eab308] to-[#facc15]' :
+                            fearGreed.value <= 75 ? 'bg-gradient-to-r from-[#84cc16] to-[#a3e635]' :
+                            'bg-gradient-to-r from-[#22c55e] to-[#4ade80]'
+                          }`}
+                          style={{ width: `${fearGreed.value}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-[10px] text-[#6B6B70]">
+                        <span>0 극단적 공포</span>
+                        <span>50 중립</span>
+                        <span>100 극단적 탐욕</span>
+                      </div>
+                    </div>
+
+                    {/* Guide */}
+                    <div className="grid grid-cols-2 gap-3 mt-4">
+                      <div className="bg-[#0A0A0B] rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="w-2 h-2 rounded-full bg-[#ef4444]"></span>
+                          <span className="text-[11px] text-[#ADADB0] font-medium">0-25 극단적 공포</span>
+                        </div>
+                        <p className="text-[10px] text-[#6B6B70]">매수 기회? 역발상 투자</p>
+                      </div>
+                      <div className="bg-[#0A0A0B] rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="w-2 h-2 rounded-full bg-[#f97316]"></span>
+                          <span className="text-[11px] text-[#ADADB0] font-medium">26-45 공포</span>
+                        </div>
+                        <p className="text-[10px] text-[#6B6B70]">분할 매수 고려</p>
+                      </div>
+                      <div className="bg-[#0A0A0B] rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="w-2 h-2 rounded-full bg-[#84cc16]"></span>
+                          <span className="text-[11px] text-[#ADADB0] font-medium">56-75 탐욕</span>
+                        </div>
+                        <p className="text-[10px] text-[#6B6B70]">차익실현 고려</p>
+                      </div>
+                      <div className="bg-[#0A0A0B] rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="w-2 h-2 rounded-full bg-[#22c55e]"></span>
+                          <span className="text-[11px] text-[#ADADB0] font-medium">76-100 극단적 탐욕</span>
+                        </div>
+                        <p className="text-[10px] text-[#6B6B70]">주의! 고점 신호일 수 있음</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="mt-4 pt-4 border-t border-[#1F1F23] text-[11px] text-[#6B6B70]">
+                  <span>60초 자동 업데이트 · Alternative.me API · 변동성, 거래량, SNS, 설문, 도미넌스 기반</span>
                 </div>
               </div>
             )}
