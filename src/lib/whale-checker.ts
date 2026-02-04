@@ -2,6 +2,65 @@ import { createClient } from '@supabase/supabase-js';
 import { sendTelegramMessage } from './telegram';
 
 const supabaseUrl = 'https://ofpbscpcryquxrtojpei.supabase.co';
+
+// Notion API 설정 (환경변수에서 가져옴)
+const NOTION_API_KEY = process.env.NOTION_API_KEY || '';
+const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID || '';
+
+// 노션에 Whale Alert 기록
+async function recordToNotion(
+  walletName: string,
+  direction: 'in' | 'out',
+  amount: number,
+  tokenSymbol: string,
+  usdValue: number,
+  txHash: string
+): Promise<boolean> {
+  // 환경변수 없으면 스킵
+  if (!NOTION_API_KEY || !NOTION_DATABASE_ID) {
+    return false;
+  }
+
+  try {
+    const dirEmoji = direction === 'out' ? '📤 OUT' : '📥 IN';
+    const title = `${walletName} ${amount.toFixed(2)} ${tokenSymbol} ${dirEmoji}`;
+    const etherscanUrl = `https://etherscan.io/tx/${txHash}`;
+
+    const response = await fetch('https://api.notion.com/v1/pages', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${NOTION_API_KEY}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        parent: { database_id: NOTION_DATABASE_ID },
+        properties: {
+          '순서 ': {
+            title: [{ text: { content: title } }]
+          }
+        },
+        children: [
+          {
+            object: 'block',
+            type: 'paragraph',
+            paragraph: {
+              rich_text: [
+                { type: 'text', text: { content: `💰 USD: $${usdValue.toLocaleString()}\n🔗 TX: ` } },
+                { type: 'text', text: { content: etherscanUrl, link: { url: etherscanUrl } } }
+              ]
+            }
+          }
+        ]
+      })
+    });
+
+    return response.ok;
+  } catch (error) {
+    console.error('Notion recording failed:', error);
+    return false;
+  }
+}
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcGJzY3BjcnlxdXhydG9qcGVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyMTY2MTMsImV4cCI6MjA4NDc5MjYxM30.xqmqiAXsxU9rCk6j9tV_0c3UjrX-t5ee5xsLUccpmE4';
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -133,6 +192,9 @@ export async function checkWhaleMovements(): Promise<AlertResult> {
             token_symbol: 'ETH',
             usd_value: usdValue,
           });
+
+          // Record to Notion
+          await recordToNotion(wallet.name, direction, value, 'ETH', usdValue, tx.hash);
         }
       }
 
@@ -189,6 +251,9 @@ export async function checkWhaleMovements(): Promise<AlertResult> {
           token_symbol: symbol,
           usd_value: usdValue,
         });
+
+        // Record to Notion
+        await recordToNotion(wallet.name, direction, rawValue, symbol, usdValue, txHash);
       }
     } catch (error) {
       result.errors.push(`${wallet.name}: ${String(error)}`);
