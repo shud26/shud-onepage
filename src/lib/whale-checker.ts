@@ -38,20 +38,26 @@ async function recordToNotion(
         properties: {
           '순서 ': {
             title: [{ text: { content: title } }]
+          },
+          '지갑': {
+            rich_text: [{ text: { content: walletName } }]
+          },
+          '방향': {
+            select: { name: dirEmoji }
+          },
+          '금액': {
+            number: amount
+          },
+          '토큰': {
+            select: { name: tokenSymbol }
+          },
+          'USD': {
+            number: Math.round(usdValue)
+          },
+          'TX': {
+            url: etherscanUrl
           }
-        },
-        children: [
-          {
-            object: 'block',
-            type: 'paragraph',
-            paragraph: {
-              rich_text: [
-                { type: 'text', text: { content: `💰 USD: $${usdValue.toLocaleString()}\n🔗 TX: ` } },
-                { type: 'text', text: { content: etherscanUrl, link: { url: etherscanUrl } } }
-              ]
-            }
-          }
-        ]
+        }
       })
     });
 
