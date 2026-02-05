@@ -1329,6 +1329,68 @@ export default function Home() {
             <ins className="adsbygoogle" style={{ display: 'block' }} data-ad-format="auto" data-full-width-responsive="true"></ins>
           </div>
 
+          {/* ===== GUIDES BANNER ===== */}
+          <section className="relative overflow-hidden bg-gradient-to-br from-[#FF5C00]/10 via-[#111113] to-[#8b5cf6]/10 border border-[#FF5C00]/20 rounded-xl p-6">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF5C00]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#8b5cf6]/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+            <div className="relative z-10">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#FF5C00] text-white">NEW</span>
+                    <span className="text-[11px] text-[#8B8B90]">10개 가이드 업데이트</span>
+                  </div>
+                  <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
+                    암호화폐 완벽 가이드
+                  </h2>
+                  <p className="text-[13px] text-[#ADADB0] max-w-md">
+                    비트코인 입문부터 DeFi, 스테이킹, 세금까지 - 코인 투자에 필요한 모든 정보를 쉽게 설명합니다.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    href="/guides/bitcoin-beginners-guide"
+                    className="text-[11px] px-3 py-1.5 rounded-full bg-[#1A1A1D] text-[#ADADB0] hover:text-white hover:bg-[#2A2A2E] transition-colors border border-[#1F1F23]"
+                  >
+                    비트코인 입문
+                  </Link>
+                  <Link
+                    href="/guides/staking-guide"
+                    className="text-[11px] px-3 py-1.5 rounded-full bg-[#1A1A1D] text-[#ADADB0] hover:text-white hover:bg-[#2A2A2E] transition-colors border border-[#1F1F23]"
+                  >
+                    스테이킹
+                  </Link>
+                  <Link
+                    href="/guides/airdrop-guide"
+                    className="text-[11px] px-3 py-1.5 rounded-full bg-[#1A1A1D] text-[#ADADB0] hover:text-white hover:bg-[#2A2A2E] transition-colors border border-[#1F1F23]"
+                  >
+                    에어드랍
+                  </Link>
+                  <Link
+                    href="/guides/defi-beginners-guide"
+                    className="text-[11px] px-3 py-1.5 rounded-full bg-[#1A1A1D] text-[#ADADB0] hover:text-white hover:bg-[#2A2A2E] transition-colors border border-[#1F1F23]"
+                  >
+                    DeFi
+                  </Link>
+                </div>
+              </div>
+              <div className="mt-5 pt-4 border-t border-[#1F1F23]/50 flex items-center justify-between">
+                <div className="flex items-center gap-4 text-[11px] text-[#6B6B70]">
+                  <span>입문 4개</span>
+                  <span>트레이딩 3개</span>
+                  <span>DeFi 2개</span>
+                  <span>세금 1개</span>
+                </div>
+                <Link
+                  href="/guides"
+                  className="text-sm font-medium text-[#FF5C00] hover:text-[#FF8A4C] transition-colors flex items-center gap-1"
+                >
+                  전체 가이드 보기 &#8594;
+                </Link>
+              </div>
+            </div>
+          </section>
+
           {/* ===== BLOG PREVIEW ===== */}
           {blogPosts.length > 0 && (
             <section className="bg-[#111113] border border-[#1F1F23] rounded-xl p-6">
