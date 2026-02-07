@@ -799,4 +799,859 @@ export const guides: Guide[] = [
 <p><em>* 이 글은 일반적인 정보 제공 목적이며, 정확한 세금 상담은 세무사에게 받으세요.</em></p>
 `,
   },
+  {
+    slug: 'market-making-guide',
+    title: '마켓메이킹(MM) 완전 정복 가이드',
+    description: '마켓메이킹이 무엇인지, 어떻게 수익을 내는지, 개인이 MM 봇을 운영하는 방법까지 설명합니다.',
+    category: 'trading',
+    readTime: 10,
+    updatedAt: '2026-02-07',
+    content: `
+<h2>마켓메이킹이란?</h2>
+<p>마켓메이킹(Market Making)은 <strong>매수 주문과 매도 주문을 동시에 걸어서 스프레드(가격 차이)로 수익을 내는 전략</strong>입니다. 쉽게 말해 "싸게 사서 비싸게 팔기"를 자동으로 반복하는 것입니다.</p>
+
+<h3>예시로 이해하기</h3>
+<ul>
+  <li>BTC 현재가: $100,000</li>
+  <li>매수 주문: $99,950에 걸어둠</li>
+  <li>매도 주문: $100,050에 걸어둠</li>
+  <li>둘 다 체결되면 → $100 수익 (스프레드)</li>
+</ul>
+
+<h2>MM이 중요한 이유</h2>
+<p>거래소에 유동성을 제공합니다. MM이 없으면 주문이 체결되지 않고, 슬리피지가 커져서 일반 트레이더도 손해를 봅니다. 그래서 많은 DEX가 MM에게 인센티브(리베이트, 에어드랍 포인트)를 제공합니다.</p>
+
+<h3>MM 수익 구조</h3>
+<ul>
+  <li><strong>스프레드 수익</strong>: 매수-매도 가격 차이</li>
+  <li><strong>리베이트</strong>: 거래소가 유동성 공급자에게 주는 수수료 할인</li>
+  <li><strong>에어드랍/포인트</strong>: DEX 토큰 에어드랍 기대</li>
+</ul>
+
+<h2>MM의 리스크</h2>
+<p>가격이 급변할 때 한쪽 주문만 체결되면 손실이 발생합니다. 이를 <strong>인벤토리 리스크</strong>라고 합니다.</p>
+
+<h3>주요 리스크</h3>
+<ul>
+  <li><strong>인벤토리 리스크</strong>: 한쪽만 체결 → 가격 역행 시 손실</li>
+  <li><strong>급변동 리스크</strong>: 뉴스, 대형 거래 시 가격 급등락</li>
+  <li><strong>기술 리스크</strong>: 봇 오류, 네트워크 장애</li>
+  <li><strong>자금 리스크</strong>: 거래소 해킹, 스마트 컨트랙트 버그</li>
+</ul>
+
+<h2>MM 봇 기본 구조</h2>
+<p>간단한 MM 봇은 다음과 같은 루프를 돌립니다:</p>
+<ol>
+  <li>현재 가격 조회</li>
+  <li>스프레드 계산 (보통 0.1~0.5%)</li>
+  <li>매수/매도 주문 배치</li>
+  <li>체결 확인 및 포지션 관리</li>
+  <li>리스크 체크 (손실 한도, 포지션 크기)</li>
+  <li>반복</li>
+</ol>
+
+<h2>MM 타이밍 지표</h2>
+<p>MM은 변동성이 적당할 때 가장 효과적입니다. 너무 변동성이 크면 인벤토리 리스크가 커지고, 너무 작으면 스프레드가 좁아져 수익이 적습니다.</p>
+<ul>
+  <li><strong>ATR(Average True Range)</strong>: 평균 변동폭 → 낮을수록 MM에 유리</li>
+  <li><strong>스프레드</strong>: 매수-매도 차이 → 넓을수록 수익 기회</li>
+  <li><strong>거래량</strong>: 충분한 유동성 → 높을수록 체결 확률 증가</li>
+  <li><strong>추세 강도</strong>: 횡보장 → MM에 최적, 추세장 → 리스크 증가</li>
+</ul>
+
+<h2>개인 MM 전략</h2>
+<h3>1. 에어드랍 파밍 MM</h3>
+<p>신규 DEX에서 거래량을 만들어 에어드랍 포인트를 쌓는 전략입니다. 수익보다는 에어드랍 토큰이 목적입니다.</p>
+
+<h3>2. 수동 MM</h3>
+<p>봇 없이 직접 양방향 주문을 걸어 관리하는 방식입니다. 소규모로 시작하기 좋습니다.</p>
+
+<h3>3. 그리드 트레이딩</h3>
+<p>일정 가격 간격으로 여러 매수/매도 주문을 배치하는 방식입니다. 단순하지만 효과적입니다.</p>
+
+<h2>MM 봇 개발 로드맵</h2>
+<ol>
+  <li><strong>Phase 1</strong>: JavaScript/API 기초 학습</li>
+  <li><strong>Phase 2</strong>: 거래소 API 연동 (주문, 잔고 조회)</li>
+  <li><strong>Phase 3</strong>: 테스트넷에서 봇 실행</li>
+  <li><strong>Phase 4</strong>: 리스크 관리 + 메인넷 배포</li>
+</ol>
+
+<h2>마무리</h2>
+<p>MM은 단순해 보이지만 리스크 관리가 핵심입니다. 소액으로 시작하고, 반드시 손실 한도를 설정하세요. 에어드랍 파밍 목적이라면 비용 대비 기대 보상을 꼼꼼히 계산해야 합니다.</p>
+`,
+  },
+  {
+    slug: 'funding-rate-arbitrage',
+    title: '펀딩비 차익거래 완전 가이드',
+    description: '펀딩비가 무엇인지, 어떻게 차익거래에 활용하는지, 실전 전략과 리스크까지 상세 설명합니다.',
+    category: 'trading',
+    readTime: 12,
+    updatedAt: '2026-02-07',
+    content: `
+<h2>펀딩비란?</h2>
+<p>펀딩비(Funding Rate)는 <strong>무기한 선물 시장에서 롱/숏 포지션 간에 주기적으로 교환하는 수수료</strong>입니다. 선물 가격을 현물 가격에 가깝게 유지하는 메커니즘입니다.</p>
+
+<h3>펀딩비 작동 원리</h3>
+<ul>
+  <li><strong>양수(+)</strong>: 롱이 숏에게 지불 → 시장이 과열(롱이 많음)</li>
+  <li><strong>음수(-)</strong>: 숏이 롱에게 지불 → 시장이 공포(숏이 많음)</li>
+  <li>보통 8시간마다 정산 (Binance, Hyperliquid 등)</li>
+</ul>
+
+<h2>펀딩비 차익거래란?</h2>
+<p>같은 코인에 대해 <strong>한쪽은 롱, 한쪽은 숏</strong>을 잡아서 가격 변동 위험 없이 펀딩비 차이만 수익으로 가져가는 전략입니다. 이를 <strong>델타뉴트럴(Delta Neutral)</strong> 전략이라고 합니다.</p>
+
+<h3>예시</h3>
+<ul>
+  <li>Binance BTC 펀딩비: +0.03% (8시간당)</li>
+  <li>Hyperliquid BTC 펀딩비: -0.01% (8시간당)</li>
+  <li>스프레드: 0.04%</li>
+  <li>Binance에서 숏(펀딩비 수취) + Hyperliquid에서 롱(펀딩비 수취)</li>
+  <li>양쪽에서 펀딩비 수취 → 가격 변동 무관 수익</li>
+</ul>
+
+<h2>수익률 계산</h2>
+<p>펀딩비 스프레드가 0.01%이고 하루 3번 정산된다면:</p>
+<ul>
+  <li>일 수익률: 0.01% × 3 = 0.03%</li>
+  <li>월 수익률: 0.03% × 30 = 0.9%</li>
+  <li>연 수익률: 0.03% × 365 = <strong>10.95%</strong></li>
+</ul>
+<p>리스크가 낮은 전략치고는 상당히 높은 수익률입니다.</p>
+
+<h2>필요한 준비물</h2>
+<ol>
+  <li><strong>2개 이상 거래소 계정</strong>: Binance, Hyperliquid, Bybit 등</li>
+  <li><strong>양쪽 거래소에 자금 분배</strong></li>
+  <li><strong>펀딩비 모니터링 도구</strong></li>
+  <li><strong>포지션 관리 스크립트</strong> (선택)</li>
+</ol>
+
+<h2>실전 전략</h2>
+<h3>1. 단일 거래소 vs 다중 거래소</h3>
+<p>같은 거래소에서 현물 롱 + 선물 숏이 가장 간단합니다. 다중 거래소는 자금 이동이 필요하지만 더 높은 스프레드를 찾을 수 있습니다.</p>
+
+<h3>2. 진입/퇴장 타이밍</h3>
+<ul>
+  <li>스프레드가 0.01% 이상일 때 진입</li>
+  <li>스프레드가 축소되거나 역전되면 퇴장</li>
+  <li>정산 시각 직전에 포지션 조정하지 말 것</li>
+</ul>
+
+<h3>3. 코인 선택</h3>
+<p>유동성이 높고 펀딩비 변동이 큰 코인이 좋습니다. BTC, ETH가 가장 안전하며, 알트코인은 수익률은 높지만 리스크도 큽니다.</p>
+
+<h2>리스크 관리</h2>
+<ul>
+  <li><strong>청산 리스크</strong>: 한쪽 포지션이 청산되면 델타뉴트럴이 깨짐 → 레버리지를 낮게 설정</li>
+  <li><strong>수수료</strong>: 거래 수수료가 펀딩비 수익을 초과하면 손해</li>
+  <li><strong>자금 이동 시간</strong>: 거래소 간 자금 전송 중 기회 소멸 가능</li>
+  <li><strong>거래소 리스크</strong>: 거래소 해킹, 출금 정지 등</li>
+</ul>
+
+<h2>자동화 도구</h2>
+<p>펀딩비 차익거래는 자동화하면 효율적입니다:</p>
+<ul>
+  <li>펀딩비 모니터링 봇 (실시간 스프레드 계산)</li>
+  <li>텔레그램 알림 (기회 발생 시 알림)</li>
+  <li>자동 포지션 오픈/클로즈 (고급)</li>
+</ul>
+
+<h2>마무리</h2>
+<p>펀딩비 차익거래는 코인 가격 방향에 베팅하지 않는 안전한 전략입니다. 하지만 "무위험"이 아니므로, 레버리지 관리와 수수료 계산을 철저히 해야 합니다. 소액으로 시작하여 경험을 쌓으세요.</p>
+`,
+  },
+  {
+    slug: 'onchain-analysis-guide',
+    title: '온체인 분석 입문 가이드',
+    description: '블록체인 데이터를 분석하여 시장을 읽는 온체인 분석의 기초를 배웁니다.',
+    category: 'trading',
+    readTime: 9,
+    updatedAt: '2026-02-07',
+    content: `
+<h2>온체인 분석이란?</h2>
+<p>온체인 분석은 <strong>블록체인에 기록된 실제 거래 데이터</strong>를 분석하여 시장 동향을 파악하는 방법입니다. 차트 분석(기술적 분석)과 달리, 실제 자금 흐름을 볼 수 있다는 장점이 있습니다.</p>
+
+<h2>왜 온체인 분석이 중요한가?</h2>
+<p>차트에는 나타나지 않는 정보를 볼 수 있습니다:</p>
+<ul>
+  <li>고래들이 코인을 축적하고 있는지, 매도하고 있는지</li>
+  <li>거래소로 대량 입금 = 매도 압박 신호</li>
+  <li>거래소에서 대량 출금 = 장기 보유(홀드) 신호</li>
+  <li>새로운 지갑 생성 증가 = 신규 투자자 유입</li>
+</ul>
+
+<h2>핵심 온체인 지표</h2>
+
+<h3>1. 거래소 잔고 (Exchange Balance)</h3>
+<p>거래소에 보관된 코인 수량입니다. 잔고가 줄어들면 홀더들이 코인을 빼서 장기 보유하는 것이므로 긍정적 신호입니다.</p>
+
+<h3>2. 고래 활동 (Whale Activity)</h3>
+<p>대량 보유자(고래)의 움직임은 시장에 큰 영향을 줍니다. 고래가 거래소로 코인을 보내면 매도 가능성이 높습니다.</p>
+
+<h3>3. 활성 주소 수 (Active Addresses)</h3>
+<p>하루 동안 거래에 참여한 고유 주소 수입니다. 증가 추세면 네트워크 사용이 늘고 있다는 의미입니다.</p>
+
+<h3>4. NUPL (Net Unrealized Profit/Loss)</h3>
+<p>전체 보유자의 미실현 손익 비율입니다. 높으면 과열(매도 시점), 낮으면 공포(매수 시점)를 나타냅니다.</p>
+
+<h3>5. SOPR (Spent Output Profit Ratio)</h3>
+<p>사용된 코인의 수익률입니다. 1 이상이면 수익 실현, 1 미만이면 손실 매도를 의미합니다.</p>
+
+<h2>온체인 분석 도구</h2>
+<ul>
+  <li><strong>Glassnode</strong>: 가장 포괄적인 온체인 데이터 (유료)</li>
+  <li><strong>CryptoQuant</strong>: 한국 팀이 만든 분석 도구 (일부 무료)</li>
+  <li><strong>Dune Analytics</strong>: 커스텀 쿼리 가능 (무료)</li>
+  <li><strong>Etherscan</strong>: 이더리움 트랜잭션 조회 (무료)</li>
+  <li><strong>Whale Alert</strong>: 대규모 이체 알림 (무료 봇)</li>
+</ul>
+
+<h2>실전 활용법</h2>
+
+<h3>고래 지갑 추적</h3>
+<ol>
+  <li>유명 고래 지갑 주소 확보 (Etherscan, Arkham 등)</li>
+  <li>지갑 모니터링 설정 (Whale Alert, 자체 봇)</li>
+  <li>대량 이체 발생 시 방향 분석</li>
+  <li>거래소 입금 = 매도 준비, 거래소 출금 = 홀드</li>
+</ol>
+
+<h3>공포/탐욕과 결합</h3>
+<p>온체인 데이터와 공포탐욕지수를 함께 보면 더 정확합니다:</p>
+<ul>
+  <li>극단적 공포 + 거래소 출금 증가 = 강한 매수 시그널</li>
+  <li>극단적 탐욕 + 거래소 입금 증가 = 강한 매도 시그널</li>
+</ul>
+
+<h2>주의사항</h2>
+<ul>
+  <li>온체인 데이터도 후행 지표일 수 있음</li>
+  <li>하나의 지표만으로 판단하지 말 것</li>
+  <li>고래의 움직임이 항상 방향성을 의미하지는 않음 (단순 지갑 정리일 수도)</li>
+</ul>
+
+<h2>마무리</h2>
+<p>온체인 분석은 "시장의 엑스레이"입니다. 차트가 보여주지 않는 내부를 들여다볼 수 있습니다. 무료 도구부터 시작해서 점차 분석 능력을 키워보세요!</p>
+`,
+  },
+  {
+    slug: 'solana-beginners-guide',
+    title: '솔라나(SOL) 초보자 가이드 2026',
+    description: '솔라나 블록체인의 특징, 생태계, 지갑 설정부터 DeFi 활용까지 초보자를 위한 완벽 가이드입니다.',
+    category: 'beginner',
+    readTime: 8,
+    updatedAt: '2026-02-07',
+    content: `
+<h2>솔라나란?</h2>
+<p>솔라나는 <strong>초당 수천 건의 거래를 처리할 수 있는 고성능 블록체인</strong>입니다. 이더리움의 느린 속도와 비싼 수수료 문제를 해결하기 위해 만들어졌습니다. 거래 수수료가 $0.001 미만으로 매우 저렴합니다.</p>
+
+<h3>솔라나의 장점</h3>
+<ul>
+  <li><strong>빠른 속도</strong>: 블록 생성 400ms, 확정 수초</li>
+  <li><strong>저렴한 수수료</strong>: 거래당 $0.001 미만</li>
+  <li><strong>높은 처리량</strong>: 초당 수천 TPS</li>
+  <li><strong>활발한 생태계</strong>: DeFi, NFT, 밈코인, 게임 등</li>
+</ul>
+
+<h2>솔라나 지갑 설정</h2>
+<h3>추천 지갑</h3>
+<ul>
+  <li><strong>Phantom</strong>: 가장 인기 있는 솔라나 지갑 (브라우저 확장/모바일)</li>
+  <li><strong>Solflare</strong>: 스테이킹 기능이 강한 지갑</li>
+  <li><strong>Backpack</strong>: xNFT 지원 차세대 지갑</li>
+</ul>
+
+<h3>Phantom 지갑 시작하기</h3>
+<ol>
+  <li>phantom.app 접속 → 브라우저 확장 설치</li>
+  <li>"새 지갑 만들기" 선택</li>
+  <li><strong>시드 구문 12개 단어 반드시 백업!</strong> (종이에 적어 보관)</li>
+  <li>비밀번호 설정 → 완료</li>
+</ol>
+
+<h2>SOL 구매 및 전송</h2>
+<ol>
+  <li>업비트 등 거래소에서 SOL 구매</li>
+  <li>Phantom 지갑 주소 복사 (SOL 주소)</li>
+  <li>거래소에서 출금 → Phantom 주소로 전송</li>
+  <li>약 1분 내 도착 (전송비 약 $0.01)</li>
+</ol>
+
+<h2>솔라나 DeFi 생태계</h2>
+
+<h3>DEX (탈중앙 거래소)</h3>
+<ul>
+  <li><strong>Jupiter</strong>: 솔라나 최대 DEX 집계기 (최적 가격 제공)</li>
+  <li><strong>Raydium</strong>: AMM 기반 DEX</li>
+  <li><strong>Orca</strong>: 사용하기 쉬운 DEX</li>
+</ul>
+
+<h3>스테이킹</h3>
+<p>SOL을 스테이킹하면 연 6~8% 수익을 얻을 수 있습니다:</p>
+<ul>
+  <li><strong>네이티브 스테이킹</strong>: Phantom에서 직접 검증자에게 위임</li>
+  <li><strong>리퀴드 스테이킹</strong>: Marinade(mSOL), Jito(jitoSOL) 사용 → 스테이킹하면서 DeFi에도 활용 가능</li>
+</ul>
+
+<h3>밈코인</h3>
+<p>솔라나는 밈코인의 중심지입니다. pump.fun, Moonshot 등에서 새 밈코인이 매일 수천 개 생성됩니다. 대부분 0이 되지만, 가끔 대박이 나기도 합니다. 투기 자산이므로 잃어도 되는 돈만 투자하세요.</p>
+
+<h2>솔라나 NFT</h2>
+<p>Magic Eden이 솔라나 최대 NFT 마켓플레이스입니다. 이더리움 NFT보다 훨씬 저렴하게 거래할 수 있습니다.</p>
+
+<h2>솔라나의 단점</h2>
+<ul>
+  <li><strong>네트워크 장애 이력</strong>: 과거 여러 차례 다운타임 발생</li>
+  <li><strong>중앙화 논란</strong>: 검증자 하드웨어 요구사항이 높아 참여 장벽 존재</li>
+  <li><strong>밈코인 사기 많음</strong>: 러그풀, 스캠 주의</li>
+</ul>
+
+<h2>마무리</h2>
+<p>솔라나는 빠르고 저렴한 블록체인으로, 다양한 DeFi와 NFT를 경험하기 좋습니다. Phantom 지갑 설치 후 소액으로 생태계를 탐험해보세요!</p>
+`,
+  },
+  {
+    slug: 'layer2-comparison-guide',
+    title: '이더리움 레이어2 비교 가이드 2026',
+    description: 'Arbitrum, Optimism, zkSync, Base 등 주요 L2 체인의 특징, 수수료, 생태계를 비교 분석합니다.',
+    category: 'beginner',
+    readTime: 10,
+    updatedAt: '2026-02-07',
+    content: `
+<h2>레이어2(L2)란?</h2>
+<p>레이어2는 <strong>이더리움 위에 구축된 확장 네트워크</strong>입니다. 이더리움의 보안은 그대로 활용하면서, 속도는 빠르고 수수료는 저렴합니다. 이더리움이 "고속도로"라면, L2는 그 위에 추가된 "고가도로"입니다.</p>
+
+<h2>L2가 필요한 이유</h2>
+<ul>
+  <li>이더리움 메인넷 가스비: $5~$50+ (피크 시)</li>
+  <li>L2 가스비: $0.01~$0.50</li>
+  <li>처리 속도: 메인넷 15 TPS → L2 수천 TPS</li>
+</ul>
+
+<h2>주요 L2 비교</h2>
+
+<h3>Arbitrum</h3>
+<ul>
+  <li><strong>타입</strong>: Optimistic Rollup</li>
+  <li><strong>TVL</strong>: L2 중 1위</li>
+  <li><strong>토큰</strong>: ARB</li>
+  <li><strong>특징</strong>: 가장 큰 DeFi 생태계, GMX가 대표 프로젝트</li>
+  <li><strong>수수료</strong>: $0.10~$0.30</li>
+  <li><strong>추천</strong>: DeFi 유저</li>
+</ul>
+
+<h3>Optimism</h3>
+<ul>
+  <li><strong>타입</strong>: Optimistic Rollup</li>
+  <li><strong>토큰</strong>: OP</li>
+  <li><strong>특징</strong>: OP Stack으로 Superchain 생태계 구축, Coinbase Base의 기반</li>
+  <li><strong>수수료</strong>: $0.05~$0.20</li>
+  <li><strong>추천</strong>: 생태계 확장성 중시하는 유저</li>
+</ul>
+
+<h3>Base</h3>
+<ul>
+  <li><strong>타입</strong>: Optimistic Rollup (OP Stack)</li>
+  <li><strong>토큰</strong>: 없음 (Coinbase 운영)</li>
+  <li><strong>특징</strong>: Coinbase가 운영, 미국 규제 친화적, 쉬운 온보딩</li>
+  <li><strong>수수료</strong>: $0.01~$0.10</li>
+  <li><strong>추천</strong>: 초보자, Coinbase 유저</li>
+</ul>
+
+<h3>zkSync</h3>
+<ul>
+  <li><strong>타입</strong>: ZK-Rollup</li>
+  <li><strong>토큰</strong>: ZK</li>
+  <li><strong>특징</strong>: 영지식 증명 기술, Account Abstraction 네이티브 지원</li>
+  <li><strong>수수료</strong>: $0.05~$0.25</li>
+  <li><strong>추천</strong>: 기술 관심 유저</li>
+</ul>
+
+<h3>StarkNet</h3>
+<ul>
+  <li><strong>타입</strong>: ZK-Rollup (STARK 증명)</li>
+  <li><strong>토큰</strong>: STRK</li>
+  <li><strong>특징</strong>: Cairo 프로그래밍 언어, 독자적 기술 스택</li>
+  <li><strong>수수료</strong>: $0.01~$0.15</li>
+  <li><strong>추천</strong>: 개발자, 기술 얼리어답터</li>
+</ul>
+
+<h2>L2 선택 가이드</h2>
+<ul>
+  <li><strong>DeFi 위주</strong> → Arbitrum (가장 풍부한 생태계)</li>
+  <li><strong>초보자</strong> → Base (쉬운 접근, 저렴한 수수료)</li>
+  <li><strong>에어드랍 기대</strong> → 새로운 L2 프로젝트 탐색</li>
+  <li><strong>기술 관심</strong> → zkSync, StarkNet (ZK 기술)</li>
+</ul>
+
+<h2>L2로 자산 옮기기 (브리지)</h2>
+<ol>
+  <li>이더리움 메인넷에 ETH 준비</li>
+  <li>공식 브리지 또는 제3자 브리지(Orbiter, Across 등) 사용</li>
+  <li>원하는 L2 네트워크 선택</li>
+  <li>전송 (보통 1~15분 소요)</li>
+</ol>
+<p><strong>주의</strong>: 항상 공식 브리지를 사용하고, 소액으로 먼저 테스트하세요.</p>
+
+<h2>마무리</h2>
+<p>L2는 이더리움의 미래입니다. 이미 많은 DeFi 활동이 L2로 이동했으며, 점점 더 가속화될 것입니다. 여러 L2를 소액으로 경험해보면서 자신에게 맞는 체인을 찾아보세요!</p>
+`,
+  },
+  {
+    slug: 'crypto-security-guide',
+    title: '암호화폐 보안 완벽 가이드',
+    description: '지갑 보안, 피싱 방지, 시드 구문 관리 등 암호화폐 자산을 안전하게 지키는 방법을 알려드립니다.',
+    category: 'security',
+    readTime: 11,
+    updatedAt: '2026-02-07',
+    content: `
+<h2>왜 보안이 중요한가?</h2>
+<p>암호화폐는 <strong>은행처럼 되돌릴 수 없습니다</strong>. 한 번 해킹당하면 코인을 되찾을 방법이 거의 없습니다. "본인이 은행"이므로 보안도 본인 책임입니다.</p>
+
+<h3>흔한 피해 사례</h3>
+<ul>
+  <li>피싱 사이트에서 시드 구문 입력 → 전액 탈취</li>
+  <li>가짜 에어드랍 승인 → 토큰 무단 전송</li>
+  <li>화면 캡처 앱에 시드 구문 노출</li>
+  <li>거래소 해킹 (Mt. Gox, FTX 등)</li>
+</ul>
+
+<h2>시드 구문(복구 문구) 관리</h2>
+<p>시드 구문은 지갑의 마스터 키입니다. <strong>절대 디지털로 보관하지 마세요.</strong></p>
+
+<h3>하면 안 되는 것</h3>
+<ul>
+  <li>스크린샷 찍기</li>
+  <li>메모 앱에 저장</li>
+  <li>클라우드(iCloud, Google Drive)에 업로드</li>
+  <li>카카오톡/텔레그램으로 전송</li>
+  <li>사진으로 찍어 저장</li>
+</ul>
+
+<h3>올바른 보관법</h3>
+<ul>
+  <li><strong>종이에 적기</strong>: 방수/방화 봉투에 보관</li>
+  <li><strong>금속 플레이트</strong>: 화재에도 안전 (Cryptosteel, Billfodl)</li>
+  <li><strong>2곳 이상 분산 보관</strong>: 집 + 다른 안전한 장소</li>
+  <li><strong>가족에게 위치 알려두기</strong>: 비상시를 대비</li>
+</ul>
+
+<h2>피싱 방지</h2>
+<p>암호화폐 사기의 80%가 피싱입니다.</p>
+
+<h3>피싱 유형</h3>
+<ul>
+  <li><strong>가짜 사이트</strong>: URL이 미세하게 다름 (uniswap.org → un1swap.org)</li>
+  <li><strong>가짜 에어드랍</strong>: "무료 토큰 클레임" → 지갑 승인 시 자산 탈취</li>
+  <li><strong>가짜 고객센터</strong>: 디스코드/텔레그램에서 DM으로 접근</li>
+  <li><strong>가짜 앱</strong>: 앱스토어의 짝퉁 지갑 앱</li>
+</ul>
+
+<h3>방지 방법</h3>
+<ul>
+  <li><strong>북마크 사용</strong>: 자주 쓰는 사이트는 반드시 북마크로 접속</li>
+  <li><strong>URL 확인</strong>: 접속 전 도메인 꼼꼼히 확인</li>
+  <li><strong>DM 무시</strong>: 디스코드/텔레그램 DM으로 오는 것은 99% 사기</li>
+  <li><strong>시드 구문 요구 = 100% 사기</strong></li>
+  <li><strong>무료 에어드랍 의심</strong>: 공식 채널에서 확인</li>
+</ul>
+
+<h2>지갑 보안 단계</h2>
+
+<h3>Level 1: 기본 (초보자)</h3>
+<ul>
+  <li>MetaMask/Phantom에 소액만 보관</li>
+  <li>시드 구문 종이에 백업</li>
+  <li>2FA(구글 인증) 활성화 (거래소)</li>
+</ul>
+
+<h3>Level 2: 중급</h3>
+<ul>
+  <li>하드웨어 지갑(Ledger) 구매 → 대부분 자산 보관</li>
+  <li>핫월렛에는 당장 사용할 금액만 보관</li>
+  <li>토큰 승인(Approve) 정기적으로 취소 (Revoke.cash)</li>
+</ul>
+
+<h3>Level 3: 고급</h3>
+<ul>
+  <li>멀티시그 지갑 (Safe) 사용</li>
+  <li>별도 기기에서만 지갑 사용</li>
+  <li>하드웨어 키(YubiKey) 사용</li>
+</ul>
+
+<h2>거래소 보안</h2>
+<ul>
+  <li>2FA 반드시 활성화 (SMS보다 Google Authenticator 추천)</li>
+  <li>출금 주소 화이트리스트 설정</li>
+  <li>거래소에 장기 보관하지 않기 ("Not your keys, not your coins")</li>
+  <li>대형 거래소 이용 (Binance, Coinbase, 업비트 등)</li>
+</ul>
+
+<h2>토큰 승인(Approve) 관리</h2>
+<p>DeFi 사용 시 토큰 사용 승인을 줍니다. 이 승인이 남아있으면 해당 컨트랙트가 언제든 토큰을 가져갈 수 있습니다.</p>
+<ul>
+  <li><strong>Revoke.cash</strong>: 불필요한 승인 취소</li>
+  <li>승인 시 "Unlimited" 대신 필요한 금액만 승인</li>
+  <li>사용 후 바로 승인 취소하는 습관</li>
+</ul>
+
+<h2>마무리</h2>
+<p>보안은 "한 번 설정하면 끝"이 아닙니다. 꾸준히 관리해야 합니다. 하드웨어 지갑 하나 구매하는 것만으로도 보안 수준이 크게 올라갑니다. 자산 크기와 관계없이 기본 보안은 반드시 지키세요!</p>
+`,
+  },
+  {
+    slug: 'defi-yield-strategy',
+    title: 'DeFi 수익 전략 가이드 2026',
+    description: '스테이킹, 유동성 공급, 이자 농사 등 DeFi에서 수익을 내는 다양한 전략을 비교 분석합니다.',
+    category: 'defi',
+    readTime: 11,
+    updatedAt: '2026-02-07',
+    content: `
+<h2>DeFi 수익의 종류</h2>
+<p>DeFi에서 수익을 내는 방법은 크게 4가지입니다. 각각 리스크와 수익률이 다르므로 자신에 맞는 전략을 선택하세요.</p>
+
+<h2>1. 스테이킹 (Staking)</h2>
+<p>코인을 네트워크에 예치하여 보상을 받는 가장 기본적인 방법입니다.</p>
+
+<h3>대표 프로토콜</h3>
+<ul>
+  <li><strong>Lido (stETH)</strong>: 이더리움 리퀴드 스테이킹 → 연 3~4%</li>
+  <li><strong>Marinade (mSOL)</strong>: 솔라나 리퀴드 스테이킹 → 연 6~7%</li>
+  <li><strong>Jito (jitoSOL)</strong>: MEV 수익 포함 솔라나 스테이킹 → 연 7~8%</li>
+</ul>
+
+<h3>장점과 단점</h3>
+<ul>
+  <li>장점: 간단하고 안전, 원금 손실 리스크 낮음</li>
+  <li>단점: 수익률이 상대적으로 낮음</li>
+</ul>
+
+<h2>2. 유동성 공급 (Liquidity Providing)</h2>
+<p>DEX에 토큰 쌍을 예치하여 거래 수수료를 받는 방법입니다.</p>
+
+<h3>작동 원리</h3>
+<ol>
+  <li>ETH와 USDC를 50:50으로 풀에 예치</li>
+  <li>트레이더가 이 풀에서 거래할 때마다 수수료 발생</li>
+  <li>예치한 비율만큼 수수료를 분배받음</li>
+</ol>
+
+<h3>비영구적 손실 (Impermanent Loss)</h3>
+<p>유동성 공급의 가장 큰 리스크입니다. 예치한 두 토큰의 가격 비율이 크게 변하면, 그냥 들고 있었을 때보다 손해를 볼 수 있습니다.</p>
+<ul>
+  <li>가격 변동 ±25% → 약 0.6% 손실</li>
+  <li>가격 변동 ±50% → 약 2.0% 손실</li>
+  <li>가격 변동 ±100% → 약 5.7% 손실</li>
+</ul>
+<p>스테이블코인 쌍(USDC/USDT)은 비영구적 손실이 거의 없습니다.</p>
+
+<h3>추천 풀</h3>
+<ul>
+  <li><strong>스테이블코인 쌍</strong>: USDC/USDT (연 5~15%, 저위험)</li>
+  <li><strong>메이저 쌍</strong>: ETH/USDC (연 10~30%, 중위험)</li>
+  <li><strong>변동성 높은 쌍</strong>: 밈코인/SOL (연 50%+, 고위험)</li>
+</ul>
+
+<h2>3. 렌딩 (Lending)</h2>
+<p>코인을 빌려주고 이자를 받는 방법입니다.</p>
+
+<h3>대표 프로토콜</h3>
+<ul>
+  <li><strong>Aave</strong>: 이더리움 기반 최대 렌딩 프로토콜</li>
+  <li><strong>Compound</strong>: 이더리움 렌딩의 원조</li>
+  <li><strong>Kamino</strong>: 솔라나 렌딩 프로토콜</li>
+</ul>
+
+<h3>수익률</h3>
+<ul>
+  <li>스테이블코인: 연 3~10% (수요에 따라 변동)</li>
+  <li>ETH, SOL: 연 1~5%</li>
+</ul>
+
+<h2>4. 이자 농사 (Yield Farming)</h2>
+<p>프로토콜이 제공하는 추가 토큰 보상까지 합쳐서 수익을 극대화하는 전략입니다.</p>
+
+<h3>원리</h3>
+<p>유동성 공급 수수료 + 프로토콜 토큰 보상 = 높은 APY</p>
+
+<h3>주의사항</h3>
+<ul>
+  <li>APY가 100%+인 곳은 보상 토큰 가격이 급락할 수 있음</li>
+  <li>새로운 프로토콜은 스마트 컨트랙트 리스크 존재</li>
+  <li>"TV에 나오면 팔아라" - 너무 유명해지면 수익률이 급감</li>
+</ul>
+
+<h2>리스크별 전략 추천</h2>
+
+<h3>보수적 (연 5~10%)</h3>
+<p>스테이블코인 렌딩 + ETH 스테이킹. 원금 손실 리스크 최소화.</p>
+
+<h3>중도 (연 10~25%)</h3>
+<p>리퀴드 스테이킹 + 메이저 쌍 LP. 적당한 수익과 리스크의 균형.</p>
+
+<h3>공격적 (연 25%+)</h3>
+<p>이자 농사 + 레버리지 스테이킹. 높은 수익 가능하지만 원금 손실 리스크도 큼.</p>
+
+<h2>마무리</h2>
+<p>DeFi 수익 전략은 "높은 수익 = 높은 리스크"가 기본 원칙입니다. 처음에는 안전한 스테이킹부터 시작하고, 경험이 쌓이면 점차 다양한 전략을 시도하세요. 절대 전 재산을 한 프로토콜에 넣지 마세요!</p>
+`,
+  },
+  {
+    slug: 'trading-psychology-guide',
+    title: '트레이딩 심리학 가이드',
+    description: 'FOMO, 패닉셀, 확증편향 등 트레이딩에서 흔히 저지르는 심리적 실수와 극복법을 알려드립니다.',
+    category: 'trading',
+    readTime: 9,
+    updatedAt: '2026-02-07',
+    content: `
+<h2>왜 트레이딩 심리가 중요한가?</h2>
+<p>트레이딩에서 기술적 분석보다 더 중요한 것이 <strong>심리 관리</strong>입니다. 아무리 좋은 전략도 감정에 휩쓸리면 무용지물이 됩니다. 대부분의 손실은 잘못된 분석이 아니라 잘못된 심리에서 옵니다.</p>
+
+<h2>흔한 심리적 함정</h2>
+
+<h3>1. FOMO (Fear Of Missing Out)</h3>
+<p>"나만 빠진 것 같은 두려움"입니다.</p>
+<ul>
+  <li>코인이 급등하면 뒤늦게 매수 → 고점에 물림</li>
+  <li>SNS에서 남들 수익 인증 → 조급한 진입</li>
+</ul>
+<p><strong>극복법</strong>: 매수 전 "이 가격에 팔 사람이 나에게 파는 것"임을 기억. 항상 진입 전 계획을 세우고 지키기.</p>
+
+<h3>2. 패닉셀 (Panic Selling)</h3>
+<p>가격이 급락하면 공포에 매도하는 행동입니다.</p>
+<ul>
+  <li>-10% 하락에 손절 → 바로 다음 날 반등</li>
+  <li>뉴스에 겁먹고 매도 → 나중에 후회</li>
+</ul>
+<p><strong>극복법</strong>: 매수 시 손절 라인을 미리 설정. 계획에 없는 매도는 하지 않기. 뉴스는 참고만.</p>
+
+<h3>3. 확증편향 (Confirmation Bias)</h3>
+<p>자기 생각에 맞는 정보만 찾고, 반대 의견은 무시하는 경향입니다.</p>
+<ul>
+  <li>BTC 매수 후 → 상승 전망 기사만 읽음</li>
+  <li>하락 경고 → "그 사람은 항상 비관적이야"</li>
+</ul>
+<p><strong>극복법</strong>: 의도적으로 반대 의견 찾아보기. "내가 틀릴 수 있다"를 전제로 분석.</p>
+
+<h3>4. 매몰비용 오류 (Sunk Cost Fallacy)</h3>
+<p>이미 잃은 돈 때문에 더 나쁜 결정을 하는 것입니다.</p>
+<ul>
+  <li>"이미 50% 손실인데 팔 수 없어" → 더 큰 손실</li>
+  <li>"물타기 하면 평균 단가가 낮아지니까" → 추가 손실</li>
+</ul>
+<p><strong>극복법</strong>: "지금 이 코인을 보유하고 있지 않다면, 이 가격에 살 것인가?" 자문하기.</p>
+
+<h3>5. 과도한 자신감 (Overconfidence)</h3>
+<p>연속 수익 후 "나는 천재다"라고 착각하는 것입니다.</p>
+<ul>
+  <li>레버리지를 점점 높임</li>
+  <li>리스크 관리를 소홀히 함</li>
+  <li>큰 한 방으로 이전 수익 모두 날림</li>
+</ul>
+<p><strong>극복법</strong>: 수익이 나도 전략을 바꾸지 않기. "운인지 실력인지" 냉정하게 판단.</p>
+
+<h2>감정 관리 실전 팁</h2>
+
+<h3>트레이딩 일지 작성</h3>
+<ul>
+  <li>매매 이유, 감정 상태, 결과를 기록</li>
+  <li>패턴 발견: "화나면 무리한 매매를 한다" 등</li>
+  <li>감정적 매매를 객관적으로 돌아볼 수 있음</li>
+</ul>
+
+<h3>규칙 기반 매매</h3>
+<ul>
+  <li>진입 조건, 퇴장 조건, 손절/익절 라인을 미리 정함</li>
+  <li>규칙에 맞지 않으면 절대 매매하지 않음</li>
+  <li>감정이 아닌 시스템으로 판단</li>
+</ul>
+
+<h3>자금 관리</h3>
+<ul>
+  <li>전체 자산의 1~2%만 한 번에 리스크</li>
+  <li>잃어도 되는 돈으로만 트레이딩</li>
+  <li>"올인"은 절대 금물</li>
+</ul>
+
+<h2>워렌 버핏의 명언</h2>
+<p><em>"다른 사람이 탐욕스러울 때 두려워하고, 다른 사람이 두려워할 때 탐욕스러워라."</em></p>
+<p>이 한 문장이 트레이딩 심리의 핵심입니다. 대중과 반대로 움직일 수 있는 심리적 강인함이 성공적인 투자의 열쇠입니다.</p>
+
+<h2>마무리</h2>
+<p>트레이딩은 기술 50%, 심리 50%입니다. 차트 분석을 배우는 만큼 자신의 심리도 공부하세요. 감정에 지면 시장에도 집니다. 차분하게, 규칙대로, 꾸준히!</p>
+`,
+  },
+  {
+    slug: 'crypto-portfolio-guide',
+    title: '암호화폐 포트폴리오 구성 가이드',
+    description: '자산 배분, 리밸런싱, 분산투자 전략으로 안정적인 크립토 포트폴리오를 만드는 방법을 알려드립니다.',
+    category: 'beginner',
+    readTime: 8,
+    updatedAt: '2026-02-07',
+    content: `
+<h2>왜 포트폴리오 관리가 필요한가?</h2>
+<p>"달걀을 한 바구니에 담지 마라"는 투자의 가장 기본 원칙입니다. 한 코인에 올인하면 그 코인이 무너질 때 전부 잃습니다. <strong>분산투자</strong>로 리스크를 줄이면서 수익을 추구하는 것이 현명합니다.</p>
+
+<h2>자산 배분 원칙</h2>
+
+<h3>코어-새틀라이트 전략</h3>
+<p>포트폴리오를 핵심(코어)과 위성(새틀라이트)으로 나눕니다:</p>
+<ul>
+  <li><strong>코어 (60~70%)</strong>: BTC + ETH → 안정적인 대형 코인</li>
+  <li><strong>새틀라이트 (20~30%)</strong>: SOL, AVAX, LINK 등 → 성장 기대</li>
+  <li><strong>스페큘레이션 (5~10%)</strong>: 밈코인, 신규 프로젝트 → 고위험 고수익</li>
+</ul>
+
+<h3>투자 금액별 추천 배분</h3>
+<ul>
+  <li><strong>$1,000 이하</strong>: BTC 50% + ETH 30% + 알트 20%</li>
+  <li><strong>$1,000~$10,000</strong>: BTC 40% + ETH 25% + 알트 25% + 밈 10%</li>
+  <li><strong>$10,000+</strong>: BTC 35% + ETH 20% + 알트 30% + DeFi 10% + 밈 5%</li>
+</ul>
+
+<h2>코인 선택 기준</h2>
+
+<h3>체크리스트</h3>
+<ol>
+  <li><strong>시가총액</strong>: TOP 30 이내가 상대적으로 안전</li>
+  <li><strong>팀</strong>: 실명 공개, 이력 확인 가능</li>
+  <li><strong>기술</strong>: 실제 작동하는 제품이 있는지</li>
+  <li><strong>커뮤니티</strong>: 활발한 개발자/사용자 커뮤니티</li>
+  <li><strong>토크노믹스</strong>: 총 발행량, 유통량, 인플레이션율</li>
+  <li><strong>사용 사례</strong>: 실제 문제를 해결하고 있는지</li>
+</ol>
+
+<h2>리밸런싱</h2>
+<p>시간이 지나면 가격 변동으로 비중이 달라집니다. 정기적으로 원래 비중으로 조정하는 것이 리밸런싱입니다.</p>
+
+<h3>리밸런싱 방법</h3>
+<ul>
+  <li><strong>시간 기반</strong>: 매월/매분기마다 한 번</li>
+  <li><strong>임계값 기반</strong>: 비중이 5% 이상 벗어나면 조정</li>
+</ul>
+
+<h3>예시</h3>
+<p>BTC 50% / ETH 30% / SOL 20%로 시작했는데, BTC가 급등하여 BTC 65% / ETH 20% / SOL 15%가 되었다면 → BTC 일부 매도, ETH/SOL 매수하여 원래 비중으로 복구</p>
+
+<h2>DCA (Dollar Cost Averaging)</h2>
+<p><strong>정기 적립식 투자</strong>입니다. 매주/매월 일정 금액을 투자하여 평균 매입가를 낮추는 전략입니다.</p>
+<ul>
+  <li>타이밍을 맞출 필요 없음</li>
+  <li>고점에 올인하는 실수 방지</li>
+  <li>장기적으로 시장 평균 수익률 달성</li>
+  <li>감정적 매매 방지</li>
+</ul>
+
+<h2>포트폴리오 추적 도구</h2>
+<ul>
+  <li><strong>CoinGecko Portfolio</strong>: 무료, 간편</li>
+  <li><strong>Delta</strong>: 모바일 앱, 거래소 연동</li>
+  <li><strong>Zerion</strong>: DeFi 포지션 자동 추적</li>
+  <li><strong>직접 만들기</strong>: 스프레드시트 또는 코딩으로 커스텀 대시보드</li>
+</ul>
+
+<h2>흔한 실수</h2>
+<ul>
+  <li><strong>100개 코인에 분산</strong>: 관리 불가능, 10개 이내가 적당</li>
+  <li><strong>수익난 코인만 남김</strong>: 승자를 너무 일찍 팔고 패자를 안 팜</li>
+  <li><strong>뉴스에 반응</strong>: 장기 계획 없이 뉴스마다 매매</li>
+  <li><strong>리밸런싱 안 함</strong>: 비중 방치 → 리스크 집중</li>
+</ul>
+
+<h2>마무리</h2>
+<p>좋은 포트폴리오는 "잘 때도 편안한 포트폴리오"입니다. 급등에도 급락에도 흔들리지 않는 배분을 찾으세요. BTC + ETH 코어에 관심 있는 알트코인을 소량 추가하는 것부터 시작하면 됩니다!</p>
+`,
+  },
+  {
+    slug: 'restaking-guide',
+    title: '리스테이킹(Restaking) 완벽 가이드 2026',
+    description: 'EigenLayer, Kelp, Puffer 등 리스테이킹 프로토콜의 원리와 참여 방법을 설명합니다.',
+    category: 'defi',
+    readTime: 10,
+    updatedAt: '2026-02-07',
+    content: `
+<h2>리스테이킹이란?</h2>
+<p>리스테이킹은 <strong>이미 스테이킹한 ETH를 다른 서비스의 보안에도 활용</strong>하여 추가 수익을 얻는 방법입니다. 하나의 자산으로 여러 곳에서 보상을 받을 수 있어 자본 효율이 높습니다.</p>
+
+<h3>비유로 이해하기</h3>
+<p>은행에 예금(스테이킹)해서 이자를 받으면서, 동시에 그 예금증서를 다른 곳에 담보로 맡겨 추가 이자를 받는 것과 비슷합니다.</p>
+
+<h2>EigenLayer: 리스테이킹의 핵심</h2>
+<p>EigenLayer는 리스테이킹의 선두주자로, 이더리움 보안을 다른 서비스(AVS, Actively Validated Services)에 공유합니다.</p>
+
+<h3>작동 원리</h3>
+<ol>
+  <li>ETH를 Lido 등에서 스테이킹 → stETH 수령</li>
+  <li>stETH를 EigenLayer에 리스테이킹</li>
+  <li>EigenLayer가 여러 AVS에 보안 제공</li>
+  <li>AVS로부터 추가 보상 수령</li>
+</ol>
+
+<h3>AVS란?</h3>
+<p>Actively Validated Services의 약자로, 이더리움의 보안을 빌려쓰는 서비스입니다:</p>
+<ul>
+  <li>오라클 네트워크</li>
+  <li>데이터 가용성 레이어</li>
+  <li>브릿지 보안</li>
+  <li>롤업 시퀀서</li>
+</ul>
+
+<h2>리퀴드 리스테이킹 (LRT)</h2>
+<p>EigenLayer에 직접 리스테이킹하면 자산이 잠기지만, 리퀴드 리스테이킹 프로토콜을 사용하면 유동성을 유지할 수 있습니다.</p>
+
+<h3>주요 LRT 프로토콜</h3>
+<ul>
+  <li><strong>EtherFi (eETH/weETH)</strong>: 가장 큰 LRT, TVL 최대</li>
+  <li><strong>Kelp DAO (rsETH)</strong>: 다양한 LST 지원</li>
+  <li><strong>Puffer Finance (pufETH)</strong>: 소규모 검증자도 참여 가능</li>
+  <li><strong>Renzo (ezETH)</strong>: 간편한 리스테이킹</li>
+</ul>
+
+<h2>참여 방법 (단계별)</h2>
+
+<h3>방법 1: 직접 리스테이킹</h3>
+<ol>
+  <li>ETH 준비 (이더리움 메인넷)</li>
+  <li>Lido에서 스테이킹 → stETH 수령</li>
+  <li>EigenLayer에 stETH 예치</li>
+  <li>오퍼레이터(검증자) 선택</li>
+</ol>
+
+<h3>방법 2: LRT 사용 (추천)</h3>
+<ol>
+  <li>ETH 준비</li>
+  <li>EtherFi, Kelp 등에서 원클릭 리스테이킹</li>
+  <li>LRT 토큰(weETH, rsETH 등) 수령</li>
+  <li>LRT를 DeFi에서 추가 활용 가능</li>
+</ol>
+
+<h2>수익 구조</h2>
+<ul>
+  <li><strong>Layer 1</strong>: 이더리움 스테이킹 보상 (연 3~4%)</li>
+  <li><strong>Layer 2</strong>: EigenLayer AVS 보상 (변동)</li>
+  <li><strong>Layer 3</strong>: LRT 프로토콜 포인트/에어드랍</li>
+  <li><strong>Layer 4</strong>: LRT 토큰을 DeFi에 활용 (추가 수익)</li>
+</ul>
+<p>여러 레이어의 보상을 동시에 받아 <strong>총 수익률이 기본 스테이킹보다 훨씬 높을 수 있습니다</strong>.</p>
+
+<h2>리스크</h2>
+
+<h3>1. 슬래싱 리스크</h3>
+<p>검증자가 잘못하면 스테이킹한 ETH의 일부가 삭감됩니다. 리스테이킹은 여러 서비스에 보안을 제공하므로 슬래싱 리스크도 중복됩니다.</p>
+
+<h3>2. 스마트 컨트랙트 리스크</h3>
+<p>여러 프로토콜을 중첩하므로, 하나라도 취약점이 있으면 자금이 위험합니다.</p>
+
+<h3>3. 유동성 리스크</h3>
+<p>LRT 토큰이 ETH와 1:1 가치를 유지하지 못할 수 있습니다 (디페깅).</p>
+
+<h3>4. 포인트 파밍의 불확실성</h3>
+<p>포인트가 토큰으로 전환될 때 기대에 못 미칠 수 있습니다.</p>
+
+<h2>마무리</h2>
+<p>리스테이킹은 DeFi의 새로운 트렌드로, 자본 효율을 극대화할 수 있습니다. 하지만 리스크도 중첩되므로, 전체 자산의 일부만 투자하고 신뢰할 수 있는 프로토콜을 선택하세요. 소액으로 시작하여 구조를 이해한 뒤 비중을 늘리는 것이 안전합니다!</p>
+`,
+  },
 ];
