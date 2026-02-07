@@ -72,74 +72,33 @@ export default function KimpPage() {
   const btcKimp = coins.find(c => c.symbol === 'BTC')?.kimp ?? 0;
   const gaugeValue = getGaugeValue(btcKimp);
 
-  // 환율
-  useEffect(() => {
-    fetch('https://api.exchangerate-api.com/v4/latest/USD')
-      .then(res => res.json())
-      .then(data => setKrwRate(data.rates.KRW))
-      .catch(() => setKrwRate(1350));
-  }, []);
-
-  // 데이터 가져오기: 하이퍼리퀴드 + 업비트 + 환율
+  // 데이터 가져오기: 서버 API 프록시 사용 (업비트 CORS 우회)
   const fetchKimp = useCallback(async () => {
     try {
-      // 1. 하이퍼리퀴드 전체 토큰 메타 + 가격
-      const [hlMetaRes, hlPriceRes] = await Promise.all([
-        fetch('https://api.hyperliquid.xyz/info', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'meta' }),
-        }),
-        fetch('https://api.hyperliquid.xyz/info', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'allMids' }),
-        }),
-      ]);
+      const res = await fetch('/api/kimp');
+      if (!res.ok) throw new Error('API error');
+      const data = await res.json();
 
-      const hlMeta = await hlMetaRes.json();
-      const hlMids: Record<string, string> = await hlPriceRes.json();
+      const { hlMeta, hlMids, upbitTickers, krwRate: fetchedRate } = data;
+      setKrwRate(fetchedRate);
 
       // HL 토큰 목록 + 가격
       const hlTokens: Record<string, number> = {};
-      for (const u of hlMeta.universe) {
+      for (const u of hlMeta) {
         const name = u.name as string;
         const mapped = HL_PREFIX_MAP[name] || name;
         const price = parseFloat(hlMids[name] || '0');
         if (price > 0) hlTokens[mapped] = price;
       }
 
-      // 2. 업비트 KRW 마켓 목록
-      const upbitMarketsRes = await fetch('https://api.upbit.com/v1/market/all?is_details=false');
-      const upbitMarkets = await upbitMarketsRes.json();
-      const krwSymbols = upbitMarkets
-        .filter((m: { market: string }) => m.market.startsWith('KRW-'))
-        .map((m: { market: string }) => m.market);
+      const upbitPrices = upbitTickers as Record<string, { price: number; change: number; volume: number }>;
 
-      // 3. 업비트 현재가 (한번에 최대 100개씩)
-      const upbitPrices: Record<string, { price: number; change: number; volume: number }> = {};
-      for (let i = 0; i < krwSymbols.length; i += 100) {
-        const batch = krwSymbols.slice(i, i + 100);
-        const tickerRes = await fetch(`https://api.upbit.com/v1/ticker?markets=${batch.join(',')}`);
-        const tickers = await tickerRes.json();
-        if (Array.isArray(tickers)) {
-          for (const t of tickers) {
-            const sym = t.market.replace('KRW-', '');
-            upbitPrices[sym] = {
-              price: t.trade_price,
-              change: t.signed_change_rate * 100,
-              volume: t.acc_trade_price_24h,
-            };
-          }
-        }
-      }
-
-      // 4. USDT 김프 계산 (베이스라인)
+      // USDT 김프 계산 (베이스라인)
       const usdtUpbit = upbitPrices['USDT']?.price || 0;
-      const currentUsdtKimp = usdtUpbit > 0 ? ((usdtUpbit / krwRate) - 1) * 100 : 0;
+      const currentUsdtKimp = usdtUpbit > 0 ? ((usdtUpbit / fetchedRate) - 1) * 100 : 0;
       setUsdtKimp(currentUsdtKimp);
 
-      // 5. 겹치는 코인만 김프 계산
+      // 겹치는 코인만 김프 계산
       const hlSymbols = Object.keys(hlTokens);
       const upbitSymbols = Object.keys(upbitPrices);
       const overlap = hlSymbols.filter(s => upbitSymbols.includes(s) && s !== 'USDT' && s !== 'USDC');
@@ -147,7 +106,7 @@ export default function KimpPage() {
       const newCoins: KimpCoin[] = overlap.map(symbol => {
         const hlPrice = hlTokens[symbol];
         const upbitKrw = upbitPrices[symbol].price;
-        const upbitUsd = upbitKrw / krwRate;
+        const upbitUsd = upbitKrw / fetchedRate;
         const kimp = hlPrice > 0 ? ((upbitUsd - hlPrice) / hlPrice) * 100 : 0;
         const netKimp = kimp - UPBIT_FEE - HL_FEE;
         const pureKimp = kimp - currentUsdtKimp; // 테더 김프 빼면 = 코인 고유 프리미엄
@@ -187,7 +146,7 @@ export default function KimpPage() {
       console.error('Kimp fetch error:', error);
       setLoading(false);
     }
-  }, [krwRate]);
+  }, []);
 
   useEffect(() => {
     fetchKimp();
