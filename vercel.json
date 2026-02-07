@@ -1,3 +1,8 @@
 {
-  "crons": []
+  "crons": [
+    {
+      "path": "/api/kimp-auto",
+      "schedule": "0 * * * *"
+    }
+  ]
 }
