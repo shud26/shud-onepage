@@ -649,7 +649,7 @@ export default function Home() {
           <div className="hidden md:flex items-center gap-6 text-[13px] text-[#8B8B90]">
             <a href="#mm-signal" className="hover:text-white transition-colors">MM</a>
             <a href="#prices" className="hover:text-white transition-colors">시세</a>
-            <a href="#kimchi" className="hover:text-white transition-colors">김프</a>
+            <Link href="/kimp" className="hover:text-white transition-colors text-[#FF5C00]">김프 봇</Link>
             <a href="#whale" className="hover:text-white transition-colors">고래</a>
             <a href="#airdrops" className="hover:text-white transition-colors">에어드랍</a>
             <a href="#research" className="hover:text-white transition-colors">리서치</a>
