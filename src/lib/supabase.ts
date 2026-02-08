@@ -107,3 +107,13 @@ export interface KimpHistory {
     low: { symbol: string; kimp: number; pureKimp: number }[];
   };
 }
+
+export interface KimpCoinHistory {
+  id: string;
+  created_at: string;
+  symbol: string;
+  kimp: number;
+  pure_kimp: number;
+  net_kimp: number;
+  volume_krw: number;
+}

@@ -168,6 +168,20 @@ export async function GET(request: NextRequest) {
       console.error('Kimp history save error:', e);
     }
 
+    // 코인별 김프 히스토리 저장 (kimp_coin_history)
+    try {
+      const coinRows = allCoins.map(c => ({
+        symbol: c.symbol,
+        kimp: parseFloat(c.kimp.toFixed(4)),
+        pure_kimp: parseFloat(c.pureKimp.toFixed(4)),
+        net_kimp: parseFloat(c.netKimp.toFixed(4)),
+        volume_krw: c.volume,
+      }));
+      await supabase.from('kimp_coin_history').insert(coinRows);
+    } catch (e) {
+      console.error('Coin history save error:', e);
+    }
+
     return NextResponse.json({
       success: sent,
       action: 'sent',

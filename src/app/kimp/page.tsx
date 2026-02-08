@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 
 // 수수료 상수
@@ -71,6 +71,10 @@ export default function KimpPage() {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [showOnlyWatch, setShowOnlyWatch] = useState(false);
+  const [watchAlertSending, setWatchAlertSending] = useState(false);
+  const [expandedCoin, setExpandedCoin] = useState<string | null>(null);
+  const [coinHistory, setCoinHistory] = useState<Record<string, { date: string; kimp: number; pureKimp: number }[]>>({});
+  const [coinHistoryLoading, setCoinHistoryLoading] = useState<string | null>(null);
 
   // localStorage에서 워치리스트 복원
   useEffect(() => {
@@ -230,6 +234,50 @@ export default function KimpPage() {
       alert(res.ok ? '텔레그램 전송 완료!' : '전송 실패');
     } catch { alert('에러 발생'); }
     setAlertSending(false);
+  };
+
+  // 워치리스트 텔레그램 알림
+  const sendWatchAlert = async () => {
+    if (watchlist.length === 0) return;
+    setWatchAlertSending(true);
+    try {
+      const watchCoins = coins.filter(c => watchlist.includes(c.symbol)).map(c => ({
+        symbol: c.symbol, kimp: c.kimp, pureKimp: c.pureKimp, netKimp: c.netKimp,
+      }));
+      const res = await fetch('/api/kimp-watch-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ coins: watchCoins, watchlist, krwRate, usdtKimp }),
+      });
+      alert(res.ok ? '워치리스트 알림 전송 완료!' : '전송 실패');
+    } catch { alert('에러 발생'); }
+    setWatchAlertSending(false);
+  };
+
+  // 코인 히스토리 로드
+  const loadCoinHistory = async (symbol: string) => {
+    if (coinHistory[symbol]) return; // 이미 로드됨
+    setCoinHistoryLoading(symbol);
+    try {
+      const res = await fetch(`/api/kimp-coin-history?symbol=${symbol}&days=30`);
+      if (res.ok) {
+        const data = await res.json();
+        setCoinHistory(prev => ({ ...prev, [symbol]: data.history }));
+      }
+    } catch (e) {
+      console.error('Coin history load error:', e);
+    }
+    setCoinHistoryLoading(null);
+  };
+
+  // 코인 행 클릭 → 확장/축소
+  const toggleExpand = (symbol: string) => {
+    if (expandedCoin === symbol) {
+      setExpandedCoin(null);
+    } else {
+      setExpandedCoin(symbol);
+      loadCoinHistory(symbol);
+    }
   };
 
   // 볼륨 포맷
@@ -476,6 +524,11 @@ export default function KimpPage() {
             className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${showOnlyWatch ? 'bg-[#FF5C00]/10 border-[#FF5C00]/30 text-[#FF5C00]' : 'bg-[#111113] border-[#1F1F23] text-[#8B8B90]'}`}>
             관심 {watchlist.length}
           </button>
+          <button onClick={sendWatchAlert} disabled={watchAlertSending || watchlist.length === 0}
+            className="px-3 py-2 rounded-lg text-xs font-medium border transition-colors bg-[#111113] border-[#1F1F23] text-[#8B8B90] hover:text-[#FF5C00] hover:border-[#FF5C00]/30 disabled:opacity-30 disabled:cursor-not-allowed"
+            title="워치리스트 텔레그램 알림">
+            {watchAlertSending ? '...' : '📢'}
+          </button>
           <span className="text-xs text-[#6B6B70]">{filteredCoins.length}개 표시</span>
         </div>
 
@@ -503,42 +556,109 @@ export default function KimpPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredCoins.map((c, i) => (
-                    <tr key={c.symbol} className="border-b border-[#1F1F23]/50 hover:bg-[#0A0A0B] transition-colors text-[13px]">
-                      <td className="py-2.5 px-4 text-[#4A4A4E] text-xs">{i + 1}</td>
-                      <td className="py-2.5 px-3">
-                        <div className="flex items-center gap-1.5">
-                          <button onClick={() => toggleWatch(c.symbol)} className="text-sm hover:scale-125 transition-transform" title={watchlist.includes(c.symbol) ? '관심 해제' : '관심 추가'}>
-                            {watchlist.includes(c.symbol) ? <span className="text-[#F59E0B]">&#9733;</span> : <span className="text-[#4A4A4E]">&#9734;</span>}
-                          </button>
-                          <span className="font-medium text-white">{c.symbol}</span>
-                          <span className={`text-[10px] ${c.change24h >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>{c.change24h >= 0 ? '+' : ''}{c.change24h.toFixed(1)}%</span>
-                        </div>
-                      </td>
-                      <td className="text-right py-2.5 px-3 text-[#ADADB0] font-mono text-xs">${fmtPrice(c.hlPrice)}</td>
-                      <td className="text-right py-2.5 px-3 text-[#ADADB0] font-mono text-xs">₩{c.upbitPriceKrw.toLocaleString(undefined, { maximumFractionDigits: c.upbitPriceKrw >= 100 ? 0 : 2 })}</td>
-                      <td className="text-right py-2.5 px-3">
-                        <span className="font-mono text-xs text-[#8B8B90]">{c.kimp > 0 ? '+' : ''}{c.kimp.toFixed(2)}%</span>
-                      </td>
-                      <td className="text-right py-2.5 px-3">
-                        <div className="flex flex-col items-end gap-0.5">
-                          <span className="font-mono font-medium" style={{ color: getKimpColor(c.pureKimp) }}>{c.pureKimp > 0 ? '+' : ''}{c.pureKimp.toFixed(2)}%</span>
-                          <div className="w-10 h-1 bg-[#1F1F23] rounded-full">
-                            <div className="h-full rounded-full" style={{ width: `${Math.min(Math.abs(c.pureKimp) * 15, 100)}%`, background: getKimpColor(c.pureKimp) }} />
-                          </div>
-                        </div>
-                      </td>
-                      <td className="text-right py-2.5 px-3 hidden md:table-cell">
-                        <span className="font-mono text-xs" style={{ color: c.netKimp > 0 ? '#22C55E' : '#EF4444' }}>{c.netKimp > 0 ? '+' : ''}{c.netKimp.toFixed(2)}%</span>
-                      </td>
-                      <td className="text-right py-2.5 px-3 hidden lg:table-cell text-[11px] text-[#8B8B90] font-mono">₩{fmtVol(c.volume24hKrw)}</td>
-                      <td className="text-right py-2.5 px-3">
-                        {c.signal === 'go' && <span className="text-[10px] font-medium bg-[rgba(34,197,94,0.1)] text-[#22C55E] px-2 py-0.5 rounded-full">GO</span>}
-                        {c.signal === 'wait' && <span className="text-[10px] font-medium bg-[rgba(245,158,11,0.1)] text-[#F59E0B] px-2 py-0.5 rounded-full">WAIT</span>}
-                        {c.signal === 'stop' && <span className="text-[10px] font-medium bg-[rgba(107,107,112,0.1)] text-[#6B6B70] px-2 py-0.5 rounded-full">-</span>}
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredCoins.map((c, i) => {
+                    const isExpanded = expandedCoin === c.symbol;
+                    const history = coinHistory[c.symbol];
+                    const isHistLoading = coinHistoryLoading === c.symbol;
+                    return (
+                      <React.Fragment key={c.symbol}>
+                        <tr className={`border-b border-[#1F1F23]/50 hover:bg-[#0A0A0B] transition-colors text-[13px] cursor-pointer ${isExpanded ? 'bg-[#0A0A0B]' : ''}`}
+                          onClick={() => toggleExpand(c.symbol)}>
+                          <td className="py-2.5 px-4 text-[#4A4A4E] text-xs">{i + 1}</td>
+                          <td className="py-2.5 px-3">
+                            <div className="flex items-center gap-1.5">
+                              <button onClick={e => { e.stopPropagation(); toggleWatch(c.symbol); }} className="text-sm hover:scale-125 transition-transform" title={watchlist.includes(c.symbol) ? '관심 해제' : '관심 추가'}>
+                                {watchlist.includes(c.symbol) ? <span className="text-[#F59E0B]">&#9733;</span> : <span className="text-[#4A4A4E]">&#9734;</span>}
+                              </button>
+                              <span className="font-medium text-white">{c.symbol}</span>
+                              <span className={`text-[10px] ${c.change24h >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>{c.change24h >= 0 ? '+' : ''}{c.change24h.toFixed(1)}%</span>
+                              <span className={`text-[10px] transition-transform ${isExpanded ? 'rotate-180' : ''}`}>&#9660;</span>
+                            </div>
+                          </td>
+                          <td className="text-right py-2.5 px-3 text-[#ADADB0] font-mono text-xs">${fmtPrice(c.hlPrice)}</td>
+                          <td className="text-right py-2.5 px-3 text-[#ADADB0] font-mono text-xs">₩{c.upbitPriceKrw.toLocaleString(undefined, { maximumFractionDigits: c.upbitPriceKrw >= 100 ? 0 : 2 })}</td>
+                          <td className="text-right py-2.5 px-3">
+                            <span className="font-mono text-xs text-[#8B8B90]">{c.kimp > 0 ? '+' : ''}{c.kimp.toFixed(2)}%</span>
+                          </td>
+                          <td className="text-right py-2.5 px-3">
+                            <div className="flex flex-col items-end gap-0.5">
+                              <span className="font-mono font-medium" style={{ color: getKimpColor(c.pureKimp) }}>{c.pureKimp > 0 ? '+' : ''}{c.pureKimp.toFixed(2)}%</span>
+                              <div className="w-10 h-1 bg-[#1F1F23] rounded-full">
+                                <div className="h-full rounded-full" style={{ width: `${Math.min(Math.abs(c.pureKimp) * 15, 100)}%`, background: getKimpColor(c.pureKimp) }} />
+                              </div>
+                            </div>
+                          </td>
+                          <td className="text-right py-2.5 px-3 hidden md:table-cell">
+                            <span className="font-mono text-xs" style={{ color: c.netKimp > 0 ? '#22C55E' : '#EF4444' }}>{c.netKimp > 0 ? '+' : ''}{c.netKimp.toFixed(2)}%</span>
+                          </td>
+                          <td className="text-right py-2.5 px-3 hidden lg:table-cell text-[11px] text-[#8B8B90] font-mono">₩{fmtVol(c.volume24hKrw)}</td>
+                          <td className="text-right py-2.5 px-3">
+                            {c.signal === 'go' && <span className="text-[10px] font-medium bg-[rgba(34,197,94,0.1)] text-[#22C55E] px-2 py-0.5 rounded-full">GO</span>}
+                            {c.signal === 'wait' && <span className="text-[10px] font-medium bg-[rgba(245,158,11,0.1)] text-[#F59E0B] px-2 py-0.5 rounded-full">WAIT</span>}
+                            {c.signal === 'stop' && <span className="text-[10px] font-medium bg-[rgba(107,107,112,0.1)] text-[#6B6B70] px-2 py-0.5 rounded-full">-</span>}
+                          </td>
+                        </tr>
+                        {/* 확장 행: 미니 김프 히스토리 차트 */}
+                        {isExpanded && (
+                          <tr className="bg-[#0D0D0E]">
+                            <td colSpan={9} className="px-4 py-3">
+                              {isHistLoading ? (
+                                <div className="flex items-center gap-2 text-[#6B6B70] text-xs py-2">
+                                  <div className="w-4 h-4 border-2 border-[#FF5C00] border-t-transparent rounded-full animate-spin"></div>
+                                  히스토리 로딩 중...
+                                </div>
+                              ) : history && history.length > 0 ? (
+                                <div>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-[11px] text-[#8B8B90] font-medium">{c.symbol} 김프 추이 (최근 {history.length}일)</span>
+                                    <div className="flex items-center gap-3 text-[10px]">
+                                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#FF5C00]"></span>총김프</span>
+                                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#8B5CF6]"></span>순수김프</span>
+                                    </div>
+                                  </div>
+                                  {(() => {
+                                    const allVals = history.flatMap(h => [h.kimp, h.pureKimp]);
+                                    const minV = Math.min(...allVals);
+                                    const maxV = Math.max(...allVals);
+                                    const rangeV = maxV - minV || 1;
+                                    return (
+                                      <>
+                                        <div className="flex items-end gap-[2px] h-14">
+                                          {history.map((h, hi) => {
+                                            const kH = ((h.kimp - minV) / rangeV) * 100;
+                                            const pH = ((h.pureKimp - minV) / rangeV) * 100;
+                                            return (
+                                              <div key={hi} className="flex-1 flex items-end gap-[1px] h-full group relative">
+                                                <div className="flex-1 rounded-sm" style={{ height: `${Math.max(2, kH)}%`, background: '#FF5C00', opacity: hi === history.length - 1 ? 1 : 0.5 }} />
+                                                <div className="flex-1 rounded-sm" style={{ height: `${Math.max(2, pH)}%`, background: '#8B5CF6', opacity: hi === history.length - 1 ? 1 : 0.5 }} />
+                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-20">
+                                                  <div className="bg-[#1A1A1D] border border-[#333] rounded px-2 py-1 text-[9px] whitespace-nowrap shadow-lg">
+                                                    <p className="text-[#8B8B90]">{h.date}</p>
+                                                    <p className="text-[#FF5C00] font-mono">{h.kimp > 0 ? '+' : ''}{h.kimp.toFixed(2)}%</p>
+                                                    <p className="text-[#8B5CF6] font-mono">{h.pureKimp > 0 ? '+' : ''}{h.pureKimp.toFixed(2)}%</p>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                        <div className="flex justify-between text-[9px] text-[#4A4A4E] mt-1">
+                                          <span>{history[0]?.date}</span>
+                                          <span>{history[history.length - 1]?.date}</span>
+                                        </div>
+                                      </>
+                                    );
+                                  })()}
+                                </div>
+                              ) : (
+                                <p className="text-[11px] text-[#4A4A4E] py-2">히스토리 데이터 없음 (매일 아침 자동 수집됩니다)</p>
+                              )}
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
