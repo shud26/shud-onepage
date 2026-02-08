@@ -67,6 +67,8 @@ export default function KimpPage() {
   const [alertSending, setAlertSending] = useState(false);
   const [search, setSearch] = useState('');
   const [showOnlyGo, setShowOnlyGo] = useState(false);
+  const [dailyHistory, setDailyHistory] = useState<{ date: string; btc_kimp: number; avg_kimp: number }[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
   // BTC 김프 (대표값)
   const btcKimp = coins.find(c => c.symbol === 'BTC')?.kimp ?? 0;
@@ -153,6 +155,27 @@ export default function KimpPage() {
     const interval = setInterval(fetchKimp, 30000);
     return () => clearInterval(interval);
   }, [fetchKimp]);
+
+  // 일별 김프 히스토리 가져오기
+  useEffect(() => {
+    async function fetchHistory() {
+      try {
+        const res = await fetch('/api/kimp-history?days=30');
+        if (!res.ok) throw new Error('History API error');
+        const data = await res.json();
+        const history = (data as { created_at: string; btc_kimp: number; avg_kimp: number }[]).map(d => ({
+          date: new Date(d.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }),
+          btc_kimp: d.btc_kimp,
+          avg_kimp: d.avg_kimp,
+        }));
+        setDailyHistory(history);
+      } catch (e) {
+        console.error('History fetch error:', e);
+      }
+      setHistoryLoading(false);
+    }
+    fetchHistory();
+  }, []);
 
   // 필터 + 정렬
   const filteredCoins = useMemo(() => {
@@ -349,6 +372,66 @@ export default function KimpPage() {
             </div>
           </div>
         )}
+
+        {/* === 일별 김프 추이 (Supabase 히스토리) === */}
+        {!historyLoading && dailyHistory.length > 1 && (() => {
+          const minK = Math.min(...dailyHistory.map(d => Math.min(d.btc_kimp, d.avg_kimp)));
+          const maxK = Math.max(...dailyHistory.map(d => Math.max(d.btc_kimp, d.avg_kimp)));
+          const range = maxK - minK || 1;
+          return (
+            <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold">일별 김프 추이</h3>
+                <div className="flex items-center gap-4 text-[10px]">
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#FF5C00]"></span>BTC</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#3B82F6]"></span>평균</span>
+                  <span className="text-[#6B6B70]">최근 {dailyHistory.length}일</span>
+                </div>
+              </div>
+              {/* Y축 가이드 */}
+              <div className="relative">
+                <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-[9px] text-[#4A4A4E] font-mono pr-2" style={{ width: '36px' }}>
+                  <span>{maxK.toFixed(1)}%</span>
+                  <span>{((maxK + minK) / 2).toFixed(1)}%</span>
+                  <span>{minK.toFixed(1)}%</span>
+                </div>
+                {/* 0% 라인 */}
+                <div className="ml-10 relative" style={{ height: '120px' }}>
+                  {minK < 0 && maxK > 0 && (
+                    <div className="absolute w-full border-t border-dashed border-[#333] z-10" style={{ top: `${((maxK - 0) / range) * 100}%` }}>
+                      <span className="absolute right-0 -top-3 text-[8px] text-[#6B6B70]">0%</span>
+                    </div>
+                  )}
+                  <div className="flex items-end gap-[2px] h-full">
+                    {dailyHistory.map((d, i) => {
+                      const btcH = ((d.btc_kimp - minK) / range) * 100;
+                      const avgH = ((d.avg_kimp - minK) / range) * 100;
+                      return (
+                        <div key={i} className="flex-1 flex items-end gap-[1px] h-full group relative">
+                          <div className="flex-1 rounded-sm transition-all duration-300" style={{ height: `${Math.max(2, btcH)}%`, background: '#FF5C00', opacity: i === dailyHistory.length - 1 ? 1 : 0.6 }} />
+                          <div className="flex-1 rounded-sm transition-all duration-300" style={{ height: `${Math.max(2, avgH)}%`, background: '#3B82F6', opacity: i === dailyHistory.length - 1 ? 1 : 0.5 }} />
+                          {/* 툴팁 */}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-20">
+                            <div className="bg-[#1A1A1D] border border-[#333] rounded-lg px-2.5 py-1.5 text-[10px] whitespace-nowrap shadow-lg">
+                              <p className="text-[#8B8B90] mb-0.5">{d.date}</p>
+                              <p className="text-[#FF5C00] font-mono">BTC {d.btc_kimp > 0 ? '+' : ''}{d.btc_kimp.toFixed(2)}%</p>
+                              <p className="text-[#3B82F6] font-mono">AVG {d.avg_kimp > 0 ? '+' : ''}{d.avg_kimp.toFixed(2)}%</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-between text-[9px] text-[#4A4A4E] mt-2 ml-10">
+                <span>{dailyHistory[0]?.date}</span>
+                {dailyHistory.length > 10 && <span>{dailyHistory[Math.floor(dailyHistory.length / 2)]?.date}</span>}
+                <span>{dailyHistory[dailyHistory.length - 1]?.date}</span>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* === 검색 + 필터 === */}
         <div className="flex items-center gap-3 flex-wrap">
