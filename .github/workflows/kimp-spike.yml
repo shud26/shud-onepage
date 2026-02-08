@@ -1,0 +1,17 @@
+name: Kimp Spike Alert
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # 매시간 정각
+  workflow_dispatch:       # 수동 실행 가능
+
+jobs:
+  check-spike:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Kimp Spike
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://tftchess.com/api/kimp-spike")
+          echo "Response: $response"
