@@ -107,9 +107,9 @@ export async function GET(request: NextRequest) {
       return { symbol, kimp, netKimp, pureKimp, volume: upbitPrices[symbol].volume };
     });
 
-    // 스파이크 감지
-    const spikeHigh = allCoins.filter(c => c.pureKimp >= SPIKE_THRESHOLD).sort((a, b) => b.pureKimp - a.pureKimp);
-    const spikeLow = allCoins.filter(c => c.pureKimp <= REVERSE_SPIKE_THRESHOLD).sort((a, b) => a.pureKimp - b.pureKimp);
+    // 스파이크 감지 (+-50% 이상은 비정상 데이터 제외)
+    const spikeHigh = allCoins.filter(c => c.pureKimp >= SPIKE_THRESHOLD && c.pureKimp < 50).sort((a, b) => b.pureKimp - a.pureKimp);
+    const spikeLow = allCoins.filter(c => c.pureKimp <= REVERSE_SPIKE_THRESHOLD && c.pureKimp > -50).sort((a, b) => a.pureKimp - b.pureKimp);
 
     if (spikeHigh.length === 0 && spikeLow.length === 0) {
       return NextResponse.json({ action: 'no_spike', totalCoins: allCoins.length });
