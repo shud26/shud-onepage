@@ -2,7 +2,7 @@ name: Kimp Spike Alert
 
 on:
   schedule:
-    - cron: '0 * * * *'  # 매시간 정각
+    - cron: '*/5 * * * *'  # 5분마다
   workflow_dispatch:       # 수동 실행 가능
 
 jobs:
