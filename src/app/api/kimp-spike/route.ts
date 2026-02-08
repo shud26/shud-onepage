@@ -23,16 +23,16 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // 최근 2시간 내 알림 보냈는지 체크 (스팸 방지)
-    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    // 최근 30분 내 알림 보냈는지 체크 (스팸 방지)
+    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     const { data: recentAlerts } = await supabase
       .from('kimp_spike_alerts')
       .select('id')
-      .gte('created_at', twoHoursAgo)
+      .gte('created_at', thirtyMinAgo)
       .limit(1);
 
     if (recentAlerts && recentAlerts.length > 0) {
-      return NextResponse.json({ action: 'skipped', reason: 'alert sent within 2h' });
+      return NextResponse.json({ action: 'skipped', reason: 'alert sent within 30min' });
     }
 
     // 데이터 수집 (kimp-auto와 동일)
