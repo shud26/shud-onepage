@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Check Kimp Spike
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" \
+          response=$(curl -s -w "\n%{http_code}" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "https://tftchess.com/api/kimp-spike")
-          echo "Response: $response"
+            "https://www.tftchess.com/api/kimp-spike")
+          echo "$response"
