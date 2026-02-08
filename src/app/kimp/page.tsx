@@ -308,6 +308,7 @@ export default function KimpPage() {
             <nav className="hidden md:flex items-center gap-1 text-sm">
               <Link href="/" className="px-3 py-1.5 rounded-lg text-[#8B8B90] hover:text-white hover:bg-[#111113] transition-colors">홈</Link>
               <span className="px-3 py-1.5 rounded-lg bg-[#1A1A1D] text-white">김프</span>
+              <Link href="/kimp/sim" className="px-3 py-1.5 rounded-lg text-[#8B8B90] hover:text-white hover:bg-[#111113] transition-colors">시뮬</Link>
               <Link href="/blog" className="px-3 py-1.5 rounded-lg text-[#8B8B90] hover:text-white hover:bg-[#111113] transition-colors">블로그</Link>
               <Link href="/whales" className="px-3 py-1.5 rounded-lg text-[#8B8B90] hover:text-white hover:bg-[#111113] transition-colors">고래</Link>
             </nav>
@@ -692,6 +693,7 @@ export default function KimpPage() {
         <div className="flex justify-around py-2 pb-[env(safe-area-inset-bottom)]">
           <Link href="/" className="flex flex-col items-center gap-0.5 px-3 py-1 text-[#6B6B70]"><span className="text-lg">🏠</span><span className="text-[10px]">홈</span></Link>
           <span className="flex flex-col items-center gap-0.5 px-3 py-1 text-[#FF5C00]"><span className="text-lg">📊</span><span className="text-[10px]">김프</span></span>
+          <Link href="/kimp/sim" className="flex flex-col items-center gap-0.5 px-3 py-1 text-[#6B6B70]"><span className="text-lg">🎲</span><span className="text-[10px]">시뮬</span></Link>
           <Link href="/whales" className="flex flex-col items-center gap-0.5 px-3 py-1 text-[#6B6B70]"><span className="text-lg">🐋</span><span className="text-[10px]">고래</span></Link>
           <Link href="/blog" className="flex flex-col items-center gap-0.5 px-3 py-1 text-[#6B6B70]"><span className="text-lg">📝</span><span className="text-[10px]">블로그</span></Link>
         </div>
