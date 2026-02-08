@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendTelegramMessage } from '@/lib/telegram';
+import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -147,6 +148,25 @@ export async function GET(request: NextRequest) {
 
     const message = lines.join('\n');
     const sent = await sendTelegramMessage(message);
+
+    // Supabase에 김프 히스토리 저장
+    try {
+      await supabase.from('kimp_history').insert({
+        btc_kimp: parseFloat(btcKimp.toFixed(4)),
+        avg_kimp: parseFloat(avgKimp.toFixed(4)),
+        usdt_kimp: parseFloat(usdtKimp.toFixed(4)),
+        krw_rate: krwRate,
+        total_coins: allCoins.length,
+        high_kimp_count: highKimp.length,
+        reverse_kimp_count: reverseKimp.length,
+        top_coins: {
+          high: top3High.map(c => ({ symbol: c.symbol, kimp: parseFloat(c.kimp.toFixed(4)), pureKimp: parseFloat(c.pureKimp.toFixed(4)) })),
+          low: top3Low.map(c => ({ symbol: c.symbol, kimp: parseFloat(c.kimp.toFixed(4)), pureKimp: parseFloat(c.pureKimp.toFixed(4)) })),
+        },
+      });
+    } catch (e) {
+      console.error('Kimp history save error:', e);
+    }
 
     return NextResponse.json({
       success: sent,

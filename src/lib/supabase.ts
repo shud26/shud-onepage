@@ -91,3 +91,19 @@ export interface BlogPost {
   created_at: string;
   updated_at: string;
 }
+
+export interface KimpHistory {
+  id: string;
+  created_at: string;
+  btc_kimp: number;
+  avg_kimp: number;
+  usdt_kimp: number;
+  krw_rate: number;
+  total_coins: number;
+  high_kimp_count: number;
+  reverse_kimp_count: number;
+  top_coins: {
+    high: { symbol: string; kimp: number; pureKimp: number }[];
+    low: { symbol: string; kimp: number; pureKimp: number }[];
+  };
+}
