@@ -69,6 +69,25 @@ export default function KimpPage() {
   const [showOnlyGo, setShowOnlyGo] = useState(false);
   const [dailyHistory, setDailyHistory] = useState<{ date: string; btc_kimp: number; avg_kimp: number }[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [watchlist, setWatchlist] = useState<string[]>([]);
+  const [showOnlyWatch, setShowOnlyWatch] = useState(false);
+
+  // localStorage에서 워치리스트 복원
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('kimp-watchlist');
+      if (saved) setWatchlist(JSON.parse(saved));
+    } catch {}
+  }, []);
+
+  // 워치리스트 토글
+  const toggleWatch = (symbol: string) => {
+    setWatchlist(prev => {
+      const next = prev.includes(symbol) ? prev.filter(s => s !== symbol) : [...prev, symbol];
+      localStorage.setItem('kimp-watchlist', JSON.stringify(next));
+      return next;
+    });
+  };
 
   // BTC 김프 (대표값)
   const btcKimp = coins.find(c => c.symbol === 'BTC')?.kimp ?? 0;
@@ -182,13 +201,14 @@ export default function KimpPage() {
     let list = [...coins];
     if (search) list = list.filter(c => c.symbol.toLowerCase().includes(search.toLowerCase()));
     if (showOnlyGo) list = list.filter(c => c.signal === 'go');
+    if (showOnlyWatch) list = list.filter(c => watchlist.includes(c.symbol));
     list.sort((a, b) => {
       const aVal = sortBy === 'volume' ? a.volume24hKrw : sortBy === 'netKimp' ? a.netKimp : sortBy === 'pureKimp' ? a.pureKimp : a.kimp;
       const bVal = sortBy === 'volume' ? b.volume24hKrw : sortBy === 'netKimp' ? b.netKimp : sortBy === 'pureKimp' ? b.pureKimp : b.kimp;
       return sortDesc ? bVal - aVal : aVal - bVal;
     });
     return list;
-  }, [coins, search, showOnlyGo, sortBy, sortDesc]);
+  }, [coins, search, showOnlyGo, showOnlyWatch, watchlist, sortBy, sortDesc]);
 
   // 통계
   const avgPure = coins.length > 0 ? coins.reduce((s, c) => s + c.pureKimp, 0) / coins.length : 0;
@@ -452,6 +472,10 @@ export default function KimpPage() {
             className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${showOnlyGo ? 'bg-[#22C55E]/10 border-[#22C55E]/30 text-[#22C55E]' : 'bg-[#111113] border-[#1F1F23] text-[#8B8B90]'}`}>
             GO만 보기
           </button>
+          <button onClick={() => setShowOnlyWatch(!showOnlyWatch)}
+            className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${showOnlyWatch ? 'bg-[#FF5C00]/10 border-[#FF5C00]/30 text-[#FF5C00]' : 'bg-[#111113] border-[#1F1F23] text-[#8B8B90]'}`}>
+            관심 {watchlist.length}
+          </button>
           <span className="text-xs text-[#6B6B70]">{filteredCoins.length}개 표시</span>
         </div>
 
@@ -483,8 +507,13 @@ export default function KimpPage() {
                     <tr key={c.symbol} className="border-b border-[#1F1F23]/50 hover:bg-[#0A0A0B] transition-colors text-[13px]">
                       <td className="py-2.5 px-4 text-[#4A4A4E] text-xs">{i + 1}</td>
                       <td className="py-2.5 px-3">
-                        <span className="font-medium text-white">{c.symbol}</span>
-                        <span className={`ml-1.5 text-[10px] ${c.change24h >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>{c.change24h >= 0 ? '+' : ''}{c.change24h.toFixed(1)}%</span>
+                        <div className="flex items-center gap-1.5">
+                          <button onClick={() => toggleWatch(c.symbol)} className="text-sm hover:scale-125 transition-transform" title={watchlist.includes(c.symbol) ? '관심 해제' : '관심 추가'}>
+                            {watchlist.includes(c.symbol) ? <span className="text-[#F59E0B]">&#9733;</span> : <span className="text-[#4A4A4E]">&#9734;</span>}
+                          </button>
+                          <span className="font-medium text-white">{c.symbol}</span>
+                          <span className={`text-[10px] ${c.change24h >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>{c.change24h >= 0 ? '+' : ''}{c.change24h.toFixed(1)}%</span>
+                        </div>
                       </td>
                       <td className="text-right py-2.5 px-3 text-[#ADADB0] font-mono text-xs">${fmtPrice(c.hlPrice)}</td>
                       <td className="text-right py-2.5 px-3 text-[#ADADB0] font-mono text-xs">₩{c.upbitPriceKrw.toLocaleString(undefined, { maximumFractionDigits: c.upbitPriceKrw >= 100 ? 0 : 2 })}</td>
