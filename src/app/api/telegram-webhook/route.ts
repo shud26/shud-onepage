@@ -44,71 +44,47 @@ async function handleKimpCommand() {
     `\n` +
     `${kimp >= 3 ? '⚠️ 김프 높음 → 매도(KRW→USDT→해외) 유리' : kimp <= -3 ? '💡 역김프 → 매수(해외→USDT→KRW) 유리' : '😐 보합 구간'}`;
 
-  const buttons = kimp >= 2
-    ? [
-        [
-          { text: '매도 5만', callback_data: 'sell_50000' },
-          { text: '매도 10만', callback_data: 'sell_100000' },
-        ],
-        [
-          { text: '전송 50', callback_data: 'transfer_50' },
-          { text: '전송 100', callback_data: 'transfer_100' },
-        ],
-        [{ text: '무시', callback_data: 'ignore' }],
-      ]
-    : [
-        [
-          { text: '매수 5만', callback_data: 'buy_50000' },
-          { text: '매수 10만', callback_data: 'buy_100000' },
-        ],
-        [
-          { text: '매도 5만', callback_data: 'sell_50000' },
-          { text: '매도 10만', callback_data: 'sell_100000' },
-        ],
-        [{ text: '무시', callback_data: 'ignore' }],
-      ];
-
-  await sendTelegramWithButtons(text, buttons);
+  await sendTelegramMessage(text);
 }
 
 // /b 명령어 처리
 async function handleBalanceCommand() {
-  const [upbit, usdtPrice] = await Promise.all([
-    getBalance(),
-    getUSDTPrice(),
-  ]);
+  // 업비트: IP 제한으로 실패 가능 → 에러 처리
+  let upbitKrw = -1;
+  let upbitUsdt = -1;
+  try {
+    const upbit = await getBalance();
+    upbitKrw = upbit.krw;
+    upbitUsdt = upbit.usdt;
+  } catch { /* IP 제한 */ }
 
-  // Binance는 한국 IP 차단 → 미국 프록시 경유
+  const usdtPrice = await getUSDTPrice(); // 공개 API라 항상 성공
+
+  // Binance: 한국 IP 차단 → 미국 프록시 경유
   const binanceUsdt = await getBinanceBalanceViaProxy();
 
-  const upbitUsdtKrw = upbit.usdt * usdtPrice;
+  const upbitLine = upbitKrw >= 0
+    ? `  KRW: ${Math.floor(upbitKrw).toLocaleString()}원\n` +
+      `  USDT: ${upbitUsdt.toFixed(2)}개 (≈${Math.floor(upbitUsdt * usdtPrice).toLocaleString()}원)`
+    : `  ⚠️ 조회 불가 (IP 제한) → 앱에서 확인`;
   const binanceLine = binanceUsdt >= 0
     ? `  USDT: ${binanceUsdt.toFixed(2)}개`
-    : `  ⚠️ 조회 불가 (한국 IP 차단)`;
-  const totalKrw = upbit.krw + upbitUsdtKrw + (binanceUsdt > 0 ? binanceUsdt * usdtPrice : 0);
+    : `  ⚠️ 조회 불가 → 앱에서 확인`;
 
   const text =
     `💼 <b>잔고 현황</b>\n` +
     `\n` +
     `🇰🇷 <b>업비트</b>\n` +
-    `  KRW: ${Math.floor(upbit.krw).toLocaleString()}원\n` +
-    `  USDT: ${upbit.usdt.toFixed(2)}개 (≈${Math.floor(upbitUsdtKrw).toLocaleString()}원)\n` +
+    `${upbitLine}\n` +
     `\n` +
     `🌐 <b>Binance</b>\n` +
     `${binanceLine}\n` +
     `\n` +
-    `💰 총자산: ≈${Math.floor(totalKrw).toLocaleString()}원\n` +
-    `📊 USDT 가격: ${usdtPrice.toLocaleString()}원`;
+    `📊 USDT 가격: ${usdtPrice.toLocaleString()}원\n` +
+    `\n` +
+    `💡 잔고는 각 앱에서 직접 확인하세요`;
 
-  const buttons = [
-    [
-      { text: '전송 50 USDT', callback_data: 'transfer_50' },
-      { text: '전송 100 USDT', callback_data: 'transfer_100' },
-    ],
-    [{ text: '무시', callback_data: 'ignore' }],
-  ];
-
-  await sendTelegramWithButtons(text, buttons);
+  await sendTelegramWithButtons(text, [[{ text: '확인', callback_data: 'ignore' }]]);
 }
 
 // /help 명령어 처리
@@ -116,13 +92,15 @@ async function handleHelpCommand() {
   const text =
     `📖 <b>김프봇 명령어</b>\n` +
     `\n` +
-    `/kimp - 김프 확인 + 매수/매도 버튼\n` +
-    `/b - 업비트/Binance 잔고 조회\n` +
+    `/kimp - 김프 실시간 확인\n` +
+    `/b - 잔고 조회 (USDT 가격)\n` +
     `/help - 명령어 목록\n` +
     `\n` +
     `🔔 자동 알림: 5분마다 김프 체크\n` +
-    `  김프 ≥3%: 매도 알림\n` +
-    `  김프 ≤-3%: 매수 알림`;
+    `  김프 ≥3%: 매도 타이밍 알림\n` +
+    `  김프 ≤-3%: 매수 타이밍 알림\n` +
+    `\n` +
+    `💡 매매는 업비트/Binance 앱에서 직접`;
 
   await sendTelegramMessage(text);
 }

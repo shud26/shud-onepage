@@ -4,10 +4,5 @@
       "path": "/api/kimp-auto",
       "schedule": "0 0 * * *"
     }
-  ],
-  "functions": {
-    "src/app/api/binance-proxy/route.ts": {
-      "regions": ["iad1"]
-    }
-  }
+  ]
 }
