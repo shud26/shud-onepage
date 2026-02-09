@@ -64,14 +64,23 @@ async function handleKimpCommand() {
 
 // /b 명령어 처리
 async function handleBalanceCommand() {
-  const [upbit, binance, usdtPrice] = await Promise.all([
+  const [upbit, usdtPrice] = await Promise.all([
     getBalance(),
-    getBinanceBalance(),
     getUSDTPrice(),
   ]);
 
+  // Binance는 한국 IP 차단 → 실패해도 계속 진행
+  let binanceUsdt = -1;
+  try {
+    const binance = await getBinanceBalance();
+    binanceUsdt = binance.usdt;
+  } catch { /* 지역 제한 */ }
+
   const upbitUsdtKrw = upbit.usdt * usdtPrice;
-  const totalKrw = upbit.krw + upbitUsdtKrw + (binance.usdt * usdtPrice);
+  const binanceLine = binanceUsdt >= 0
+    ? `  USDT: ${binanceUsdt.toFixed(2)}개`
+    : `  ⚠️ 조회 불가 (한국 IP 차단)`;
+  const totalKrw = upbit.krw + upbitUsdtKrw + (binanceUsdt > 0 ? binanceUsdt * usdtPrice : 0);
 
   const text =
     `💼 <b>잔고 현황</b>\n` +
@@ -81,7 +90,7 @@ async function handleBalanceCommand() {
     `  USDT: ${upbit.usdt.toFixed(2)}개 (≈${Math.floor(upbitUsdtKrw).toLocaleString()}원)\n` +
     `\n` +
     `🌐 <b>Binance</b>\n` +
-    `  USDT: ${binance.usdt.toFixed(2)}개\n` +
+    `${binanceLine}\n` +
     `\n` +
     `💰 총자산: ≈${Math.floor(totalKrw).toLocaleString()}원\n` +
     `📊 USDT 가격: ${usdtPrice.toLocaleString()}원`;
