@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 
 // === Types ===
@@ -15,6 +15,8 @@ interface ArbitragePosition {
   transferCompleteTime: number;
   status: 'transferring' | 'ready_to_close';
   fees: number;
+  takeProfit: number | null;
+  stopLoss: number | null;
 }
 
 interface CompletedTrade {
@@ -29,6 +31,7 @@ interface CompletedTrade {
   fees: number;
   openedAt: number;
   closedAt: number;
+  closeReason: 'manual' | 'tp' | 'sl';
 }
 
 interface KimpCoin {
@@ -89,6 +92,14 @@ function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
+function formatDuration(ms: number): string {
+  const mins = Math.floor(ms / 60000);
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  const remainMins = mins % 60;
+  return `${hrs}h ${remainMins}m`;
+}
+
 export default function KimpSimPage() {
   const [mounted, setMounted] = useState(false);
   const [balance, setBalance] = useState(INITIAL_BALANCE);
@@ -106,8 +117,17 @@ export default function KimpSimPage() {
   const [direction, setDirection] = useState<'upbit_to_hl' | 'hl_to_upbit'>('upbit_to_hl');
   const [amount, setAmount] = useState(500);
 
+  // TP/SL form state
+  const [tpslEnabled, setTpslEnabled] = useState(false);
+  const [tpValue, setTpValue] = useState(2.0);
+  const [slValue, setSlValue] = useState(1.0);
+
   // Timer tick
   const [, setTick] = useState(0);
+
+  // Refs for auto TP/SL (to avoid stale closure)
+  const coinsRef = useRef<KimpCoin[]>([]);
+  coinsRef.current = coins;
 
   // === localStorage Load ===
   useEffect(() => {
@@ -187,20 +207,100 @@ export default function KimpSimPage() {
     return () => clearInterval(interval);
   }, [fetchKimp]);
 
-  // === Timer for transfer countdown ===
+  // === Close Position (with reason) ===
+  const closePosition = useCallback((posId: string, reason: 'manual' | 'tp' | 'sl' = 'manual') => {
+    setPositions(prev => {
+      const pos = prev.find(p => p.id === posId);
+      if (!pos) return prev;
+
+      const currentCoin = coinsRef.current.find(c => c.symbol === pos.symbol);
+      if (!currentCoin) return prev;
+
+      const exitKimp = currentCoin.kimp;
+      let kimpDiff: number;
+
+      if (pos.direction === 'upbit_to_hl') {
+        kimpDiff = pos.entryKimp - exitKimp;
+      } else {
+        kimpDiff = exitKimp - pos.entryKimp;
+      }
+
+      const grossPnl = pos.amount * (kimpDiff / 100);
+      const pnl = grossPnl - pos.fees;
+      const pnlPercent = (pnl / pos.amount) * 100;
+
+      const trade: CompletedTrade = {
+        id: pos.id,
+        symbol: pos.symbol,
+        direction: pos.direction,
+        amount: pos.amount,
+        entryKimp: pos.entryKimp,
+        exitKimp,
+        pnl,
+        pnlPercent,
+        fees: pos.fees,
+        openedAt: pos.entryTime,
+        closedAt: Date.now(),
+        closeReason: reason,
+      };
+
+      setHistory(h => [trade, ...h].slice(0, 50));
+      setBalance(b => b + pos.amount + pnl);
+
+      return prev.filter(p => p.id !== posId);
+    });
+  }, []);
+
+  // === Timer for transfer countdown + TP/SL auto-check ===
   useEffect(() => {
     const interval = setInterval(() => {
       setTick(t => t + 1);
-      // Auto-update status
-      setPositions(prev => prev.map(p => {
-        if (p.status === 'transferring' && Date.now() >= p.transferCompleteTime) {
-          return { ...p, status: 'ready_to_close' };
+      // Auto-update status + TP/SL check
+      setPositions(prev => {
+        let updated = prev;
+        let needsUpdate = false;
+
+        updated = prev.map(p => {
+          if (p.status === 'transferring' && Date.now() >= p.transferCompleteTime) {
+            needsUpdate = true;
+            return { ...p, status: 'ready_to_close' as const };
+          }
+          return p;
+        });
+
+        // TP/SL auto check for ready positions
+        const currentCoins = coinsRef.current;
+        for (const pos of updated) {
+          if (pos.status !== 'ready_to_close') continue;
+          if (pos.takeProfit === null && pos.stopLoss === null) continue;
+
+          const currentCoin = currentCoins.find(c => c.symbol === pos.symbol);
+          if (!currentCoin) continue;
+
+          let kimpDiff: number;
+          if (pos.direction === 'upbit_to_hl') {
+            kimpDiff = pos.entryKimp - currentCoin.kimp;
+          } else {
+            kimpDiff = currentCoin.kimp - pos.entryKimp;
+          }
+
+          // Check TP
+          if (pos.takeProfit !== null && kimpDiff >= pos.takeProfit) {
+            setTimeout(() => closePosition(pos.id, 'tp'), 0);
+            continue;
+          }
+          // Check SL (kimpDiff goes negative = losing)
+          if (pos.stopLoss !== null && kimpDiff <= -(pos.stopLoss)) {
+            setTimeout(() => closePosition(pos.id, 'sl'), 0);
+            continue;
+          }
         }
-        return p;
-      }));
+
+        return needsUpdate ? updated : prev;
+      });
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [closePosition]);
 
   // === Selected coin data ===
   const selectedCoin = useMemo(() => coins.find(c => c.symbol === selectedSymbol), [coins, selectedSymbol]);
@@ -226,52 +326,12 @@ export default function KimpSimPage() {
       transferCompleteTime: now + transferTime,
       status: 'transferring',
       fees,
+      takeProfit: tpslEnabled ? tpValue : null,
+      stopLoss: tpslEnabled ? slValue : null,
     };
 
     setPositions(prev => [pos, ...prev]);
     setBalance(prev => prev - amount);
-  };
-
-  // === Close Position ===
-  const closePosition = (posId: string) => {
-    const pos = positions.find(p => p.id === posId);
-    if (!pos) return;
-
-    const currentCoin = coins.find(c => c.symbol === pos.symbol);
-    if (!currentCoin) { alert('현재 김프 데이터를 불러오는 중입니다'); return; }
-
-    const exitKimp = currentCoin.kimp;
-    let kimpDiff: number;
-
-    if (pos.direction === 'upbit_to_hl') {
-      // 업비트에서 사서 HL에서 팔기: 김프가 줄어들면 이익
-      kimpDiff = pos.entryKimp - exitKimp;
-    } else {
-      // HL에서 사서 업비트에서 팔기: 김프가 커지면 이익
-      kimpDiff = exitKimp - pos.entryKimp;
-    }
-
-    const grossPnl = pos.amount * (kimpDiff / 100);
-    const pnl = grossPnl - pos.fees;
-    const pnlPercent = (pnl / pos.amount) * 100;
-
-    const trade: CompletedTrade = {
-      id: pos.id,
-      symbol: pos.symbol,
-      direction: pos.direction,
-      amount: pos.amount,
-      entryKimp: pos.entryKimp,
-      exitKimp,
-      pnl,
-      pnlPercent,
-      fees: pos.fees,
-      openedAt: pos.entryTime,
-      closedAt: Date.now(),
-    };
-
-    setHistory(prev => [trade, ...prev].slice(0, 50));
-    setPositions(prev => prev.filter(p => p.id !== posId));
-    setBalance(prev => prev + pos.amount + pnl);
   };
 
   // === Reset ===
@@ -282,15 +342,84 @@ export default function KimpSimPage() {
     setHistory([]);
   };
 
-  // === Stats ===
+  // === Basic Stats ===
   const totalPnl = history.reduce((s, t) => s + t.pnl, 0);
   const winCount = history.filter(t => t.pnl > 0).length;
   const winRate = history.length > 0 ? (winCount / history.length) * 100 : 0;
+
+  // === Advanced Stats ===
+  const avgPnl = history.length > 0 ? totalPnl / history.length : 0;
+  const maxProfit = history.length > 0 ? Math.max(...history.map(t => t.pnl)) : 0;
+  const maxLoss = history.length > 0 ? Math.min(...history.map(t => t.pnl)) : 0;
+  const avgHoldTime = history.length > 0 ? history.reduce((s, t) => s + (t.closedAt - t.openedAt), 0) / history.length : 0;
+  const tpCount = history.filter(t => t.closeReason === 'tp').length;
+  const slCount = history.filter(t => t.closeReason === 'sl').length;
+  const manualCount = history.filter(t => t.closeReason === 'manual' || !t.closeReason).length;
+
+  // === Per-coin stats ===
+  const coinStats = useMemo(() => {
+    const map: Record<string, { trades: number; wins: number; totalPnl: number; pnls: number[] }> = {};
+    for (const t of history) {
+      if (!map[t.symbol]) map[t.symbol] = { trades: 0, wins: 0, totalPnl: 0, pnls: [] };
+      map[t.symbol].trades++;
+      if (t.pnl > 0) map[t.symbol].wins++;
+      map[t.symbol].totalPnl += t.pnl;
+      map[t.symbol].pnls.push(t.pnl);
+    }
+    return Object.entries(map)
+      .map(([symbol, s]) => ({
+        symbol,
+        trades: s.trades,
+        winRate: (s.wins / s.trades) * 100,
+        avgPnl: s.totalPnl / s.trades,
+        totalPnl: s.totalPnl,
+      }))
+      .sort((a, b) => b.totalPnl - a.totalPnl);
+  }, [history]);
+
+  // === Cumulative PnL for chart (last 20 trades, oldest first) ===
+  const cumulativePnl = useMemo(() => {
+    const recent = history.slice(0, 20).reverse();
+    let cumulative = 0;
+    return recent.map(t => {
+      cumulative += t.pnl;
+      return { id: t.id, symbol: t.symbol, pnl: t.pnl, cumulative };
+    });
+  }, [history]);
+
+  // === CSV Export ===
+  const exportCSV = () => {
+    if (history.length === 0) return;
+    const headers = ['날짜', '코인', '방향', '금액(USD)', '진입김프(%)', '종료김프(%)', '수수료(USD)', 'PnL(USD)', 'PnL(%)', '종료사유'];
+    const rows = history.map(t => [
+      new Date(t.closedAt).toISOString(),
+      t.symbol,
+      t.direction === 'upbit_to_hl' ? '업비트→HL' : 'HL→업비트',
+      t.amount.toFixed(2),
+      t.entryKimp.toFixed(4),
+      t.exitKimp.toFixed(4),
+      t.fees.toFixed(4),
+      t.pnl.toFixed(4),
+      t.pnlPercent.toFixed(4),
+      t.closeReason === 'tp' ? 'TP' : t.closeReason === 'sl' ? 'SL' : '수동',
+    ]);
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `kimp-sim-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   // Sort coins by absolute pureKimp for selection
   const sortedCoins = useMemo(() => [...coins].sort((a, b) => Math.abs(b.pureKimp) - Math.abs(a.pureKimp)), [coins]);
 
   if (!mounted) return null;
+
+  const chartMax = cumulativePnl.length > 0 ? Math.max(...cumulativePnl.map(d => Math.abs(d.cumulative)), 1) : 1;
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] text-[#e5e5e5]">
@@ -383,8 +512,8 @@ export default function KimpSimPage() {
                 </div>
               </div>
 
-              {/* Direction + Amount */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Direction + Amount + TP/SL */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Direction */}
                 <div>
                   <label className="text-xs text-[#8B8B90] mb-1.5 block">방향</label>
@@ -420,6 +549,40 @@ export default function KimpSimPage() {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                {/* TP/SL */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs text-[#8B8B90]">TP / SL</label>
+                    <button onClick={() => setTpslEnabled(!tpslEnabled)}
+                      className={`relative w-8 h-4 rounded-full transition-colors ${tpslEnabled ? 'bg-[#FF5C00]' : 'bg-[#333]'}`}>
+                      <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${tpslEnabled ? 'left-4.5' : 'left-0.5'}`}
+                        style={{ left: tpslEnabled ? '17px' : '2px' }} />
+                    </button>
+                  </div>
+                  {tpslEnabled ? (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-[#22C55E] w-6">TP</span>
+                        <input type="number" min={0.1} max={10} step={0.1} value={tpValue}
+                          onChange={e => setTpValue(Math.max(0.1, Math.min(10, Number(e.target.value))))}
+                          className="flex-1 bg-[#0A0A0B] border border-[#1F1F23] rounded px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-[#22C55E]" />
+                        <span className="text-[10px] text-[#6B6B70]">%</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-[#EF4444] w-6">SL</span>
+                        <input type="number" min={0.1} max={10} step={0.1} value={slValue}
+                          onChange={e => setSlValue(Math.max(0.1, Math.min(10, Number(e.target.value))))}
+                          className="flex-1 bg-[#0A0A0B] border border-[#1F1F23] rounded px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-[#EF4444]" />
+                        <span className="text-[10px] text-[#6B6B70]">%</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-[#0A0A0B] border border-[#1F1F23] rounded-lg px-3 py-3 text-center text-[11px] text-[#4A4A4E]">
+                      수동 모드
+                    </div>
+                  )}
                 </div>
 
                 {/* Info + Open */}
@@ -486,6 +649,11 @@ export default function KimpSimPage() {
                           {pos.direction === 'upbit_to_hl' ? '업비트→HL' : 'HL→업비트'}
                         </span>
                         <span className="text-xs text-[#6B6B70] font-mono">${pos.amount.toLocaleString()}</span>
+                        {(pos.takeProfit !== null || pos.stopLoss !== null) && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#FF5C00]/10 text-[#FF5C00]">
+                            TP {pos.takeProfit ?? '-'}% / SL {pos.stopLoss ?? '-'}%
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right">
@@ -494,7 +662,7 @@ export default function KimpSimPage() {
                           </span>
                         </div>
                         {isReady ? (
-                          <button onClick={() => closePosition(pos.id)}
+                          <button onClick={() => closePosition(pos.id, 'manual')}
                             className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#22C55E] hover:bg-[#16A34A] text-black transition-colors">
                             닫기
                           </button>
@@ -526,11 +694,120 @@ export default function KimpSimPage() {
           </div>
         )}
 
+        {/* === Performance Analytics === */}
+        {history.length > 0 && (
+          <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5 space-y-5">
+            <h2 className="text-sm font-semibold">성과 분석</h2>
+
+            {/* Advanced Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-[#0A0A0B] border border-[#1F1F23] rounded-lg p-3">
+                <p className="text-[10px] text-[#6B6B70] uppercase">평균 PnL</p>
+                <p className={`text-sm font-bold font-mono mt-1 ${avgPnl >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                  {avgPnl >= 0 ? '+' : ''}${avgPnl.toFixed(2)}
+                </p>
+              </div>
+              <div className="bg-[#0A0A0B] border border-[#1F1F23] rounded-lg p-3">
+                <p className="text-[10px] text-[#6B6B70] uppercase">최대 이익 / 손실</p>
+                <p className="text-sm font-mono mt-1">
+                  <span className="text-[#22C55E]">+${maxProfit.toFixed(2)}</span>
+                  <span className="text-[#6B6B70] mx-1">/</span>
+                  <span className="text-[#EF4444]">${maxLoss.toFixed(2)}</span>
+                </p>
+              </div>
+              <div className="bg-[#0A0A0B] border border-[#1F1F23] rounded-lg p-3">
+                <p className="text-[10px] text-[#6B6B70] uppercase">평균 보유 시간</p>
+                <p className="text-sm font-bold font-mono mt-1 text-[#ADADB0]">{formatDuration(avgHoldTime)}</p>
+              </div>
+              <div className="bg-[#0A0A0B] border border-[#1F1F23] rounded-lg p-3">
+                <p className="text-[10px] text-[#6B6B70] uppercase">TP / SL / 수동</p>
+                <p className="text-sm font-mono mt-1">
+                  <span className="text-[#22C55E]">{tpCount}</span>
+                  <span className="text-[#6B6B70] mx-1">/</span>
+                  <span className="text-[#EF4444]">{slCount}</span>
+                  <span className="text-[#6B6B70] mx-1">/</span>
+                  <span className="text-[#ADADB0]">{manualCount}</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Cumulative PnL Chart */}
+            {cumulativePnl.length > 1 && (
+              <div>
+                <p className="text-[10px] text-[#6B6B70] uppercase mb-2">누적 PnL (최근 {cumulativePnl.length}건)</p>
+                <div className="flex items-end gap-1 h-24 bg-[#0A0A0B] border border-[#1F1F23] rounded-lg p-3">
+                  {cumulativePnl.map((d, i) => {
+                    const h = Math.abs(d.cumulative) / chartMax * 100;
+                    const isPositive = d.cumulative >= 0;
+                    return (
+                      <div key={d.id} className="flex-1 flex flex-col items-center justify-end h-full relative group">
+                        <div className="absolute bottom-full mb-1 hidden group-hover:block z-10 bg-[#1A1A1D] border border-[#333] rounded px-2 py-1 text-[10px] whitespace-nowrap">
+                          {d.symbol} {d.pnl >= 0 ? '+' : ''}${d.pnl.toFixed(2)} (누적: {d.cumulative >= 0 ? '+' : ''}${d.cumulative.toFixed(2)})
+                        </div>
+                        <div
+                          className="w-full rounded-sm transition-all"
+                          style={{
+                            height: `${Math.max(h, 4)}%`,
+                            backgroundColor: isPositive ? '#22C55E' : '#EF4444',
+                            opacity: 0.5 + (i / cumulativePnl.length) * 0.5,
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Per-coin Stats */}
+            {coinStats.length > 0 && (
+              <div>
+                <p className="text-[10px] text-[#6B6B70] uppercase mb-2">코인별 성과</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-[#6B6B70] border-b border-[#1F1F23] text-[11px] font-semibold tracking-wider uppercase">
+                        <th className="text-left py-2 px-3">코인</th>
+                        <th className="text-right py-2 px-3">거래수</th>
+                        <th className="text-right py-2 px-3">승률</th>
+                        <th className="text-right py-2 px-3">평균 PnL</th>
+                        <th className="text-right py-2 px-3">총 PnL</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {coinStats.map((s, i) => (
+                        <tr key={s.symbol} className={`border-b border-[#1F1F23]/50 text-[13px] ${i === 0 && s.totalPnl > 0 ? 'bg-[#22C55E]/5' : ''}`}>
+                          <td className="py-1.5 px-3 font-medium text-white">{s.symbol}</td>
+                          <td className="py-1.5 px-3 text-right font-mono text-[#ADADB0]">{s.trades}</td>
+                          <td className="py-1.5 px-3 text-right font-mono text-[#ADADB0]">{s.winRate.toFixed(0)}%</td>
+                          <td className={`py-1.5 px-3 text-right font-mono ${s.avgPnl >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                            {s.avgPnl >= 0 ? '+' : ''}${s.avgPnl.toFixed(2)}
+                          </td>
+                          <td className={`py-1.5 px-3 text-right font-mono font-medium ${s.totalPnl >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                            {s.totalPnl >= 0 ? '+' : ''}${s.totalPnl.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* === Trade History === */}
         <div className="bg-[#111113] border border-[#1F1F23] rounded-xl overflow-hidden">
           <div className="px-5 py-3 border-b border-[#1F1F23] flex items-center justify-between">
             <h2 className="text-sm font-semibold">거래 기록 ({history.length})</h2>
-            <button onClick={resetAll} className="text-[10px] text-[#6B6B70] hover:text-[#EF4444] transition-colors">초기화</button>
+            <div className="flex items-center gap-2">
+              {history.length > 0 && (
+                <button onClick={exportCSV} className="text-[10px] text-[#FF5C00] hover:text-[#FF8A4C] transition-colors border border-[#FF5C00]/30 rounded px-2 py-0.5">
+                  CSV 내보내기
+                </button>
+              )}
+              <button onClick={resetAll} className="text-[10px] text-[#6B6B70] hover:text-[#EF4444] transition-colors">초기화</button>
+            </div>
           </div>
           {history.length === 0 ? (
             <div className="px-5 py-10 text-center text-[#4A4A4E] text-sm">
@@ -548,7 +825,8 @@ export default function KimpSimPage() {
                     <th className="text-right py-2.5 px-3">진입김프</th>
                     <th className="text-right py-2.5 px-3">종료김프</th>
                     <th className="text-right py-2.5 px-3">수수료</th>
-                    <th className="text-right py-2.5 px-4">PnL</th>
+                    <th className="text-right py-2.5 px-3">PnL</th>
+                    <th className="text-center py-2.5 px-3">종료</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -571,12 +849,21 @@ export default function KimpSimPage() {
                         {t.exitKimp > 0 ? '+' : ''}{t.exitKimp.toFixed(2)}%
                       </td>
                       <td className="py-2 px-3 text-right font-mono text-[#6B6B70]">${t.fees.toFixed(2)}</td>
-                      <td className="py-2 px-4 text-right">
+                      <td className="py-2 px-3 text-right">
                         <span className={`font-mono font-medium ${t.pnl >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
                           {t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}
                         </span>
                         <span className={`block text-[10px] font-mono ${t.pnl >= 0 ? 'text-[#22C55E]/70' : 'text-[#EF4444]/70'}`}>
                           {t.pnlPercent >= 0 ? '+' : ''}{t.pnlPercent.toFixed(2)}%
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 text-center">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                          t.closeReason === 'tp' ? 'bg-[#22C55E]/10 text-[#22C55E]' :
+                          t.closeReason === 'sl' ? 'bg-[#EF4444]/10 text-[#EF4444]' :
+                          'bg-[#333]/30 text-[#6B6B70]'
+                        }`}>
+                          {t.closeReason === 'tp' ? 'TP' : t.closeReason === 'sl' ? 'SL' : '수동'}
                         </span>
                       </td>
                     </tr>
@@ -599,8 +886,8 @@ export default function KimpSimPage() {
               <p>역김프일 때 HL에서 코인을 사서 업비트로 전송 후 매도. 김프가 커지면 이익!</p>
             </div>
             <div>
-              <p className="font-medium text-[#8B8B90] mb-1">수수료 구조</p>
-              <p>업비트 {UPBIT_FEE}% + HL {HL_FEE}% + 전송 {TRANSFER_FEE}% = 총 {TOTAL_FEE_PERCENT.toFixed(3)}%. 김프 변동이 이보다 커야 수익!</p>
+              <p className="font-medium text-[#8B8B90] mb-1">TP/SL 자동매매</p>
+              <p>TP(익절): 김프 변동이 목표치 도달 시 자동 종료. SL(손절): 역방향 변동 시 자동 종료. 수수료 {TOTAL_FEE_PERCENT.toFixed(3)}% 고려!</p>
             </div>
           </div>
         </div>
