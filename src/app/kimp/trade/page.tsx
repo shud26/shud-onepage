@@ -9,7 +9,7 @@ const KIMP_ALERT_THRESHOLD = 3; // ±3%
 
 interface TradeRecord {
   id: string;
-  action: 'buy' | 'sell';
+  action: 'buy' | 'sell' | 'transfer';
   amount: number;
   message: string;
   success: boolean;
@@ -27,6 +27,10 @@ export default function KimpTradePage() {
   const [usdtPrice, setUsdtPrice] = useState(0);
   const [balanceLoading, setBalanceLoading] = useState(false);
 
+  // Binance balance
+  const [binanceUsdt, setBinanceUsdt] = useState(0);
+  const [binanceLoading, setBinanceLoading] = useState(false);
+
   // Kimp data
   const [usdtKimp, setUsdtKimp] = useState(0);
   const [krwRate, setKrwRate] = useState(0);
@@ -35,6 +39,7 @@ export default function KimpTradePage() {
 
   // Trade
   const [orderLoading, setOrderLoading] = useState(false);
+  const [transferLoading, setTransferLoading] = useState(false);
   const [history, setHistory] = useState<TradeRecord[]>([]);
 
   // Auto alert
@@ -79,7 +84,7 @@ export default function KimpTradePage() {
     }
   };
 
-  // === Fetch balance ===
+  // === Fetch Upbit balance ===
   const fetchBalance = useCallback(async () => {
     if (!loggedIn) return;
     setBalanceLoading(true);
@@ -94,6 +99,21 @@ export default function KimpTradePage() {
       console.error('Balance fetch error:', error);
     }
     setBalanceLoading(false);
+  }, [loggedIn]);
+
+  // === Fetch Binance balance ===
+  const fetchBinanceBalance = useCallback(async () => {
+    if (!loggedIn) return;
+    setBinanceLoading(true);
+    try {
+      const res = await fetch(`/api/binance?pin=${PIN}`);
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      setBinanceUsdt(data.usdt);
+    } catch (error) {
+      console.error('Binance balance fetch error:', error);
+    }
+    setBinanceLoading(false);
   }, [loggedIn]);
 
   // === Fetch kimp ===
@@ -155,11 +175,17 @@ export default function KimpTradePage() {
   // === Polling: kimp + balance ===
   useEffect(() => {
     fetchKimp();
-    if (loggedIn) fetchBalance();
+    if (loggedIn) {
+      fetchBalance();
+      fetchBinanceBalance();
+    }
 
     const interval = setInterval(async () => {
       const kimp = await fetchKimp();
-      if (loggedIn) fetchBalance();
+      if (loggedIn) {
+        fetchBalance();
+        fetchBinanceBalance();
+      }
 
       // Auto alert
       if (autoAlert && kimp !== null) {
@@ -172,9 +198,9 @@ export default function KimpTradePage() {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [fetchKimp, fetchBalance, loggedIn, autoAlert, sendKimpAlert]);
+  }, [fetchKimp, fetchBalance, fetchBinanceBalance, loggedIn, autoAlert, sendKimpAlert]);
 
-  // === Execute order ===
+  // === Execute order (Upbit) ===
   const executeOrder = async (action: 'buy' | 'sell', amount: number) => {
     if (!confirm(`USDT ${action === 'buy' ? '매수' : '매도'} ${amount.toLocaleString()}원 실행하시겠습니까?`)) return;
 
@@ -216,6 +242,48 @@ export default function KimpTradePage() {
     setOrderLoading(false);
   };
 
+  // === Execute transfer (Binance → Upbit) ===
+  const executeTransfer = async (usdtAmount: number) => {
+    if (!confirm(`Binance → 업비트 ${usdtAmount} USDT 전송하시겠습니까?\n(TRC20, 수수료 ~1 USDT)`)) return;
+
+    setTransferLoading(true);
+    try {
+      const res = await fetch('/api/binance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: PIN, action: 'withdraw', amount: usdtAmount, network: 'TRX' }),
+      });
+
+      const result = await res.json();
+
+      const record: TradeRecord = {
+        id: Date.now().toString(),
+        action: 'transfer',
+        amount: usdtAmount,
+        message: result.message || result.error || 'Unknown',
+        success: result.success || false,
+        timestamp: Date.now(),
+      };
+
+      setHistory(prev => [record, ...prev].slice(0, 50));
+
+      if (result.success) {
+        await fetchBinanceBalance();
+      }
+    } catch (error) {
+      const record: TradeRecord = {
+        id: Date.now().toString(),
+        action: 'transfer',
+        amount: usdtAmount,
+        message: error instanceof Error ? error.message : 'Network error',
+        success: false,
+        timestamp: Date.now(),
+      };
+      setHistory(prev => [record, ...prev].slice(0, 50));
+    }
+    setTransferLoading(false);
+  };
+
   // === Kimp color ===
   const getKimpColor = (k: number) => {
     if (k >= 5) return '#EF4444';
@@ -227,6 +295,11 @@ export default function KimpTradePage() {
 
   const formatDate = (ts: number) =>
     new Date(ts).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  // === Total assets ===
+  const upbitUsdtKrw = usdt * usdtPrice;
+  const binanceUsdtKrw = binanceUsdt * (krwRate || 1450);
+  const totalKrw = krw + upbitUsdtKrw + binanceUsdtKrw;
 
   if (!mounted) return null;
 
@@ -338,34 +411,60 @@ export default function KimpTradePage() {
           )}
         </div>
 
-        {/* === 잔고 === */}
-        <div className="grid grid-cols-3 gap-3">
+        {/* === 총 자산 === */}
+        <div className="bg-[#111113] border border-[#FF5C00]/30 rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] text-[#FF5C00] uppercase tracking-wider font-medium">총 자산 (업비트 + Binance)</p>
+              <p className="text-2xl font-bold font-mono mt-1">
+                {balanceLoading && binanceLoading ? '...' : `${Math.floor(totalKrw).toLocaleString()}원`}
+              </p>
+            </div>
+            <div className="text-right text-[11px] text-[#6B6B70] space-y-0.5">
+              <p>업비트 KRW: {Math.floor(krw).toLocaleString()}</p>
+              <p>업비트 USDT: {Math.floor(upbitUsdtKrw).toLocaleString()}</p>
+              <p>Binance USDT: {Math.floor(binanceUsdtKrw).toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* === 잔고 (4칸) === */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-4">
             <p className="text-[10px] text-[#6B6B70] uppercase tracking-wider">KRW 잔액</p>
             <p className="text-lg font-bold font-mono mt-1">
               {balanceLoading ? '...' : `${Math.floor(krw).toLocaleString()}원`}
             </p>
+            <p className="text-[10px] text-[#3B82F6] mt-0.5">업비트</p>
           </div>
           <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-4">
             <p className="text-[10px] text-[#6B6B70] uppercase tracking-wider">USDT 잔액</p>
             <p className="text-lg font-bold font-mono mt-1">
               {balanceLoading ? '...' : `${usdt.toFixed(2)} USDT`}
             </p>
-            <p className="text-[10px] text-[#6B6B70] mt-0.5">
-              {balanceLoading ? '' : `≈ ${Math.floor(usdt * usdtPrice).toLocaleString()}원`}
+            <p className="text-[10px] text-[#3B82F6] mt-0.5">업비트</p>
+          </div>
+          <div className="bg-[#111113] border border-[#F59E0B]/30 rounded-xl p-4">
+            <p className="text-[10px] text-[#6B6B70] uppercase tracking-wider">USDT 잔액</p>
+            <p className="text-lg font-bold font-mono mt-1">
+              {binanceLoading ? '...' : `${binanceUsdt.toFixed(2)} USDT`}
             </p>
+            <p className="text-[10px] text-[#F59E0B] mt-0.5">Binance</p>
           </div>
           <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-4">
             <p className="text-[10px] text-[#6B6B70] uppercase tracking-wider">USDT 현재가</p>
             <p className="text-lg font-bold font-mono mt-1">
               {balanceLoading ? '...' : `${usdtPrice.toLocaleString()}원`}
             </p>
+            <p className="text-[10px] mt-0.5" style={{ color: getKimpColor(usdtKimp) }}>
+              김프 {usdtKimp > 0 ? '+' : ''}{usdtKimp.toFixed(2)}%
+            </p>
           </div>
         </div>
 
         {/* === 매매 버튼 === */}
         <div className="bg-[#111113] border border-[#1F1F23] rounded-xl p-5">
-          <h2 className="text-sm font-semibold mb-4">USDT 매매</h2>
+          <h2 className="text-sm font-semibold mb-4">USDT 매매 (업비트)</h2>
 
           <div className="grid grid-cols-2 gap-4">
             {/* 매수 */}
@@ -419,6 +518,42 @@ export default function KimpTradePage() {
           </div>
         </div>
 
+        {/* === 리밸런싱 (Binance → 업비트) === */}
+        <div className="bg-[#111113] border border-[#F59E0B]/30 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold">리밸런싱 (Binance → 업비트)</h2>
+            <span className="text-[10px] px-2 py-0.5 rounded bg-[#F59E0B]/10 text-[#F59E0B]">TRC20</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <button
+              onClick={() => executeTransfer(50)}
+              disabled={transferLoading}
+              className="py-3 rounded-lg text-sm font-medium bg-[#F59E0B]/10 border border-[#F59E0B]/30 text-[#F59E0B] hover:bg-[#F59E0B]/20 transition-colors disabled:opacity-30"
+            >
+              전송 50 USDT
+            </button>
+            <button
+              onClick={() => executeTransfer(100)}
+              disabled={transferLoading}
+              className="py-3 rounded-lg text-sm font-medium bg-[#F59E0B]/10 border border-[#F59E0B]/30 text-[#F59E0B] hover:bg-[#F59E0B]/20 transition-colors disabled:opacity-30"
+            >
+              전송 100 USDT
+            </button>
+          </div>
+
+          {transferLoading && (
+            <div className="flex items-center justify-center mb-3">
+              <div className="w-4 h-4 border-2 border-[#F59E0B] border-t-transparent rounded-full animate-spin mr-2"></div>
+              <span className="text-sm text-[#6B6B70]">전송 처리 중...</span>
+            </div>
+          )}
+
+          <div className="p-3 bg-[#0A0A0B] border border-[#1F1F23] rounded-lg text-[11px] text-[#6B6B70]">
+            <p>⚠️ 1회 최대 100 USDT | TRC20 네트워크 | 수수료 ~1 USDT | 도착 1~5분</p>
+          </div>
+        </div>
+
         {/* === 거래 기록 === */}
         <div className="bg-[#111113] border border-[#1F1F23] rounded-xl overflow-hidden">
           <div className="px-5 py-3 border-b border-[#1F1F23] flex items-center justify-between">
@@ -441,13 +576,16 @@ export default function KimpTradePage() {
               {history.map(t => (
                 <div key={t.id} className="px-5 py-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className={`text-lg ${t.success ? (t.action === 'buy' ? '' : '') : ''}`}>
-                      {t.success ? (t.action === 'buy' ? '🟢' : '🔴') : '❌'}
+                    <span className="text-lg">
+                      {t.action === 'transfer'
+                        ? (t.success ? '📤' : '❌')
+                        : (t.success ? (t.action === 'buy' ? '🟢' : '🔴') : '❌')}
                     </span>
                     <div>
                       <p className="text-sm font-medium">
-                        USDT {t.action === 'buy' ? '매수' : '매도'}{' '}
-                        <span className="font-mono">{t.amount.toLocaleString()}원</span>
+                        {t.action === 'transfer'
+                          ? `Binance → 업비트 ${t.amount} USDT`
+                          : `USDT ${t.action === 'buy' ? '매수' : '매도'} ${t.amount.toLocaleString()}원`}
                       </p>
                       <p className="text-[11px] text-[#6B6B70]">{t.message}</p>
                     </div>
@@ -464,15 +602,15 @@ export default function KimpTradePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <p className="font-medium text-[#8B8B90] mb-1">김프 매도 전략</p>
-              <p>김프 3% 이상일 때 USDT를 업비트에서 비싸게 매도. 해외에서 다시 매수하면 차익 발생.</p>
+              <p>김프 3% 이상 → 업비트 USDT 매도 → Binance에서 USDT 보충 (리밸런싱)</p>
             </div>
             <div>
               <p className="font-medium text-[#8B8B90] mb-1">역김프 매수 전략</p>
-              <p>역김프(-)일 때 업비트에서 USDT를 싸게 매수. 해외로 전송하면 차익 발생.</p>
+              <p>역김프(-) → 업비트 USDT 매수 → 나중에 김프 올라가면 매도</p>
             </div>
             <div>
-              <p className="font-medium text-[#8B8B90] mb-1">텔레그램 원클릭</p>
-              <p>김프 ±3% 감지 시 텔레그램 알림 + 인라인 버튼. 원클릭으로 즉시 매매!</p>
+              <p className="font-medium text-[#8B8B90] mb-1">양방향 차익거래</p>
+              <p>업비트 + Binance 잔고 확인. 매도 후 Binance에서 전송 버튼으로 USDT 보충!</p>
             </div>
           </div>
         </div>

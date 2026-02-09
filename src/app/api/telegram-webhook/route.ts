@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buyUSDT, sellUSDT, getBalance, getUSDTPrice } from '@/lib/upbit';
+import { getBinanceBalance, withdrawUSDT } from '@/lib/binance';
 import { sendTelegramMessage, answerCallbackQuery } from '@/lib/telegram';
 
 export const dynamic = 'force-dynamic';
@@ -23,9 +24,46 @@ export async function POST(req: NextRequest) {
       // 콜백 즉시 응답 (로딩 해제)
       await answerCallbackQuery(callbackId, '주문 처리 중...');
 
-      // callback_data 파싱: "buy_50000", "sell_100000", "ignore"
+      // callback_data 파싱: "buy_50000", "sell_100000", "transfer_50", "transfer_100", "ignore"
       if (data === 'ignore') {
         await sendTelegramMessage('⏭️ 알림을 무시했습니다.');
+        return NextResponse.json({ ok: true });
+      }
+
+      // Binance → 업비트 USDT 전송 처리
+      if (data.startsWith('transfer_')) {
+        const transferAmount = parseInt(data.split('_')[1], 10);
+        if (isNaN(transferAmount) || transferAmount <= 0) {
+          await sendTelegramMessage('❌ 잘못된 전송 금액입니다.');
+          return NextResponse.json({ ok: true });
+        }
+
+        const targetAddress = process.env.UPBIT_USDT_DEPOSIT_ADDRESS;
+        if (!targetAddress) {
+          await sendTelegramMessage('❌ 업비트 USDT 입금 주소가 설정되지 않았습니다.');
+          return NextResponse.json({ ok: true });
+        }
+
+        const transferResult = await withdrawUSDT(targetAddress, transferAmount, 'TRX');
+
+        if (transferResult.success) {
+          const binBalance = await getBinanceBalance();
+          await sendTelegramMessage(
+            `📤 <b>Binance → 업비트 전송 완료!</b>\n` +
+            `💰 ${transferAmount} USDT (TRC20)\n` +
+            `📋 ${transferResult.message}\n` +
+            `\n` +
+            `💼 Binance 잔고: ${binBalance.usdt.toFixed(2)} USDT\n` +
+            `⏱️ 도착 예상: 1~5분`
+          );
+        } else {
+          await sendTelegramMessage(
+            `❌ <b>Binance 전송 실패</b>\n` +
+            `💰 ${transferAmount} USDT\n` +
+            `❗ ${transferResult.message}`
+          );
+        }
+
         return NextResponse.json({ ok: true });
       }
 

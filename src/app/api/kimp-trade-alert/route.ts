@@ -30,6 +30,10 @@ export async function POST(req: NextRequest) {
           { text: '🔴 매도 10만원', callback_data: 'sell_100000' },
         ],
         [
+          { text: '📤 Binance→업비트 50 USDT', callback_data: 'transfer_50' },
+          { text: '📤 100 USDT', callback_data: 'transfer_100' },
+        ],
+        [
           { text: '⏭️ 무시', callback_data: 'ignore' },
         ],
       ];
