@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buyUSDT, sellUSDT, getBalance, getUSDTPrice } from '@/lib/upbit';
-import { getBinanceBalance, withdrawUSDT } from '@/lib/binance';
+import { withdrawUSDT } from '@/lib/binance';
 import { sendTelegramMessage, sendTelegramWithButtons, answerCallbackQuery } from '@/lib/telegram';
+
+// Binance는 한국 IP 차단 → 미국 리전 프록시 경유
+async function getBinanceBalanceViaProxy(): Promise<number> {
+  const secret = process.env.CRON_SECRET;
+  const res = await fetch(`https://www.tftchess.com/api/binance-proxy?secret=${secret}`);
+  if (!res.ok) return -1;
+  const data = await res.json();
+  return data.usdt ?? -1;
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -69,12 +78,8 @@ async function handleBalanceCommand() {
     getUSDTPrice(),
   ]);
 
-  // Binance는 한국 IP 차단 → 실패해도 계속 진행
-  let binanceUsdt = -1;
-  try {
-    const binance = await getBinanceBalance();
-    binanceUsdt = binance.usdt;
-  } catch { /* 지역 제한 */ }
+  // Binance는 한국 IP 차단 → 미국 프록시 경유
+  const binanceUsdt = await getBinanceBalanceViaProxy();
 
   const upbitUsdtKrw = upbit.usdt * usdtPrice;
   const binanceLine = binanceUsdt >= 0
@@ -189,13 +194,13 @@ export async function POST(req: NextRequest) {
         const transferResult = await withdrawUSDT(targetAddress, transferAmount, 'TRX');
 
         if (transferResult.success) {
-          const binBalance = await getBinanceBalance();
+          const binUsdt = await getBinanceBalanceViaProxy();
           await sendTelegramMessage(
             `📤 <b>Binance → 업비트 전송 완료!</b>\n` +
             `💰 ${transferAmount} USDT (TRC20)\n` +
             `📋 ${transferResult.message}\n` +
             `\n` +
-            `💼 Binance 잔고: ${binBalance.usdt.toFixed(2)} USDT\n` +
+            `💼 Binance 잔고: ${binUsdt >= 0 ? binUsdt.toFixed(2) + ' USDT' : '조회 불가'}\n` +
             `⏱️ 도착 예상: 1~5분`
           );
         } else {
