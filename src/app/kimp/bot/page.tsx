@@ -108,7 +108,7 @@ export default function KimpBotDashboard() {
   const fetchState = useCallback(async () => {
     try {
       const res = await fetch(
-        `https://ofpbscpcryquxrtojpei.supabase.co/rest/v1/kimp_bot_state?id=eq.1&select=state,updated_at&_t=${Date.now()}`,
+        `https://ofpbscpcryquxrtojpei.supabase.co/rest/v1/kimp_bot_state?id=eq.1&select=state,updated_at`,
         {
           cache: 'no-store',
           headers: {
