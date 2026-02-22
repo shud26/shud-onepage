@@ -217,6 +217,14 @@ export default function KimpBotDashboard() {
   const winRate = totalTrades > 0 ? ((wins / totalTrades) * 100).toFixed(1) : '0';
   const openMargin = openPositions.reduce((s, p) => s + (p.total_margin || 0), 0);
   const openFunding = openPositions.reduce((s, p) => s + (p.funding_earned_total || 0), 0);
+  // 종료 포지션 누적 펀딩 + 열린 포지션 펀딩 = 전체 펀딩
+  const closedFunding = botState?.total_funding_earned || 0;
+  const allFunding = closedFunding + openFunding;
+  // 종료 포지션 누적 PnL USD
+  const closedPnlUsd = closedPositions.reduce((s, p) => s + (p.net_pnl ?? 0), 0);
+  // 열린 포지션 미실현 PnL (펀딩 - 수수료, 가격 PnL은 대시보드에서 계산 불가)
+  const openUnrealizedFee = openPositions.reduce((s, p) => s + (p.entry_fee || 0), 0);
+  const openUnrealizedPnl = openFunding - openUnrealizedFee;
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] text-[#e5e5e5]">
@@ -379,6 +387,14 @@ export default function KimpBotDashboard() {
                       {fmtUsd((botState.virtual_usd || 0) + openMargin)}
                     </span>
                   </div>
+                  {openFunding !== 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-[#8B8B90]">+ 미실현 펀딩</span>
+                      <span className={`font-mono ${openFunding >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                        {fmtUsd(openFunding)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -393,7 +409,7 @@ export default function KimpBotDashboard() {
                   >
                     {fmtPct(botState.total_pnl || 0)}
                   </span>
-                  <p className="text-[10px] text-[#6B6B70] mt-0.5">총 PnL</p>
+                  <p className="text-[10px] text-[#6B6B70] mt-0.5">총 PnL (실현)</p>
                 </div>
                 <div className="space-y-1.5 text-xs">
                   <div className="flex justify-between">
@@ -407,8 +423,20 @@ export default function KimpBotDashboard() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#8B8B90]">누적 펀딩</span>
-                    <span className="font-mono text-[#22C55E]">{fmtUsd(botState.total_funding_earned || 0)}</span>
+                    <span className="text-[#8B8B90]">누적 펀딩 (전체)</span>
+                    <span className={`font-mono ${allFunding >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                      {fmtUsd(allFunding)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between pl-3">
+                    <span className="text-[#6B6B70]">실현</span>
+                    <span className="font-mono text-[#8B8B90]">{fmtUsd(closedFunding)}</span>
+                  </div>
+                  <div className="flex justify-between pl-3">
+                    <span className="text-[#6B6B70]">미실현 (열린 포지션)</span>
+                    <span className={`font-mono ${openFunding >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
+                      {fmtUsd(openFunding)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[#8B8B90]">거래 수</span>
@@ -418,14 +446,6 @@ export default function KimpBotDashboard() {
                     <span className="text-[#8B8B90]">승률</span>
                     <span className="font-mono text-[#ADADB0]">
                       {winRate}% ({wins}W / {losses}L)
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#8B8B90]">미실현 펀딩</span>
-                    <span
-                      className={`font-mono ${openFunding >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}
-                    >
-                      {fmtUsd(openFunding)}
                     </span>
                   </div>
                 </div>
