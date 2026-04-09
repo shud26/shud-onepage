@@ -87,7 +87,7 @@ export default async function BlogPostPage({ params }: Props) {
       />
 
       <div style={{ padding: "48px 0 80px" }}>
-        <div className="container">
+        <div className="blog-container">
           {/* Back link */}
           <Link
             href="/blog"
@@ -96,7 +96,7 @@ export default async function BlogPostPage({ params }: Props) {
               alignItems: "center",
               gap: 6,
               fontSize: 13,
-              color: "var(--text-tertiary)",
+              color: "#aaa",
               textDecoration: "none",
               marginBottom: 32,
             }}
@@ -123,7 +123,7 @@ export default async function BlogPostPage({ params }: Props) {
                 fontWeight: 700,
                 lineHeight: 1.3,
                 letterSpacing: "-0.025em",
-                color: "var(--text-primary)",
+                color: "#111",
                 marginBottom: 16,
               }}
             >
@@ -133,7 +133,7 @@ export default async function BlogPostPage({ params }: Props) {
             <p
               style={{
                 fontSize: 16,
-                color: "var(--text-secondary)",
+                color: "#555",
                 lineHeight: 1.65,
                 marginBottom: 20,
               }}
@@ -147,7 +147,7 @@ export default async function BlogPostPage({ params }: Props) {
                 alignItems: "center",
                 gap: 16,
                 paddingTop: 20,
-                borderTop: "1px solid var(--border)",
+                borderTop: "1px solid #e8e8e8",
               }}
             >
               <div
@@ -169,10 +169,10 @@ export default async function BlogPostPage({ params }: Props) {
                 S
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#111" }}>
                   SHUD
                 </div>
-                <div style={{ fontSize: 12, color: "var(--text-tertiary)" }}>
+                <div style={{ fontSize: 12, color: "#999" }}>
                   {formatDate(post.date)} · {post.readingTime} 읽기
                 </div>
               </div>
@@ -183,8 +183,8 @@ export default async function BlogPostPage({ params }: Props) {
           {seriesPosts.length > 1 && (
             <div
               style={{
-                background: "var(--bg-elevated)",
-                border: "1px solid var(--border)",
+                background: "#f8f8f8",
+                border: "1px solid #e8e8e8",
                 borderRadius: 12,
                 padding: "20px",
                 marginBottom: 40,
@@ -193,7 +193,7 @@ export default async function BlogPostPage({ params }: Props) {
               <p
                 style={{
                   fontSize: 11,
-                  color: "var(--text-tertiary)",
+                  color: "#bbb",
                   textTransform: "uppercase",
                   letterSpacing: "0.08em",
                   fontWeight: 600,
@@ -261,7 +261,7 @@ export default async function BlogPostPage({ params }: Props) {
             style={{
               marginTop: 60,
               paddingTop: 32,
-              borderTop: "1px solid var(--border)",
+              borderTop: "1px solid #e8e8e8",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",

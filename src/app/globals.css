@@ -169,3 +169,162 @@ body {
 .prose tr:nth-child(even) td {
   background: rgba(255, 255, 255, 0.02);
 }
+
+/* ── 블로그 라이트 테마 ───────────────────────────── */
+[data-theme="light"] {
+  --blog-bg: #ffffff;
+  --blog-bg-subtle: #f8f8f8;
+  --blog-border: #e8e8e8;
+  --blog-text: #111111;
+  --blog-text-secondary: #555555;
+  --blog-text-tertiary: #999999;
+  --blog-accent: #FF5C00;
+  --blog-accent-dim: rgba(255, 92, 0, 0.08);
+  --blog-code-bg: #f4f4f4;
+}
+
+.blog-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--blog-border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+}
+
+.blog-logo {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--blog-text);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+
+.blog-nav-link {
+  font-size: 14px;
+  color: var(--blog-text-secondary);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.blog-nav-link:hover {
+  color: var(--blog-text);
+}
+
+.blog-container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.blog-footer {
+  margin-top: 80px;
+  padding: 28px 24px;
+  border-top: 1px solid var(--blog-border);
+  font-size: 13px;
+  color: var(--blog-text-tertiary);
+}
+
+.blog-footer-link {
+  color: var(--blog-text-tertiary);
+  text-decoration: none;
+}
+
+.blog-footer-link:hover {
+  color: var(--blog-text-secondary);
+}
+
+/* 포스트 목록 */
+[data-theme="light"] .post-item {
+  border-bottom-color: var(--blog-border);
+}
+
+[data-theme="light"] .post-item:hover {
+  opacity: 0.65;
+}
+
+[data-theme="light"] .tag {
+  background: var(--blog-bg-subtle);
+  color: var(--blog-text-secondary);
+  border-color: var(--blog-border);
+}
+
+[data-theme="light"] .tag-accent {
+  background: var(--blog-accent-dim);
+  color: var(--blog-accent);
+  border-color: rgba(255, 92, 0, 0.2);
+}
+
+/* 프로즈 (글 본문) */
+[data-theme="light"] .prose {
+  color: var(--blog-text);
+}
+
+[data-theme="light"] .prose h1,
+[data-theme="light"] .prose h2,
+[data-theme="light"] .prose h3 {
+  color: var(--blog-text);
+}
+
+[data-theme="light"] .prose p,
+[data-theme="light"] .prose li {
+  color: #222222;
+  line-height: 1.9;
+}
+
+[data-theme="light"] .prose a {
+  color: var(--blog-accent);
+}
+
+[data-theme="light"] .prose blockquote {
+  border-left-color: var(--blog-accent);
+  color: var(--blog-text-secondary);
+  background: var(--blog-bg-subtle);
+  border-radius: 0 8px 8px 0;
+  padding: 0.8em 1.2em;
+}
+
+[data-theme="light"] .prose code {
+  background: var(--blog-code-bg);
+  color: #c7522a;
+}
+
+[data-theme="light"] .prose pre {
+  background: #1e1e1e;
+  border: none;
+}
+
+[data-theme="light"] .prose pre code {
+  color: #d4d4d4;
+  background: none;
+}
+
+[data-theme="light"] .prose hr {
+  border-top-color: var(--blog-border);
+}
+
+[data-theme="light"] .prose th {
+  background: var(--blog-bg-subtle);
+  border-color: var(--blog-border);
+  color: var(--blog-text-secondary);
+}
+
+[data-theme="light"] .prose td {
+  border-color: var(--blog-border);
+  color: var(--blog-text);
+}
+
+[data-theme="light"] .prose tr:nth-child(even) td {
+  background: var(--blog-bg-subtle);
+}
+
+/* 시리즈 박스 */
+[data-theme="light"] .series-box {
+  background: var(--blog-bg-subtle);
+  border: 1px solid var(--blog-border);
+}
+
