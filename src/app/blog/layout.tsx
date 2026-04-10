@@ -13,11 +13,11 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
     <div data-theme="light" style={{ minHeight: "100vh", background: "#fff" }}>
       {/* Blog Header */}
       <header className="blog-header">
-        <div className="blog-container" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ maxWidth: 1080, margin: "0 auto", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/blog" className="blog-logo">
             SHUD 크립토 일지
           </Link>
-          <nav style={{ display: "flex", gap: 24, alignItems: "center" }}>
+          <nav style={{ display: "flex", gap: 32, alignItems: "center" }}>
             <Link href="/blog" className="blog-nav-link">글 목록</Link>
             <Link href="/about" className="blog-nav-link">소개</Link>
           </nav>
