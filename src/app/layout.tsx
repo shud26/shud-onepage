@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             borderBottom: "1px solid var(--border)",
             position: "sticky",
             top: 0,
-            background: "rgba(17,17,19,0.9)",
+            background: "rgba(255,255,255,0.92)",
             backdropFilter: "blur(10px)",
             WebkitBackdropFilter: "blur(10px)",
             zIndex: 100,

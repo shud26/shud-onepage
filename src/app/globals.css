@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #111113;
-  --bg-elevated: #18181B;
-  --bg-hover: #222226;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.12);
+  --bg: #ffffff;
+  --bg-elevated: #f5f5f5;
+  --bg-hover: #eeeeee;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.14);
   --accent: #FF5C00;
-  --accent-hover: #FF7A2A;
-  --accent-dim: rgba(255, 92, 0, 0.1);
-  --text-primary: #ECECEC;
-  --text-secondary: #777;
-  --text-tertiary: #444;
+  --accent-hover: #e04d00;
+  --accent-dim: rgba(255, 92, 0, 0.08);
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-tertiary: #999999;
 }
 
 html {
@@ -32,7 +32,7 @@ body {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 99px; }
 
 /* Layout */
 .container {
@@ -115,15 +115,15 @@ body {
 .prose code {
   font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
   font-size: 13.5px;
-  background: var(--bg-elevated);
+  background: #f0f0f0;
   padding: 2px 6px;
   border-radius: 4px;
-  color: #e2a47e;
+  color: #c7522a;
 }
 
 .prose pre {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
+  background: #1e1e1e;
+  border: none;
   border-radius: 8px;
   padding: 20px;
   margin: 1.8em 0;
