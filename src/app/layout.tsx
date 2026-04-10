@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     default: "코딩 입문자의 크립토 자동화 일지 | SHUD",
   },
   description:
-    "코딩을 모르는 선생님이 AI(Claude Code)로 크립토 봇을 만들어가는 실전 기록.",
+    "코딩 한 줄 못 짜던 사람이 AI(Claude Code)로 크립토 봇을 만들어가는 실전 기록.",
   keywords: "바이브코딩, 크립토 봇, 펀딩비 차익거래, 에어드랍 파밍, Claude Code",
   openGraph: {
     type: "website",

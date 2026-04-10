@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "크립토 자동화 일지 | SHUD",
-  description: "코딩 입문자 선생님이 AI로 크립토 봇을 만들어가는 실전 기록. 나도봇, 펀딩비 차익거래, 에어드랍 파밍 솔직 후기.",
+  description: "코딩 한 줄 못 짜던 사람이 AI로 크립토 봇을 만들어가는 실전 기록. 나도봇, 펀딩비 차익거래, 에어드랍 파밍 솔직 후기.",
   alternates: { canonical: "https://tftchess.com/blog" },
 };
 

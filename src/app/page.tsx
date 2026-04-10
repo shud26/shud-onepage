@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "코딩 입문자의 크립토 자동화 일지 | SHUD",
   description:
-    "코딩을 모르는 선생님이 AI(Claude Code)로 크립토 봇을 만들어가는 실전 기록. 성공도, 실패도 솔직하게.",
+    "코딩 한 줄 못 짜던 사람이 AI(Claude Code)로 크립토 봇을 만들어가는 실전 기록. 성공도, 실패도 솔직하게.",
   alternates: { canonical: "https://tftchess.com" },
 };
 
@@ -91,7 +91,7 @@ export default function HomePage() {
             maxWidth: 480,
           }}
         >
-          코딩 한 줄 못 짜던 선생님이 AI(Claude Code)로 크립토 봇을 만들어가는
+          코딩 한 줄 못 짜던 사람이 AI(Claude Code)로 크립토 봇을 만들어가는
           과정을 솔직하게 씁니다. 성공도 있고 실패도 있습니다.
         </p>
       </div>
