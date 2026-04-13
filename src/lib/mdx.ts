@@ -43,7 +43,7 @@ export function getAllPosts(): PostMeta[] {
   });
   const today = new Date().toISOString().slice(0, 10);
   return posts
-    .filter(p => p.date <= today)
+    .filter(p => new Date(p.date).toISOString().slice(0, 10) <= today)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
