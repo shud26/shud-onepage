@@ -41,7 +41,10 @@ export function getAllPosts(): PostMeta[] {
       readingTime: `${Math.ceil(rt.minutes)}분`,
     } as PostMeta;
   });
-  return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const today = new Date().toISOString().slice(0, 10);
+  return posts
+    .filter(p => p.date <= today)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 export function getPost(slug: string): Post | null {
