@@ -1,0 +1,141 @@
+---
+title: jindo 앱 Supabase 연동 + 옵시디언 자동화 파이프라인 구축기
+description: localStorage로 날아가던 jindo 데이터를 Supabase로 옮기고, 경제 메모가 옵시디언에 자동 저장되는 파이프라인을 만들었습니다.
+date: 2026-04-14
+tags: [jindo, Supabase, 옵시디언, 자동화, 바이브코딩]
+---
+
+오늘 두 가지 문제를 해결했습니다.
+
+하나는 jindo 앱 데이터가 코드 업데이트할 때마다 날아가는 문제, 또 하나는 경제 메모가 앱에만 갇혀있는 문제입니다.
+
+---
+
+## jindo가 뭔지부터
+
+학교에서 쓰는 원페이지 앱입니다. 수업 진도 메모, 할 일, 경제 신문 메모를 한 곳에 모아둡니다.
+
+문제는 localStorage 기반이었습니다. 브라우저에 저장되니까 포트가 바뀌거나 다른 기기에서 접속하면 데이터가 달라 보였습니다. 코드 업데이트할 때마다 데이터 날아가는 것처럼 느껴지는 이유가 이거였습니다.
+
+---
+
+## Supabase로 이전
+
+테이블 3개 만들었습니다.
+
+```sql
+create table jindo_records (
+  id text primary key,
+  grade integer,
+  class_num integer,
+  memo text,
+  timestamp timestamptz
+);
+
+create table jindo_todos (
+  id text primary key,
+  category text,
+  text text,
+  done boolean default false,
+  date text,
+  created_at timestamptz
+);
+
+create table jindo_econ_memos (
+  id text primary key,
+  date text,
+  keywords text,
+  content text,
+  created_at timestamptz
+);
+```
+
+localStorage 훅 3개를 Supabase 훅으로 교체했습니다. 패턴은 단순합니다.
+
+```typescript
+useEffect(() => {
+  supabase
+    .from("jindo_econ_memos")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .then(({ data }) => {
+      if (data) setMemos(data.map(/* 매핑 */));
+    });
+}, []);
+```
+
+이제 어디서 접속해도 같은 데이터가 나옵니다. Vercel 배포 URL은 **jindo.vercel.app** 으로 고정했습니다.
+
+---
+
+## 경제 메모 → 옵시디언 자동 저장
+
+Supabase에 저장된 경제 메모를 Mac Mini가 30분마다 체크해서 옵시디언에 씁니다.
+
+```python
+def write_to_obsidian(memo: dict):
+    date = memo["date"]
+    filepath = OBSIDIAN_DIR / f"{date}.md"
+
+    keywords = memo.get("keywords", "")
+    tags = "  ".join(f"#{k.strip()}" for k in keywords.split(",") if k.strip())
+
+    entry = f"\n---\n\n{tags}\n\n{memo['content']}\n"
+
+    if not filepath.exists():
+        filepath.write_text(f"# 경제 메모 — {date}\n" + entry)
+    else:
+        with open(filepath, "a") as f:
+            f.write(entry)
+```
+
+iCloud 경로에 파일이 생기면 맥북과 아이폰 옵시디언에 자동으로 나타납니다.
+
+---
+
+## 주간 AI 요약
+
+매주 일요일 밤 9시에 Ollama가 그 주 경제 메모 + 나도봇 성과를 읽고 요약합니다.
+
+```python
+prompt = f"""
+=== 경제 메모 ===
+{econ_text}
+
+=== 나도봇 성과 ===
+{nado_text}
+
+주간 리뷰를 작성해주세요.
+"""
+res = requests.post("http://localhost:11434/api/generate", json={
+    "model": "qwen2.5:14b",
+    "prompt": prompt,
+    "stream": False,
+})
+```
+
+결과물이 `주간리뷰/2026-W16.md` 파일로 저장됩니다.
+
+---
+
+## 지금 구조 전체
+
+```
+jindo 앱 (경제 메모 입력)
+    ↓
+Supabase 저장
+    ↓
+Mac Mini jindo_sync.py (30분 폴링)
+    ↓
+옵시디언 경제메모/YYYY-MM-DD.md
+    ↓
+iCloud 동기화
+    ↓
+맥북 + 아이폰 옵시디언
+
++ 매주 일요일: Ollama 주간 요약 → 주간리뷰/YYYY-Wxx.md
+```
+
+---
+
+데이터가 흩어지지 않고 한 곳에 쌓이는 구조를 만드는 게 목표입니다. 경제 메모, 봇 성과, 코딩 기록이 전부 옵시디언에 모이면 나중에 LLM이 읽고 질문에 답할 수 있습니다.
