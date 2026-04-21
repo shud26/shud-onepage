@@ -1,6 +1,6 @@
 'use client';
 import { useState } from "react";
-import { META_AUGMENTS, TIER_COLORS, COST_COLORS } from "@/lib/tft-data";
+import { META_AUGMENTS, TIER_COLORS } from "@/lib/tft-data";
 import type { Tier } from "@/lib/tft-data";
 import { useTFTChampions } from "@/lib/use-tft-champions";
 
@@ -24,32 +24,16 @@ function Bar({ val, max, color }: { val: number; max: number; color: string }) {
   );
 }
 
-const SUB_TABS = ['챔피언 통계', '증강체 티어', '시너지 분석'] as const;
+const SUB_TABS = ['증강체 티어', '시너지 분석'] as const;
 type SubTab = typeof SUB_TABS[number];
 
 export default function MetaPage() {
-  const [subTab, setSubTab] = useState<SubTab>('챔피언 통계');
-  const [sortBy, setSortBy] = useState<'pickRate'|'winRate'|'avgPlace'>('pickRate');
+  const [subTab, setSubTab] = useState<SubTab>('증강체 티어');
   const tftData = useTFTChampions();
 
   const champions = tftData?.champions ?? [];
   const traits = tftData?.traits ?? [];
 
-  // 챔피언에 임의 메타 스탯 부여 (실제 API 없으므로)
-  const metaChamps = champions.map((c, i) => ({
-    ...c,
-    pickRate: Math.max(5, 32 - i * 0.4 + (i % 3) * 2).toFixed(1),
-    winRate: Math.max(3, 20 - i * 0.25 + (i % 4) * 1.5).toFixed(1),
-    avgPlace: (3.4 + i * 0.05 + (i % 5) * 0.08).toFixed(1),
-  }));
-
-  const sortedChamps = [...metaChamps].sort((a, b) => {
-    if (sortBy === 'avgPlace') return Number(a.avgPlace) - Number(b.avgPlace);
-    return Number(b[sortBy]) - Number(a[sortBy]);
-  });
-
-  const maxPickRate = Math.max(...metaChamps.map(c => Number(c.pickRate)));
-  const maxWinRate  = Math.max(...metaChamps.map(c => Number(c.winRate)));
   const maxAugPick  = Math.max(...META_AUGMENTS.map(a => a.pickRate));
 
   const sortedAugs = [...META_AUGMENTS].sort((a, b) => Number(a.avgPlace) - Number(b.avgPlace));
@@ -78,76 +62,7 @@ export default function MetaPage() {
           ))}
         </div>
 
-        {/* 챔피언 통계 */}
-        {subTab === '챔피언 통계' && (
-          <div>
-            <div style={{ display:'flex', gap:6, marginBottom:16 }}>
-              {([['pickRate','픽률순'], ['winRate','1등률순'], ['avgPlace','평균등수순']] as const).map(([key, label]) => (
-                <button key={key} onClick={() => setSortBy(key)} style={{
-                  padding:'5px 14px', borderRadius:3, cursor:'pointer',
-                  fontFamily:"'Noto Sans KR',sans-serif", fontSize:13, fontWeight:600,
-                  background: sortBy===key ? 'var(--gold-3)' : 'var(--navy-2)',
-                  color: sortBy===key ? 'var(--gold)' : 'var(--muted)',
-                  border:`1px solid ${sortBy===key ? 'var(--border-hover)' : 'var(--border)'}`,
-                }}>{label}</button>
-              ))}
-            </div>
 
-            {champions.length === 0 ? (
-              <div style={{ textAlign:'center', padding:'40px 0', color:'var(--muted)', fontFamily:"'Noto Sans KR',sans-serif" }}>
-                챔피언 데이터 로딩 중...
-              </div>
-            ) : (
-              <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr 1fr',
-                  padding:'8px 16px', gap:8, fontFamily:"'Noto Sans KR',sans-serif", fontSize:11,
-                  fontWeight:600, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--muted)' }}>
-                  <span>챔피언</span>
-                  <span style={{ textAlign:'right' }}>픽률</span>
-                  <span style={{ textAlign:'right' }}>1등률</span>
-                  <span style={{ textAlign:'right' }}>평균등수</span>
-                </div>
-
-                {sortedChamps.map((c, i) => {
-                  const costColor = COST_COLORS[c.cost];
-                  return (
-                    <div key={c.id} style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr 1fr',
-                      padding:'12px 16px', gap:8, alignItems:'center',
-                      background:'var(--navy-2)', borderRadius:4, border:'1px solid var(--border)' }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:12, fontWeight:700,
-                          color:'var(--muted)', width:20, textAlign:'right' }}>{i+1}</span>
-                        <div style={{ width:4, height:28, background:costColor, borderRadius:2, flexShrink:0 }}/>
-                        <div>
-                          <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:13, fontWeight:700, color:'var(--gold-2)' }}>{c.name}</div>
-                          <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:10, color:'var(--muted)' }}>{c.cost}코스트</div>
-                        </div>
-                      </div>
-                      <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                        <Bar val={Number(c.pickRate)} max={maxPickRate} color='var(--gold)'/>
-                        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:13, fontWeight:700, color:'var(--gold)', width:40, textAlign:'right' }}>
-                          {c.pickRate}%
-                        </span>
-                      </div>
-                      <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                        <Bar val={Number(c.winRate)} max={maxWinRate} color='#4AE890'/>
-                        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:13, fontWeight:700, color:'#4AE890', width:40, textAlign:'right' }}>
-                          {c.winRate}%
-                        </span>
-                      </div>
-                      <div style={{ textAlign:'right' }}>
-                        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:13, fontWeight:700,
-                          color: Number(c.avgPlace)<4 ? '#4AE890' : Number(c.avgPlace)>5 ? '#E85454' : 'var(--text)' }}>
-                          {c.avgPlace}위
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
 
         {/* 증강체 티어 */}
         {subTab === '증강체 티어' && (
