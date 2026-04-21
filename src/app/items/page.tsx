@@ -1,26 +1,85 @@
 'use client';
-import { useState } from "react";
-import { BASE_ITEMS, ITEM_COMBOS } from "@/lib/tft-data";
+import { useState, useEffect } from "react";
+import Image from "next/image";
+
+interface BaseItem { id: string; name: string; imageUrl: string; }
+interface ComboItem { id: string; name: string; composition: string[]; imageUrl: string; }
+
+// 기본 아이템별 색상 (순서 고정)
+const BASE_COLORS: Record<string, string> = {
+  TFT_Item_BFSword:             '#E85454',
+  TFT_Item_RecurveBow:          '#22a050',
+  TFT_Item_ChainVest:           '#909090',
+  TFT_Item_NeedlesslyLargeRod:  '#60A8F0',
+  TFT_Item_TearOfTheGoddess:    '#4A9EE8',
+  TFT_Item_GiantsBelt:          '#E8A454',
+  TFT_Item_Spatula:             '#C89B3C',
+  TFT_Item_SparringGloves:      '#C060F0',
+  TFT_Item_NegatronCloak:       '#8B5CF6',
+};
+
+function ItemIcon({ item, size = 56, selected = false, onClick }: {
+  item: BaseItem; size?: number; selected?: boolean; onClick?: () => void;
+}) {
+  const color = BASE_COLORS[item.id] || '#aaa';
+  return (
+    <button
+      onClick={onClick}
+      title={item.name}
+      style={{
+        width: size, height: size, borderRadius: 6, overflow: 'hidden',
+        border: `2px solid ${selected ? color : 'var(--border)'}`,
+        background: selected ? `${color}25` : 'var(--navy-3)',
+        cursor: onClick ? 'pointer' : 'default',
+        padding: 0, flexShrink: 0,
+        transform: selected ? 'scale(1.08)' : 'none',
+        transition: 'all 0.15s',
+        boxShadow: selected ? `0 0 10px ${color}55` : 'none',
+      }}
+    >
+      {item.imageUrl ? (
+        <Image src={item.imageUrl} alt={item.name} width={size} height={size}
+          style={{ objectFit: 'cover', display: 'block' }} unoptimized />
+      ) : (
+        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: 'Cinzel,serif', fontSize: 12, fontWeight: 700, color }} />
+      )}
+    </button>
+  );
+}
 
 export default function ItemsPage() {
-  const [slotA, setSlotA] = useState<string|null>(null);
-  const [slotB, setSlotB] = useState<string|null>(null);
+  const [baseItems, setBaseItems] = useState<BaseItem[]>([]);
+  const [comboItems, setComboItems] = useState<ComboItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [slotA, setSlotA] = useState<string | null>(null);
+  const [slotB, setSlotB] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/tft-items')
+      .then(r => r.json())
+      .then(({ baseItems, comboItems }) => {
+        setBaseItems(baseItems);
+        setComboItems(comboItems);
+        setLoading(false);
+      });
+  }, []);
 
   const handleSelect = (id: string) => {
     if (!slotA) { setSlotA(id); return; }
     if (!slotB) { setSlotB(id); return; }
-    // 둘 다 있으면 A를 B로 밀고 새 것을 A에 넣기
-    setSlotA(slotB);
-    setSlotB(id);
+    setSlotA(slotB); setSlotB(id);
   };
 
-  const comboKey = slotA && slotB
-    ? [slotA, slotB].sort().join('+')
+  const comboKey = slotA && slotB ? [slotA, slotB].sort().join('+') : null;
+  const result = comboKey
+    ? comboItems.find(c => [...c.composition].sort().join('+') === comboKey)
     : null;
-  const result = comboKey ? ITEM_COMBOS[comboKey] : null;
+  const itemA = slotA ? baseItems.find(i => i.id === slotA) : null;
+  const itemB = slotB ? baseItems.find(i => i.id === slotB) : null;
 
-  const itemA = slotA ? BASE_ITEMS.find(i => i.id === slotA) : null;
-  const itemB = slotB ? BASE_ITEMS.find(i => i.id === slotB) : null;
+  const colorA = itemA ? BASE_COLORS[itemA.id] || '#aaa' : 'var(--border)';
+  const colorB = itemB ? BASE_COLORS[itemB.id] || '#aaa' : 'var(--border)';
 
   return (
     <div style={{ padding: '40px 0 80px' }}>
@@ -29,179 +88,180 @@ export default function ItemsPage() {
           아이템 조합기
         </h1>
         <p style={{ color:'var(--muted)', fontFamily:'Rajdhani,sans-serif', fontSize:15, marginBottom:36 }}>
-          Season 17 Arcane Depths — 기본 아이템 2개를 조합하면 완성 아이템이 만들어집니다
+          Season 17 Arcane Depths — 기본 아이템 2개를 클릭해서 조합 아이템을 확인하세요
         </p>
 
-        {/* 조합기 UI */}
-        <div style={{
-          background:'var(--navy-2)', border:'1px solid var(--border)',
-          borderRadius:8, padding:'28px', marginBottom:36,
-          display:'flex', flexDirection:'column', alignItems:'center', gap:20,
-        }}>
-          {/* 슬롯 */}
-          <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-            {/* 슬롯 A */}
+        {loading ? (
+          <div style={{ textAlign:'center', padding:'60px 0', color:'var(--muted)', fontFamily:'Rajdhani,sans-serif' }}>
+            아이템 데이터 로딩 중...
+          </div>
+        ) : (
+          <>
+            {/* 조합기 */}
             <div style={{
-              width:80, height:80, borderRadius:6,
-              background: itemA ? `${itemA.color}20` : 'var(--navy-4)',
-              border: `2px dashed ${itemA ? itemA.color : 'var(--border)'}`,
-              display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-              gap:4, cursor: itemA ? 'pointer' : 'default',
-              transition:'all 0.15s',
-            }} onClick={() => setSlotA(null)}>
-              {itemA ? (
-                <>
-                  <span style={{ fontFamily:'Cinzel,serif', fontSize:20, fontWeight:700, color:itemA.color }}>{itemA.abbr}</span>
-                  <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:9, color:itemA.color, textAlign:'center', lineHeight:1.2 }}>{itemA.name}</span>
-                </>
-              ) : (
-                <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, color:'var(--muted)', textAlign:'center' }}>슬롯 1</span>
-              )}
-            </div>
-
-            {/* + */}
-            <span style={{ fontFamily:'Cinzel,serif', fontSize:24, fontWeight:700, color:'var(--muted)' }}>+</span>
-
-            {/* 슬롯 B */}
-            <div style={{
-              width:80, height:80, borderRadius:6,
-              background: itemB ? `${itemB.color}20` : 'var(--navy-4)',
-              border: `2px dashed ${itemB ? itemB.color : 'var(--border)'}`,
-              display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-              gap:4, cursor: itemB ? 'pointer' : 'default',
-              transition:'all 0.15s',
-            }} onClick={() => setSlotB(null)}>
-              {itemB ? (
-                <>
-                  <span style={{ fontFamily:'Cinzel,serif', fontSize:20, fontWeight:700, color:itemB.color }}>{itemB.abbr}</span>
-                  <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:9, color:itemB.color, textAlign:'center', lineHeight:1.2 }}>{itemB.name}</span>
-                </>
-              ) : (
-                <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, color:'var(--muted)', textAlign:'center' }}>슬롯 2</span>
-              )}
-            </div>
-
-            {/* = */}
-            <span style={{ fontFamily:'Cinzel,serif', fontSize:24, fontWeight:700, color:'var(--muted)' }}>=</span>
-
-            {/* 결과 */}
-            <div style={{
-              width:120, minHeight:80, borderRadius:6,
-              background: result ? 'var(--gold-3)' : 'var(--navy-4)',
-              border: `2px solid ${result ? 'var(--gold)' : 'var(--border)'}`,
-              display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-              gap:4, padding:8,
-              boxShadow: result ? '0 0 16px rgba(200,155,60,0.2)' : 'none',
-              transition:'all 0.2s',
+              background:'var(--navy-2)', border:'1px solid var(--border)',
+              borderRadius:8, padding:'28px 24px', marginBottom:36,
             }}>
-              {result ? (
-                <>
-                  <span style={{ fontFamily:'Cinzel,serif', fontSize:13, fontWeight:700, color:'var(--gold)', textAlign:'center', lineHeight:1.3 }}>{result.name}</span>
-                  <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:10, color:'var(--text)', textAlign:'center', lineHeight:1.4 }}>{result.effect}</span>
-                  <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:9, color:'var(--muted)', textAlign:'center' }}>추천: {result.champ}</span>
-                </>
-              ) : (
-                <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, color:'var(--muted)', textAlign:'center', lineHeight:1.5 }}>
-                  {slotA && slotB ? '조합 없음' : '아이템을\n선택하세요'}
-                </span>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:16, flexWrap:'wrap' }}>
+                {/* 슬롯 A */}
+                <div style={{
+                  width:88, height:88, borderRadius:8,
+                  background: itemA ? `${colorA}18` : 'var(--navy-4)',
+                  border: `2px dashed ${itemA ? colorA : 'var(--border)'}`,
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+                  gap:4, cursor: itemA ? 'pointer' : 'default', overflow:'hidden',
+                  transition:'all 0.15s',
+                }} onClick={() => setSlotA(null)}>
+                  {itemA ? (
+                    <Image src={itemA.imageUrl} alt={itemA.name} width={88} height={88}
+                      style={{ objectFit:'cover', display:'block' }} unoptimized />
+                  ) : (
+                    <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, color:'var(--muted)', textAlign:'center' }}>슬롯 1</span>
+                  )}
+                </div>
+
+                <span style={{ fontFamily:'Cinzel,serif', fontSize:28, fontWeight:700, color:'var(--muted)' }}>+</span>
+
+                {/* 슬롯 B */}
+                <div style={{
+                  width:88, height:88, borderRadius:8,
+                  background: itemB ? `${colorB}18` : 'var(--navy-4)',
+                  border: `2px dashed ${itemB ? colorB : 'var(--border)'}`,
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+                  gap:4, cursor: itemB ? 'pointer' : 'default', overflow:'hidden',
+                  transition:'all 0.15s',
+                }} onClick={() => setSlotB(null)}>
+                  {itemB ? (
+                    <Image src={itemB.imageUrl} alt={itemB.name} width={88} height={88}
+                      style={{ objectFit:'cover', display:'block' }} unoptimized />
+                  ) : (
+                    <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, color:'var(--muted)', textAlign:'center' }}>슬롯 2</span>
+                  )}
+                </div>
+
+                <span style={{ fontFamily:'Cinzel,serif', fontSize:28, fontWeight:700, color:'var(--muted)' }}>=</span>
+
+                {/* 결과 */}
+                <div style={{
+                  width:140, minHeight:88, borderRadius:8,
+                  background: result ? 'var(--gold-3)' : 'var(--navy-4)',
+                  border: `2px solid ${result ? 'var(--gold)' : 'var(--border)'}`,
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+                  gap:6, padding:8, overflow:'hidden',
+                  boxShadow: result ? '0 0 20px rgba(200,155,60,0.25)' : 'none',
+                  transition:'all 0.2s',
+                }}>
+                  {result ? (
+                    <>
+                      <Image src={result.imageUrl} alt={result.name} width={56} height={56}
+                        style={{ objectFit:'cover', borderRadius:4 }} unoptimized />
+                      <span style={{ fontFamily:'Cinzel,serif', fontSize:12, fontWeight:700, color:'var(--gold)', textAlign:'center', lineHeight:1.3 }}>
+                        {result.name}
+                      </span>
+                    </>
+                  ) : (
+                    <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, color:'var(--muted)', textAlign:'center', lineHeight:1.6 }}>
+                      {slotA && slotB ? '조합 없음' : '아이템을 선택하세요'}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {(slotA || slotB) && (
+                <div style={{ textAlign:'center', marginTop:16 }}>
+                  <button onClick={() => { setSlotA(null); setSlotB(null); }} style={{
+                    background:'none', border:'1px solid var(--border)', borderRadius:3,
+                    color:'var(--muted)', cursor:'pointer', padding:'4px 14px',
+                    fontFamily:'Rajdhani,sans-serif', fontSize:12,
+                  }}>초기화</button>
+                </div>
               )}
             </div>
-          </div>
 
-          {(slotA || slotB) && (
-            <button onClick={() => { setSlotA(null); setSlotB(null); }} style={{
-              background:'none', border:'1px solid var(--border)', borderRadius:3,
-              color:'var(--muted)', cursor:'pointer', padding:'4px 14px',
-              fontFamily:'Rajdhani,sans-serif', fontSize:12,
-            }}>초기화</button>
-          )}
-        </div>
-
-        {/* 기본 아이템 선택 */}
-        <div style={{ marginBottom:36 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
-            <span className="section-label">기본 아이템</span>
-            <div className="gold-divider" style={{ flex:1, margin:0 }}/>
-          </div>
-          <div style={{
-            display:'grid',
-            gridTemplateColumns:'repeat(auto-fill, minmax(110px, 1fr))',
-            gap:8,
-          }}>
-            {BASE_ITEMS.map(item => {
-              const isSelected = slotA === item.id || slotB === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleSelect(item.id)}
-                  style={{
-                    background: isSelected ? `${item.color}25` : 'var(--navy-2)',
-                    border: `1px solid ${isSelected ? item.color : 'var(--border)'}`,
-                    borderTop:`2px solid ${item.color}`,
-                    borderRadius:6, padding:'12px 8px',
-                    cursor:'pointer', textAlign:'center',
-                    transition:'all 0.15s',
-                    transform: isSelected ? 'scale(1.03)' : 'none',
-                  }}
-                >
-                  <div style={{
-                    fontFamily:'Cinzel,serif', fontSize:18, fontWeight:700,
-                    color:item.color, marginBottom:6,
-                  }}>{item.abbr}</div>
-                  <div style={{
-                    fontFamily:'Rajdhani,sans-serif', fontSize:11, fontWeight:600,
-                    color: isSelected ? item.color : 'var(--muted)',
-                    lineHeight:1.3,
-                  }}>{item.name}</div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 전체 조합표 */}
-        <div>
-          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
-            <span className="section-label">전체 조합표</span>
-            <div className="gold-divider" style={{ flex:1, margin:0 }}/>
-          </div>
-          <div style={{
-            display:'grid',
-            gridTemplateColumns:'repeat(auto-fill, minmax(240px, 1fr))',
-            gap:8,
-          }}>
-            {Object.entries(ITEM_COMBOS).map(([key, combo]) => {
-              const [idA, idB] = key.split('+');
-              const iA = BASE_ITEMS.find(i => i.id === idA);
-              const iB = BASE_ITEMS.find(i => i.id === idB);
-              const isActive = comboKey === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => { setSlotA(idA); setSlotB(idB); }}
-                  style={{
-                    background: isActive ? 'var(--gold-3)' : 'var(--navy-2)',
-                    border: `1px solid ${isActive ? 'var(--gold)' : 'var(--border)'}`,
-                    borderRadius:4, padding:'12px 14px',
-                    cursor:'pointer', textAlign:'left',
-                    transition:'all 0.15s',
-                    boxShadow: isActive ? '0 0 12px rgba(200,155,60,0.15)' : 'none',
-                  }}
-                >
-                  <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6 }}>
-                    {iA && <span style={{ fontFamily:'Cinzel,serif', fontSize:11, fontWeight:700, color:iA.color, background:`${iA.color}20`, padding:'1px 6px', borderRadius:2 }}>{iA.abbr}</span>}
-                    <span style={{ color:'var(--muted)', fontSize:11 }}>+</span>
-                    {iB && <span style={{ fontFamily:'Cinzel,serif', fontSize:11, fontWeight:700, color:iB.color, background:`${iB.color}20`, padding:'1px 6px', borderRadius:2 }}>{iB.abbr}</span>}
-                    <span style={{ color:'var(--muted)', fontSize:11 }}>=</span>
-                    <span style={{ fontFamily:'Cinzel,serif', fontSize:12, fontWeight:700, color:'var(--gold)', flex:1 }}>{combo.name}</span>
+            {/* 기본 아이템 */}
+            <div style={{ marginBottom:36 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
+                <span className="section-label">기본 아이템</span>
+                <div className="gold-divider" style={{ flex:1, margin:0 }}/>
+              </div>
+              <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+                {baseItems.map(item => (
+                  <div key={item.id} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
+                    <ItemIcon item={item} size={60}
+                      selected={slotA === item.id || slotB === item.id}
+                      onClick={() => handleSelect(item.id)} />
+                    <span style={{
+                      fontFamily:'Rajdhani,sans-serif', fontSize:10, fontWeight:600,
+                      color: (slotA === item.id || slotB === item.id) ? BASE_COLORS[item.id] : 'var(--muted)',
+                      textAlign:'center', maxWidth:64, lineHeight:1.2,
+                    }}>{item.name}</span>
                   </div>
-                  <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, color:'var(--muted)', marginBottom:2 }}>{combo.effect}</div>
-                  <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:10, color:'var(--muted)', opacity:0.7 }}>추천: {combo.champ}</div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 전체 조합표 */}
+            <div>
+              <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
+                <span className="section-label">전체 조합표 ({comboItems.length}개)</span>
+                <div className="gold-divider" style={{ flex:1, margin:0 }}/>
+              </div>
+              <div style={{
+                display:'grid',
+                gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))',
+                gap:8,
+              }}>
+                {comboItems.map(combo => {
+                  const cA = baseItems.find(i => i.id === combo.composition[0]);
+                  const cB = baseItems.find(i => i.id === combo.composition[1]);
+                  const isActive = comboKey === [...combo.composition].sort().join('+');
+                  return (
+                    <button
+                      key={combo.id}
+                      onClick={() => { setSlotA(combo.composition[0]); setSlotB(combo.composition[1]); }}
+                      style={{
+                        display:'flex', alignItems:'center', gap:10,
+                        background: isActive ? 'var(--gold-3)' : 'var(--navy-2)',
+                        border: `1px solid ${isActive ? 'var(--gold)' : 'var(--border)'}`,
+                        borderRadius:6, padding:'10px 12px',
+                        cursor:'pointer', textAlign:'left', transition:'all 0.15s',
+                        boxShadow: isActive ? '0 0 12px rgba(200,155,60,0.15)' : 'none',
+                      }}
+                    >
+                      {/* 조합 재료 */}
+                      <div style={{ display:'flex', alignItems:'center', gap:3, flexShrink:0 }}>
+                        {cA && (
+                          <div style={{ width:28, height:28, borderRadius:3, overflow:'hidden', border:`1px solid ${BASE_COLORS[cA.id]}44` }}>
+                            <Image src={cA.imageUrl} alt={cA.name} width={28} height={28} style={{ objectFit:'cover', display:'block' }} unoptimized />
+                          </div>
+                        )}
+                        <span style={{ color:'var(--muted)', fontSize:10 }}>+</span>
+                        {cB && (
+                          <div style={{ width:28, height:28, borderRadius:3, overflow:'hidden', border:`1px solid ${BASE_COLORS[cB.id]}44` }}>
+                            <Image src={cB.imageUrl} alt={cB.name} width={28} height={28} style={{ objectFit:'cover', display:'block' }} unoptimized />
+                          </div>
+                        )}
+                      </div>
+                      {/* 결과 아이템 */}
+                      <div style={{ display:'flex', alignItems:'center', gap:6, minWidth:0 }}>
+                        {combo.imageUrl && (
+                          <div style={{ width:32, height:32, borderRadius:3, overflow:'hidden', flexShrink:0 }}>
+                            <Image src={combo.imageUrl} alt={combo.name} width={32} height={32} style={{ objectFit:'cover', display:'block' }} unoptimized />
+                          </div>
+                        )}
+                        <span style={{
+                          fontFamily:'Cinzel,serif', fontSize:12, fontWeight:700,
+                          color: isActive ? 'var(--gold)' : 'var(--gold-2)',
+                          lineHeight:1.3,
+                        }}>{combo.name}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
