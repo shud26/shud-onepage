@@ -84,15 +84,15 @@ export default function ItemsPage() {
   return (
     <div style={{ padding: '40px 0 80px' }}>
       <div className="container">
-        <h1 style={{ fontFamily:'Cinzel,serif', fontSize:28, fontWeight:700, color:'var(--gold-2)', marginBottom:8 }}>
+        <h1 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, fontWeight:700, color:'var(--gold-2)', marginBottom:8 }}>
           아이템 조합기
         </h1>
-        <p style={{ color:'var(--muted)', fontFamily:'Rajdhani,sans-serif', fontSize:15, marginBottom:36 }}>
+        <p style={{ color:'var(--muted)', fontFamily:"'Noto Sans KR',sans-serif", fontSize:15, marginBottom:36 }}>
           Season 17 Arcane Depths — 기본 아이템 2개를 클릭해서 조합 아이템을 확인하세요
         </p>
 
         {loading ? (
-          <div style={{ textAlign:'center', padding:'60px 0', color:'var(--muted)', fontFamily:'Rajdhani,sans-serif' }}>
+          <div style={{ textAlign:'center', padding:'60px 0', color:'var(--muted)', fontFamily:"'Noto Sans KR',sans-serif" }}>
             아이템 데이터 로딩 중...
           </div>
         ) : (
@@ -116,11 +116,11 @@ export default function ItemsPage() {
                     <Image src={itemA.imageUrl} alt={itemA.name} width={88} height={88}
                       style={{ objectFit:'cover', display:'block' }} unoptimized />
                   ) : (
-                    <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, color:'var(--muted)', textAlign:'center' }}>슬롯 1</span>
+                    <span style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:11, color:'var(--muted)', textAlign:'center' }}>슬롯 1</span>
                   )}
                 </div>
 
-                <span style={{ fontFamily:'Cinzel,serif', fontSize:28, fontWeight:700, color:'var(--muted)' }}>+</span>
+                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, fontWeight:700, color:'var(--muted)' }}>+</span>
 
                 {/* 슬롯 B */}
                 <div style={{
@@ -135,11 +135,11 @@ export default function ItemsPage() {
                     <Image src={itemB.imageUrl} alt={itemB.name} width={88} height={88}
                       style={{ objectFit:'cover', display:'block' }} unoptimized />
                   ) : (
-                    <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, color:'var(--muted)', textAlign:'center' }}>슬롯 2</span>
+                    <span style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:11, color:'var(--muted)', textAlign:'center' }}>슬롯 2</span>
                   )}
                 </div>
 
-                <span style={{ fontFamily:'Cinzel,serif', fontSize:28, fontWeight:700, color:'var(--muted)' }}>=</span>
+                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, fontWeight:700, color:'var(--muted)' }}>=</span>
 
                 {/* 결과 */}
                 <div style={{
@@ -155,12 +155,12 @@ export default function ItemsPage() {
                     <>
                       <Image src={result.imageUrl} alt={result.name} width={56} height={56}
                         style={{ objectFit:'cover', borderRadius:4 }} unoptimized />
-                      <span style={{ fontFamily:'Cinzel,serif', fontSize:12, fontWeight:700, color:'var(--gold)', textAlign:'center', lineHeight:1.3 }}>
+                      <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:12, fontWeight:700, color:'var(--gold)', textAlign:'center', lineHeight:1.3 }}>
                         {result.name}
                       </span>
                     </>
                   ) : (
-                    <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, color:'var(--muted)', textAlign:'center', lineHeight:1.6 }}>
+                    <span style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:11, color:'var(--muted)', textAlign:'center', lineHeight:1.6 }}>
                       {slotA && slotB ? '조합 없음' : '아이템을 선택하세요'}
                     </span>
                   )}
@@ -172,7 +172,7 @@ export default function ItemsPage() {
                   <button onClick={() => { setSlotA(null); setSlotB(null); }} style={{
                     background:'none', border:'1px solid var(--border)', borderRadius:3,
                     color:'var(--muted)', cursor:'pointer', padding:'4px 14px',
-                    fontFamily:'Rajdhani,sans-serif', fontSize:12,
+                    fontFamily:"'Noto Sans KR',sans-serif", fontSize:12,
                   }}>초기화</button>
                 </div>
               )}
@@ -191,7 +191,7 @@ export default function ItemsPage() {
                       selected={slotA === item.id || slotB === item.id}
                       onClick={() => handleSelect(item.id)} />
                     <span style={{
-                      fontFamily:'Rajdhani,sans-serif', fontSize:10, fontWeight:600,
+                      fontFamily:"'Noto Sans KR',sans-serif", fontSize:10, fontWeight:600,
                       color: (slotA === item.id || slotB === item.id) ? BASE_COLORS[item.id] : 'var(--muted)',
                       textAlign:'center', maxWidth:64, lineHeight:1.2,
                     }}>{item.name}</span>
@@ -250,7 +250,7 @@ export default function ItemsPage() {
                           </div>
                         )}
                         <span style={{
-                          fontFamily:'Cinzel,serif', fontSize:12, fontWeight:700,
+                          fontFamily:"'Bebas Neue',sans-serif", fontSize:12, fontWeight:700,
                           color: isActive ? 'var(--gold)' : 'var(--gold-2)',
                           lineHeight:1.3,
                         }}>{combo.name}</span>

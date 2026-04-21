@@ -67,7 +67,7 @@ function ChampCard({ champ, allTraits }: { champ: ApiChampion; allTraits: ApiTra
 
       {!flipped ? (
         <>
-          <div style={{ fontFamily:'Cinzel,serif', fontSize:13, fontWeight:700, color:'var(--gold-2)', marginBottom:6 }}>
+          <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:13, fontWeight:700, color:'var(--gold-2)', marginBottom:6 }}>
             {champ.name}
           </div>
           {/* 코스트 도트 */}
@@ -93,7 +93,7 @@ function ChampCard({ champ, allTraits }: { champ: ApiChampion; allTraits: ApiTra
             onClick={e => e.stopPropagation()}
             style={{
               display:'inline-block', marginTop:8,
-              fontFamily:'Rajdhani,sans-serif', fontSize:11, fontWeight:600,
+              fontFamily:"'Noto Sans KR',sans-serif", fontSize:11, fontWeight:600,
               color: costColor, textDecoration:'none', letterSpacing:'0.06em',
               opacity:0.8,
             }}
@@ -101,10 +101,10 @@ function ChampCard({ champ, allTraits }: { champ: ApiChampion; allTraits: ApiTra
         </>
       ) : (
         <div style={{ textAlign:'left' }}>
-          <div style={{ fontFamily:'Cinzel,serif', fontSize:11, fontWeight:700, color:costColor, marginBottom:4 }}>
+          <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:11, fontWeight:700, color:costColor, marginBottom:4 }}>
             {champ.skill || '—'}
           </div>
-          <p style={{ fontFamily:'Rajdhani,sans-serif', fontSize:12, color:'var(--text)', lineHeight:1.6, marginBottom:8 }}>
+          <p style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:12, color:'var(--text)', lineHeight:1.6, marginBottom:8 }}>
             {champ.skillDesc || '—'}
           </p>
           <div style={{ display:'flex', gap:3, flexWrap:'wrap' }}>
@@ -123,7 +123,7 @@ function ChampCard({ champ, allTraits }: { champ: ApiChampion; allTraits: ApiTra
             onClick={e => e.stopPropagation()}
             style={{
               display:'inline-block', marginTop:10,
-              fontFamily:'Rajdhani,sans-serif', fontSize:11, fontWeight:600,
+              fontFamily:"'Noto Sans KR',sans-serif", fontSize:11, fontWeight:600,
               color: costColor, textDecoration:'none', letterSpacing:'0.06em',
               opacity:0.85,
             }}
@@ -154,10 +154,10 @@ export default function ChampionsClient({ champions, traits }: Props) {
   return (
     <div style={{ padding:'40px 0 80px' }}>
       <div className="container">
-        <h1 style={{ fontFamily:'Cinzel,serif', fontSize:28, fontWeight:700, color:'var(--gold-2)', marginBottom:8 }}>
+        <h1 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, fontWeight:700, color:'var(--gold-2)', marginBottom:8 }}>
           챔피언 도감
         </h1>
-        <p style={{ color:'var(--muted)', fontFamily:'Rajdhani,sans-serif', fontSize:15, marginBottom:32 }}>
+        <p style={{ color:'var(--muted)', fontFamily:"'Noto Sans KR',sans-serif", fontSize:15, marginBottom:32 }}>
           Season 17 Arcane Depths — {champions.length}명 전체 챔피언 정보
         </p>
 
@@ -174,7 +174,7 @@ export default function ChampionsClient({ champions, traits }: Props) {
                 width:'100%', padding:'10px 12px 10px 36px',
                 background:'var(--navy-2)', border:'1px solid var(--border)',
                 borderRadius:6, color:'var(--text)',
-                fontFamily:'Rajdhani,sans-serif', fontSize:14, outline:'none',
+                fontFamily:"'Noto Sans KR',sans-serif", fontSize:14, outline:'none',
               }}
             />
           </div>
@@ -184,7 +184,7 @@ export default function ChampionsClient({ champions, traits }: Props) {
             {([0,1,2,3,4,5] as const).map(c => (
               <button key={c} onClick={() => setCostFilter(c)} style={{
                 padding:'5px 14px', borderRadius:3, border:'1px solid var(--border)',
-                fontFamily:'Rajdhani,sans-serif', fontSize:13, fontWeight:600,
+                fontFamily:"'Noto Sans KR',sans-serif", fontSize:13, fontWeight:600,
                 cursor:'pointer', transition:'all 0.15s',
                 background: costFilter === c
                   ? (c === 0 ? 'var(--gold)' : COST_COLORS[c as 1|2|3|4|5])
@@ -203,7 +203,7 @@ export default function ChampionsClient({ champions, traits }: Props) {
           <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
             <button onClick={() => setTraitFilter('')} style={{
               padding:'4px 12px', borderRadius:2,
-              fontFamily:'Rajdhani,sans-serif', fontSize:12, fontWeight:600,
+              fontFamily:"'Noto Sans KR',sans-serif", fontSize:12, fontWeight:600,
               cursor:'pointer', border:'1px solid var(--border)',
               background: traitFilter === '' ? 'var(--gold-3)' : 'var(--navy-2)',
               color: traitFilter === '' ? 'var(--gold)' : 'var(--muted)',
@@ -215,7 +215,7 @@ export default function ChampionsClient({ champions, traits }: Props) {
               return (
                 <button key={t.name} onClick={() => setTraitFilter(active ? '' : t.name)} style={{
                   padding:'4px 12px', borderRadius:2,
-                  fontFamily:'Rajdhani,sans-serif', fontSize:12, fontWeight:600,
+                  fontFamily:"'Noto Sans KR',sans-serif", fontSize:12, fontWeight:600,
                   cursor:'pointer', transition:'all 0.15s',
                   background: active ? `${color}25` : 'var(--navy-2)',
                   color: active ? color : 'var(--muted)',
@@ -238,7 +238,7 @@ export default function ChampionsClient({ champions, traits }: Props) {
         </div>
 
         {filtered.length === 0 && (
-          <div style={{ textAlign:'center', padding:'60px 0', color:'var(--muted)', fontFamily:'Rajdhani,sans-serif' }}>
+          <div style={{ textAlign:'center', padding:'60px 0', color:'var(--muted)', fontFamily:"'Noto Sans KR',sans-serif" }}>
             검색 결과가 없습니다
           </div>
         )}

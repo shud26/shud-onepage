@@ -57,10 +57,10 @@ export default function MetaPage() {
   return (
     <div style={{ padding:'40px 0 80px' }}>
       <div className="container">
-        <h1 style={{ fontFamily:'Cinzel,serif', fontSize:28, fontWeight:700, color:'var(--gold-2)', marginBottom:8 }}>
+        <h1 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, fontWeight:700, color:'var(--gold-2)', marginBottom:8 }}>
           메타 통계
         </h1>
-        <p style={{ color:'var(--muted)', fontFamily:'Rajdhani,sans-serif', fontSize:15, marginBottom:24 }}>
+        <p style={{ color:'var(--muted)', fontFamily:"'Noto Sans KR',sans-serif", fontSize:15, marginBottom:24 }}>
           Season 17 Arcane Depths — 최신 메타 데이터 분석
         </p>
 
@@ -69,7 +69,7 @@ export default function MetaPage() {
           {SUB_TABS.map(t => (
             <button key={t} onClick={() => setSubTab(t)} style={{
               padding:'10px 20px', border:'none', cursor:'pointer',
-              fontFamily:'Rajdhani,sans-serif', fontSize:14, fontWeight:600,
+              fontFamily:"'Noto Sans KR',sans-serif", fontSize:14, fontWeight:600,
               letterSpacing:'0.06em', textTransform:'uppercase', background:'none',
               color: subTab===t ? 'var(--gold)' : 'var(--muted)',
               borderBottom: subTab===t ? '2px solid var(--gold)' : '2px solid transparent',
@@ -85,7 +85,7 @@ export default function MetaPage() {
               {([['pickRate','픽률순'], ['winRate','1등률순'], ['avgPlace','평균등수순']] as const).map(([key, label]) => (
                 <button key={key} onClick={() => setSortBy(key)} style={{
                   padding:'5px 14px', borderRadius:3, cursor:'pointer',
-                  fontFamily:'Rajdhani,sans-serif', fontSize:13, fontWeight:600,
+                  fontFamily:"'Noto Sans KR',sans-serif", fontSize:13, fontWeight:600,
                   background: sortBy===key ? 'var(--gold-3)' : 'var(--navy-2)',
                   color: sortBy===key ? 'var(--gold)' : 'var(--muted)',
                   border:`1px solid ${sortBy===key ? 'var(--border-hover)' : 'var(--border)'}`,
@@ -94,13 +94,13 @@ export default function MetaPage() {
             </div>
 
             {champions.length === 0 ? (
-              <div style={{ textAlign:'center', padding:'40px 0', color:'var(--muted)', fontFamily:'Rajdhani,sans-serif' }}>
+              <div style={{ textAlign:'center', padding:'40px 0', color:'var(--muted)', fontFamily:"'Noto Sans KR',sans-serif" }}>
                 챔피언 데이터 로딩 중...
               </div>
             ) : (
               <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
                 <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr 1fr',
-                  padding:'8px 16px', gap:8, fontFamily:'Rajdhani,sans-serif', fontSize:11,
+                  padding:'8px 16px', gap:8, fontFamily:"'Noto Sans KR',sans-serif", fontSize:11,
                   fontWeight:600, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--muted)' }}>
                   <span>챔피언</span>
                   <span style={{ textAlign:'right' }}>픽률</span>
@@ -115,28 +115,28 @@ export default function MetaPage() {
                       padding:'12px 16px', gap:8, alignItems:'center',
                       background:'var(--navy-2)', borderRadius:4, border:'1px solid var(--border)' }}>
                       <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                        <span style={{ fontFamily:'Cinzel,serif', fontSize:12, fontWeight:700,
+                        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:12, fontWeight:700,
                           color:'var(--muted)', width:20, textAlign:'right' }}>{i+1}</span>
                         <div style={{ width:4, height:28, background:costColor, borderRadius:2, flexShrink:0 }}/>
                         <div>
-                          <div style={{ fontFamily:'Cinzel,serif', fontSize:13, fontWeight:700, color:'var(--gold-2)' }}>{c.name}</div>
-                          <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:10, color:'var(--muted)' }}>{c.cost}코스트</div>
+                          <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:13, fontWeight:700, color:'var(--gold-2)' }}>{c.name}</div>
+                          <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:10, color:'var(--muted)' }}>{c.cost}코스트</div>
                         </div>
                       </div>
                       <div style={{ display:'flex', alignItems:'center', gap:6 }}>
                         <Bar val={Number(c.pickRate)} max={maxPickRate} color='var(--gold)'/>
-                        <span style={{ fontFamily:'Cinzel,serif', fontSize:13, fontWeight:700, color:'var(--gold)', width:40, textAlign:'right' }}>
+                        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:13, fontWeight:700, color:'var(--gold)', width:40, textAlign:'right' }}>
                           {c.pickRate}%
                         </span>
                       </div>
                       <div style={{ display:'flex', alignItems:'center', gap:6 }}>
                         <Bar val={Number(c.winRate)} max={maxWinRate} color='#4AE890'/>
-                        <span style={{ fontFamily:'Cinzel,serif', fontSize:13, fontWeight:700, color:'#4AE890', width:40, textAlign:'right' }}>
+                        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:13, fontWeight:700, color:'#4AE890', width:40, textAlign:'right' }}>
                           {c.winRate}%
                         </span>
                       </div>
                       <div style={{ textAlign:'right' }}>
-                        <span style={{ fontFamily:'Cinzel,serif', fontSize:13, fontWeight:700,
+                        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:13, fontWeight:700,
                           color: Number(c.avgPlace)<4 ? '#4AE890' : Number(c.avgPlace)>5 ? '#E85454' : 'var(--text)' }}>
                           {c.avgPlace}위
                         </span>
@@ -160,7 +160,7 @@ export default function MetaPage() {
                 <div key={tier}>
                   <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
                     <span className="tier-badge" style={{ color:tierColor, borderColor:tierColor, background:`${tierColor}33` }}>{tier}</span>
-                    <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:12, color:'var(--muted)' }}>
+                    <span style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:12, color:'var(--muted)' }}>
                       {tier==='S'?'필수 증강체':tier==='A'?'강력 추천':tier==='B'?'상황따라':'비추천'}
                     </span>
                   </div>
@@ -169,20 +169,20 @@ export default function MetaPage() {
                       <div key={aug.name} style={{ background:'var(--navy-2)',
                         border:`1px solid var(--border)`, borderLeft:`2px solid ${tierColor}`,
                         borderRadius:4, padding:'12px 14px' }}>
-                        <div style={{ fontFamily:'Cinzel,serif', fontSize:13, fontWeight:700, color:'var(--gold-2)', marginBottom:8 }}>
+                        <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:13, fontWeight:700, color:'var(--gold-2)', marginBottom:8 }}>
                           {aug.name}
                         </div>
                         <div style={{ display:'flex', gap:12 }}>
                           <div>
-                            <div style={{ fontFamily:'Cinzel,serif', fontSize:14, fontWeight:700, color:'var(--gold)' }}>{aug.avgPlace.toFixed(1)}위</div>
-                            <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>평균등수</div>
+                            <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, fontWeight:700, color:'var(--gold)' }}>{aug.avgPlace.toFixed(1)}위</div>
+                            <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>평균등수</div>
                           </div>
                           <div style={{ flex:1 }}>
                             <div style={{ display:'flex', alignItems:'center', gap:6 }}>
                               <Bar val={aug.pickRate} max={maxAugPick} color={tierColor}/>
-                              <span style={{ fontFamily:'Cinzel,serif', fontSize:14, fontWeight:700, color:tierColor, width:40 }}>{aug.pickRate}%</span>
+                              <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, fontWeight:700, color:tierColor, width:40 }}>{aug.pickRate}%</span>
                             </div>
-                            <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>픽률</div>
+                            <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>픽률</div>
                           </div>
                         </div>
                       </div>
@@ -198,7 +198,7 @@ export default function MetaPage() {
         {subTab === '시너지 분석' && (
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(260px, 1fr))', gap:12 }}>
             {traits.length === 0 ? (
-              <div style={{ textAlign:'center', padding:'40px 0', color:'var(--muted)', fontFamily:'Rajdhani,sans-serif', gridColumn:'1/-1' }}>
+              <div style={{ textAlign:'center', padding:'40px 0', color:'var(--muted)', fontFamily:"'Noto Sans KR',sans-serif", gridColumn:'1/-1' }}>
                 시너지 데이터 로딩 중...
               </div>
             ) : traits.map(trait => {
@@ -211,17 +211,17 @@ export default function MetaPage() {
                   <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
                     <div style={{ width:32, height:32, borderRadius:4, background:`${color}20`,
                       border:`1px solid ${color}44`, display:'flex', alignItems:'center', justifyContent:'center',
-                      fontFamily:'Cinzel,serif', fontSize:14, fontWeight:700, color }}>
+                      fontFamily:"'Bebas Neue',sans-serif", fontSize:14, fontWeight:700, color }}>
                       {trait.name[0]}
                     </div>
                     <div>
-                      <div style={{ fontFamily:'Cinzel,serif', fontSize:14, fontWeight:700, color:'var(--gold-2)' }}>{trait.name}</div>
-                      <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, color:'var(--muted)' }}>챔피언 {trait.champCount}명</div>
+                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, fontWeight:700, color:'var(--gold-2)' }}>{trait.name}</div>
+                      <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:11, color:'var(--muted)' }}>챔피언 {trait.champCount}명</div>
                     </div>
                   </div>
                   <div style={{ display:'flex', gap:3, flexWrap:'wrap' }}>
                     {champsWithTrait.map(c => (
-                      <span key={c.id} style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, fontWeight:600,
+                      <span key={c.id} style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:11, fontWeight:600,
                         color:`${color}cc`, background:`${color}15`, border:`1px solid ${color}33`,
                         borderRadius:2, padding:'2px 7px' }}>{c.name}</span>
                     ))}

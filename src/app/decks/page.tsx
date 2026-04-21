@@ -62,7 +62,7 @@ function ChampHex({ apiName, size = 48 }: { apiName: string; size?: number }) {
           clipPath:'polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)',
           background:'linear-gradient(135deg, #142035, #050b18)',
           display:'flex', alignItems:'center', justifyContent:'center',
-          fontFamily:'Cinzel,serif', fontSize:size*0.22, fontWeight:700, color:costColor,
+          fontFamily:"'Bebas Neue',sans-serif", fontSize:size*0.22, fontWeight:700, color:costColor,
         }}>
           {champ ? champ.name[0] : '?'}
         </div>
@@ -88,10 +88,10 @@ export default function DecksPage() {
   return (
     <div style={{ padding:'40px 0 80px' }}>
       <div className="container">
-        <h1 style={{ fontFamily:'Cinzel,serif', fontSize:28, fontWeight:700, color:'var(--gold-2)', marginBottom:8 }}>
+        <h1 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, fontWeight:700, color:'var(--gold-2)', marginBottom:8 }}>
           덱 추천
         </h1>
-        <p style={{ color:'var(--muted)', fontFamily:'Rajdhani,sans-serif', fontSize:15, marginBottom:32 }}>
+        <p style={{ color:'var(--muted)', fontFamily:"'Noto Sans KR',sans-serif", fontSize:15, marginBottom:32 }}>
           Season 17 Arcane Depths — 티어별 최강 덱 가이드
         </p>
 
@@ -100,7 +100,7 @@ export default function DecksPage() {
           <div style={{ display:'flex', gap:6 }}>
             <button onClick={() => setTierFilter('')} style={{
               padding:'5px 14px', borderRadius:3, cursor:'pointer',
-              fontFamily:'Rajdhani,sans-serif', fontSize:13, fontWeight:600,
+              fontFamily:"'Noto Sans KR',sans-serif", fontSize:13, fontWeight:600,
               background: tierFilter==='' ? 'var(--gold-3)' : 'var(--navy-2)',
               color: tierFilter==='' ? 'var(--gold)' : 'var(--muted)',
               border:`1px solid ${tierFilter==='' ? 'var(--border-hover)' : 'var(--border)'}`,
@@ -111,7 +111,7 @@ export default function DecksPage() {
               return (
                 <button key={t} onClick={() => setTierFilter(active ? '' : t)} style={{
                   padding:'5px 14px', borderRadius:3, cursor:'pointer',
-                  fontFamily:'Cinzel,serif', fontSize:13, fontWeight:700,
+                  fontFamily:"'Bebas Neue',sans-serif", fontSize:13, fontWeight:700,
                   background: active ? `${color}25` : 'var(--navy-2)',
                   color: active ? color : 'var(--muted)',
                   border:`1px solid ${active ? color+'66' : 'var(--border)'}`,
@@ -123,7 +123,7 @@ export default function DecksPage() {
             {(['','재구름','고정'] as const).map(s => (
               <button key={s} onClick={() => setStyleFilter(s)} style={{
                 padding:'5px 14px', borderRadius:3, cursor:'pointer',
-                fontFamily:'Rajdhani,sans-serif', fontSize:13, fontWeight:600,
+                fontFamily:"'Noto Sans KR',sans-serif", fontSize:13, fontWeight:600,
                 background: styleFilter===s ? 'var(--gold-3)' : 'var(--navy-2)',
                 color: styleFilter===s ? 'var(--gold)' : 'var(--muted)',
                 border:`1px solid ${styleFilter===s ? 'var(--border-hover)' : 'var(--border)'}`,
@@ -154,18 +154,18 @@ export default function DecksPage() {
                 el.style.transform='none';
               }}>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-                  <span style={{ fontFamily:'Cinzel,serif', fontSize:15, fontWeight:700, color:'var(--gold-2)' }}>
+                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:15, fontWeight:700, color:'var(--gold-2)' }}>
                     {deck.name}
                   </span>
                   <TierBadge tier={deck.tier} />
                 </div>
 
                 <div style={{ display:'flex', gap:6, marginBottom:10, flexWrap:'wrap', alignItems:'center' }}>
-                  <span style={{ fontSize:10, fontFamily:'Rajdhani,sans-serif', fontWeight:600,
+                  <span style={{ fontSize:10, fontFamily:"'Noto Sans KR',sans-serif", fontWeight:600,
                     color:'var(--muted)', background:'var(--navy-4)', padding:'2px 7px', borderRadius:2, letterSpacing:'0.06em' }}>
                     {deck.style}
                   </span>
-                  <span style={{ fontSize:10, fontFamily:'Rajdhani,sans-serif', fontWeight:600,
+                  <span style={{ fontSize:10, fontFamily:"'Noto Sans KR',sans-serif", fontWeight:600,
                     color:'var(--muted)', background:'var(--navy-4)', padding:'2px 7px', borderRadius:2, letterSpacing:'0.06em' }}>
                     {deck.difficulty}
                   </span>
@@ -190,8 +190,8 @@ export default function DecksPage() {
                     { label:'1등률',    val:`${deck.winRate}%` },
                   ].map(s => (
                     <div key={s.label}>
-                      <div style={{ fontFamily:'Cinzel,serif', fontSize:15, fontWeight:700, color:'var(--gold)' }}>{s.val}</div>
-                      <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>{s.label}</div>
+                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:15, fontWeight:700, color:'var(--gold)' }}>{s.val}</div>
+                      <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>{s.label}</div>
                     </div>
                   ))}
                 </div>
@@ -201,7 +201,7 @@ export default function DecksPage() {
         </div>
 
         {filtered.length === 0 && (
-          <div style={{ textAlign:'center', padding:'60px 0', color:'var(--muted)', fontFamily:'Rajdhani,sans-serif' }}>
+          <div style={{ textAlign:'center', padding:'60px 0', color:'var(--muted)', fontFamily:"'Noto Sans KR',sans-serif" }}>
             조건에 맞는 덱이 없습니다
           </div>
         )}
@@ -216,10 +216,10 @@ export default function DecksPage() {
                 <div style={{ display:'flex', alignItems:'center', gap:12 }}>
                   <TierBadge tier={selectedDeck.tier} large />
                   <div>
-                    <div style={{ fontFamily:'Cinzel,serif', fontSize:20, fontWeight:700, color:'var(--gold-2)' }}>
+                    <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, fontWeight:700, color:'var(--gold-2)' }}>
                       {selectedDeck.name}
                     </div>
-                    <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:12, color:'var(--muted)', marginTop:2 }}>
+                    <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:12, color:'var(--muted)', marginTop:2 }}>
                       {selectedDeck.style} · {selectedDeck.difficulty}
                     </div>
                   </div>
@@ -227,7 +227,7 @@ export default function DecksPage() {
                 <button onClick={() => setSelected(null)} style={{
                   background:'none', border:'1px solid var(--border)', borderRadius:4,
                   color:'var(--muted)', cursor:'pointer', padding:'6px 12px',
-                  fontFamily:'Rajdhani,sans-serif', fontSize:13,
+                  fontFamily:"'Noto Sans KR',sans-serif", fontSize:13,
                 }}>닫기</button>
               </div>
             </div>
@@ -235,11 +235,11 @@ export default function DecksPage() {
             <div style={{ padding:'24px' }}>
               {/* 시너지 */}
               <div style={{ marginBottom:20 }}>
-                <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, fontWeight:600,
+                <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:11, fontWeight:600,
                   letterSpacing:'0.1em', color:'var(--muted)', textTransform:'uppercase', marginBottom:8 }}>핵심 시너지</div>
                 <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
                   {selectedDeck.traits.map(t => <TraitTag key={t} trait={t} />)}
-                  <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:13, color:'var(--gold)', marginLeft:4 }}>
+                  <span style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:13, color:'var(--gold)', marginLeft:4 }}>
                     {selectedDeck.synergy}
                   </span>
                 </div>
@@ -247,7 +247,7 @@ export default function DecksPage() {
 
               {/* 유닛 */}
               <div style={{ marginBottom:20 }}>
-                <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, fontWeight:600,
+                <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:11, fontWeight:600,
                   letterSpacing:'0.1em', color:'var(--muted)', textTransform:'uppercase', marginBottom:8 }}>추천 유닛</div>
                 <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
                   {selectedDeck.unitApiNames.map(apiName => {
@@ -255,10 +255,10 @@ export default function DecksPage() {
                     return (
                       <div key={apiName} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
                         <ChampHex apiName={apiName} size={52} />
-                        <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:10, color:'var(--muted)', textAlign:'center' }}>
+                        <span style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:10, color:'var(--muted)', textAlign:'center' }}>
                           {champ?.name || '...'}
                         </span>
-                        <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:9, color:'var(--muted)', opacity:0.6 }}>
+                        <span style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:9, color:'var(--muted)', opacity:0.6 }}>
                           {champ ? `${champ.cost}코` : ''}
                         </span>
                       </div>
@@ -276,20 +276,20 @@ export default function DecksPage() {
                 ].map((s, i) => (
                   <div key={s.label} style={{ flex:1, padding:'16px', textAlign:'center',
                     borderRight: i < 2 ? '1px solid var(--border)' : 'none' }}>
-                    <div style={{ fontFamily:'Cinzel,serif', fontSize:20, fontWeight:700, color:'var(--gold)', marginBottom:4 }}>{s.val}</div>
-                    <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>{s.label}</div>
+                    <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, fontWeight:700, color:'var(--gold)', marginBottom:4 }}>{s.val}</div>
+                    <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:11, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>{s.label}</div>
                   </div>
                 ))}
               </div>
 
               {/* 핵심 아이템 */}
               <div style={{ marginBottom:20 }}>
-                <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, fontWeight:600,
+                <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:11, fontWeight:600,
                   letterSpacing:'0.1em', color:'var(--muted)', textTransform:'uppercase', marginBottom:8 }}>핵심 아이템</div>
                 <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
                   {selectedDeck.coreItems.map(item => (
                     <span key={item} style={{
-                      fontFamily:'Rajdhani,sans-serif', fontSize:12, fontWeight:600,
+                      fontFamily:"'Noto Sans KR',sans-serif", fontSize:12, fontWeight:600,
                       color:'var(--gold-2)', background:'var(--navy-4)',
                       border:'1px solid var(--border)', borderRadius:3, padding:'4px 10px',
                     }}>{item}</span>
@@ -299,13 +299,13 @@ export default function DecksPage() {
 
               {/* 팁 */}
               <div>
-                <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, fontWeight:600,
+                <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:11, fontWeight:600,
                   letterSpacing:'0.1em', color:'var(--muted)', textTransform:'uppercase', marginBottom:8 }}>공략 팁</div>
                 <ul style={{ listStyle:'none', display:'flex', flexDirection:'column', gap:6 }}>
                   {selectedDeck.tips.map((tip, i) => (
                     <li key={i} style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
-                      <span style={{ color:'var(--gold)', fontFamily:'Cinzel,serif', fontSize:13, fontWeight:700, marginTop:1, flexShrink:0 }}>{i+1}.</span>
-                      <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:14, color:'var(--text)', lineHeight:1.5 }}>{tip}</span>
+                      <span style={{ color:'var(--gold)', fontFamily:"'Bebas Neue',sans-serif", fontSize:13, fontWeight:700, marginTop:1, flexShrink:0 }}>{i+1}.</span>
+                      <span style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:14, color:'var(--text)', lineHeight:1.5 }}>{tip}</span>
                     </li>
                   ))}
                 </ul>

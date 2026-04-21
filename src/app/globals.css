@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
 
 :root {
   --navy-0:   #050b18;
@@ -40,7 +40,7 @@ html { scroll-behavior: smooth; }
 body {
   background: var(--navy-0);
   color: var(--text);
-  font-family: 'Rajdhani', sans-serif;
+  font-family: 'Noto Sans KR', sans-serif;
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -102,12 +102,12 @@ body {
   background: linear-gradient(135deg, var(--gold), #a07824);
   clip-path: polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Cinzel', serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-size: 14px; font-weight: 700;
   color: var(--navy-0);
 }
 .tft-logo-text {
-  font-family: 'Cinzel', serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-size: 17px; font-weight: 700;
   color: var(--gold-2);
   letter-spacing: 0.05em;
@@ -115,7 +115,7 @@ body {
 .tft-logo-text .gg { color: var(--gold); }
 .tft-logo-badge {
   font-size: 10px;
-  font-family: 'Rajdhani', sans-serif;
+  font-family: 'Noto Sans KR', sans-serif;
   font-weight: 600;
   letter-spacing: 0.05em;
   color: var(--muted);
@@ -129,7 +129,7 @@ body {
   align-items: center;
 }
 .tft-tab {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: 'Noto Sans KR', sans-serif;
   font-size: 14px; font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -145,7 +145,7 @@ body {
 .tft-patch {
   font-size: 12px;
   color: var(--muted);
-  font-family: 'Rajdhani', sans-serif;
+  font-family: 'Noto Sans KR', sans-serif;
   white-space: nowrap;
 }
 
@@ -174,7 +174,7 @@ body {
 
 /* ── Section Label ── */
 .section-label {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: 'Noto Sans KR', sans-serif;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -184,7 +184,7 @@ body {
 
 /* ── Trait Tag ── */
 .trait-tag {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: 'Noto Sans KR', sans-serif;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -202,7 +202,7 @@ body {
   justify-content: center;
   width: 28px; height: 28px;
   border-radius: 4px;
-  font-family: 'Cinzel', serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-size: 14px; font-weight: 700;
   border: 2px solid;
   flex-shrink: 0;
@@ -223,7 +223,7 @@ body {
   background: linear-gradient(135deg, var(--navy-3), var(--navy-0));
   display: flex; align-items: center; justify-content: center;
   width: 88%; height: 88%;
-  font-family: 'Cinzel', serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 700;
   font-size: 12px;
 }
@@ -232,7 +232,7 @@ body {
 .btn-primary {
   background: linear-gradient(135deg, var(--gold), #a07824);
   color: var(--navy-0);
-  font-family: 'Rajdhani', sans-serif;
+  font-family: 'Noto Sans KR', sans-serif;
   font-size: 14px; font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -250,7 +250,7 @@ body {
   background: transparent;
   color: var(--gold);
   border: 1px solid var(--border-hover);
-  font-family: 'Rajdhani', sans-serif;
+  font-family: 'Noto Sans KR', sans-serif;
   font-size: 14px; font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;

@@ -111,13 +111,13 @@ export default function HomePage() {
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:20 }}>
             <div style={{ width:8, height:8, borderRadius:'50%', background:'var(--gold)',
               boxShadow:'0 0 8px var(--gold)', animation:'glowPulse 1.5s ease-in-out infinite' }}/>
-            <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:12, fontWeight:600,
+            <span style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:12, fontWeight:600,
               letterSpacing:'0.12em', color:'var(--gold)', textTransform:'uppercase' }}>
               SEASON 17 LIVE
             </span>
           </div>
 
-          <h1 style={{ fontFamily:'Cinzel,serif', fontSize:'clamp(32px,5vw,68px)', fontWeight:900,
+          <h1 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'clamp(32px,5vw,68px)', fontWeight:900,
             color:'var(--gold-2)', lineHeight:1.1, marginBottom:20, letterSpacing:'0.02em' }}>
             ARCANE{' '}
             <span style={{
@@ -128,7 +128,7 @@ export default function HomePage() {
             }}>DEPTHS</span>
           </h1>
 
-          <p style={{ fontFamily:'Rajdhani,sans-serif', fontSize:18, fontWeight:500,
+          <p style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:18, fontWeight:500,
             color:'var(--muted)', maxWidth:480, marginBottom:32, lineHeight:1.6 }}>
             시즌 17 아케인 심연 — 챔피언 도감, 최강 덱 추천, 아이템 조합기를 한 곳에서.
           </p>
@@ -146,9 +146,9 @@ export default function HomePage() {
           {STATS.map((s, i) => (
             <div key={s.label} style={{ flex:'1 1 120px', padding:'18px 24px',
               borderRight: i < STATS.length-1 ? '1px solid var(--border)' : 'none', textAlign:'center' }}>
-              <div style={{ fontFamily:'Cinzel,serif', fontSize:22, fontWeight:700,
+              <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, fontWeight:700,
                 color:'var(--gold)', marginBottom:4 }}>{s.num}</div>
-              <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, fontWeight:600,
+              <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:11, fontWeight:600,
                 letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--muted)' }}>{s.label}</div>
             </div>
           ))}
@@ -161,7 +161,7 @@ export default function HomePage() {
           <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:24 }}>
             <span className="section-label">추천 덱 TOP 5</span>
             <div className="gold-divider" style={{ flex:1, margin:0 }}/>
-            <Link href="/decks" style={{ fontFamily:'Rajdhani,sans-serif', fontSize:13,
+            <Link href="/decks" style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:13,
               color:'var(--gold)', textDecoration:'none', fontWeight:600 }}>전체 보기 →</Link>
           </div>
 
@@ -172,7 +172,7 @@ export default function HomePage() {
                 <Link key={deck.id} href="/decks" style={{ textDecoration:'none' }}>
                   <div className="tft-card" style={{ borderLeft:`3px solid ${tierColor}` }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-                      <span style={{ fontFamily:'Cinzel,serif', fontSize:15, fontWeight:700,
+                      <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:15, fontWeight:700,
                         color:'var(--gold-2)' }}>{deck.name}</span>
                       <TierBadge tier={deck.tier} />
                     </div>
@@ -193,8 +193,8 @@ export default function HomePage() {
                         { label:'1등률',    val:`${deck.winRate}%` },
                       ].map(s => (
                         <div key={s.label}>
-                          <div style={{ fontFamily:'Cinzel,serif', fontSize:15, fontWeight:700, color:'var(--gold)' }}>{s.val}</div>
-                          <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>{s.label}</div>
+                          <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:15, fontWeight:700, color:'var(--gold)' }}>{s.val}</div>
+                          <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.06em' }}>{s.label}</div>
                         </div>
                       ))}
                     </div>
@@ -212,7 +212,7 @@ export default function HomePage() {
           <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20 }}>
             <span className="section-label">증강체 티어</span>
             <div className="gold-divider" style={{ flex:1, margin:0 }}/>
-            <Link href="/meta" style={{ fontFamily:'Rajdhani,sans-serif', fontSize:13,
+            <Link href="/meta" style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:13,
               color:'var(--gold)', textDecoration:'none', fontWeight:600 }}>전체 보기 →</Link>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:8 }}>
@@ -223,18 +223,18 @@ export default function HomePage() {
                   <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
                     <span className="tier-badge" style={{ color:tierColor, borderColor:tierColor,
                       background:`${tierColor}22`, width:22, height:22, fontSize:12 }}>{aug.tier}</span>
-                    <span style={{ fontFamily:'Cinzel,serif', fontSize:13, fontWeight:700, color:'var(--gold-2)' }}>
+                    <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:13, fontWeight:700, color:'var(--gold-2)' }}>
                       {aug.name}
                     </span>
                   </div>
                   <div style={{ display:'flex', gap:12 }}>
                     <div>
-                      <div style={{ fontFamily:'Cinzel,serif', fontSize:14, fontWeight:700, color:'var(--gold)' }}>{aug.avgPlace.toFixed(1)}위</div>
-                      <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:9, color:'var(--muted)', textTransform:'uppercase' }}>평균등수</div>
+                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, fontWeight:700, color:'var(--gold)' }}>{aug.avgPlace.toFixed(1)}위</div>
+                      <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:9, color:'var(--muted)', textTransform:'uppercase' }}>평균등수</div>
                     </div>
                     <div>
-                      <div style={{ fontFamily:'Cinzel,serif', fontSize:14, fontWeight:700, color:tierColor }}>{aug.pickRate}%</div>
-                      <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:9, color:'var(--muted)', textTransform:'uppercase' }}>픽률</div>
+                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, fontWeight:700, color:tierColor }}>{aug.pickRate}%</div>
+                      <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:9, color:'var(--muted)', textTransform:'uppercase' }}>픽률</div>
                     </div>
                   </div>
                 </div>

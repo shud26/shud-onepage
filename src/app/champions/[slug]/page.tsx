@@ -93,14 +93,14 @@ function MiniChampCard({ champ }: { champ: ApiChampion }) {
             <div style={{ width:'88%', height:'88%', margin:'6%',
               clipPath:'polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)',
               background:'var(--navy-1)', display:'flex', alignItems:'center', justifyContent:'center',
-              fontFamily:'Cinzel,serif', fontSize:14, fontWeight:700, color:costColor }}>
+              fontFamily:"'Bebas Neue',sans-serif", fontSize:14, fontWeight:700, color:costColor }}>
               {champ.name[0]}
             </div>
           )}
         </div>
-        <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, fontWeight:600,
+        <span style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:11, fontWeight:600,
           color:'var(--muted)', textAlign:'center', lineHeight:1.2 }}>{champ.name}</span>
-        <span style={{ fontFamily:'Cinzel,serif', fontSize:10, color:costColor }}>{champ.cost}코</span>
+        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:10, color:costColor }}>{champ.cost}코</span>
       </div>
     </Link>
   );
@@ -148,7 +148,7 @@ export default async function ChampionDetailPage({ params }: { params: Promise<{
 
           {/* 브레드크럼 */}
           <nav style={{ display:'flex', alignItems:'center', gap:8, marginBottom:24,
-            fontFamily:'Rajdhani,sans-serif', fontSize:13, color:'var(--muted)' }}>
+            fontFamily:"'Noto Sans KR',sans-serif", fontSize:13, color:'var(--muted)' }}>
             <Link href="/" style={{ color:'var(--muted)', textDecoration:'none' }}>홈</Link>
             <span>/</span>
             <Link href="/champions" style={{ color:'var(--muted)', textDecoration:'none' }}>챔피언 도감</Link>
@@ -181,7 +181,7 @@ export default async function ChampionDetailPage({ params }: { params: Promise<{
                   <div style={{ width:'88%', height:'88%', margin:'6%',
                     clipPath:'polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)',
                     background:'var(--navy-1)', display:'flex', alignItems:'center', justifyContent:'center',
-                    fontFamily:'Cinzel,serif', fontSize:40, fontWeight:700, color:costColor }}>
+                    fontFamily:"'Bebas Neue',sans-serif", fontSize:40, fontWeight:700, color:costColor }}>
                     {champ.name[0]}
                   </div>
                 )}
@@ -195,7 +195,7 @@ export default async function ChampionDetailPage({ params }: { params: Promise<{
                   }}/>
                 ))}
               </div>
-              <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:12, color:costColor, fontWeight:600,
+              <span style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:12, color:costColor, fontWeight:600,
                 background:`${costColor}20`, border:`1px solid ${costColor}44`,
                 padding:'2px 10px', borderRadius:3 }}>
                 {champ.cost}코스트
@@ -204,7 +204,7 @@ export default async function ChampionDetailPage({ params }: { params: Promise<{
 
             {/* 챔피언 정보 */}
             <div>
-              <h1 style={{ fontFamily:'Cinzel,serif', fontSize:32, fontWeight:900,
+              <h1 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:32, fontWeight:900,
                 color:'var(--gold-2)', marginBottom:12, lineHeight:1 }}>{champ.name}</h1>
 
               {/* 시너지 태그 */}
@@ -228,14 +228,14 @@ export default async function ChampionDetailPage({ params }: { params: Promise<{
                 <div style={{ background:'var(--navy-3)', border:'1px solid var(--border)',
                   borderLeft:`3px solid ${costColor}`, borderRadius:6, padding:'16px', marginBottom:16 }}>
                   <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
-                    <span style={{ fontFamily:'Cinzel,serif', fontSize:11, fontWeight:600,
+                    <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:11, fontWeight:600,
                       letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--muted)' }}>스킬</span>
                     <div style={{ flex:1, height:1, background:'var(--border)' }}/>
                   </div>
-                  <div style={{ fontFamily:'Cinzel,serif', fontSize:16, fontWeight:700, color:costColor, marginBottom:6 }}>
+                  <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:16, fontWeight:700, color:costColor, marginBottom:6 }}>
                     {champ.skill}
                   </div>
-                  <p style={{ fontFamily:'Rajdhani,sans-serif', fontSize:14, color:'var(--text)', lineHeight:1.7, margin:0 }}>
+                  <p style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:14, color:'var(--text)', lineHeight:1.7, margin:0 }}>
                     {champ.skillDesc || '스킬 설명 준비 중'}
                   </p>
                 </div>
@@ -253,9 +253,9 @@ export default async function ChampionDetailPage({ params }: { params: Promise<{
                 <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
                   <div style={{ width:10, height:10, borderRadius:'50%', background:color, flexShrink:0,
                     boxShadow:`0 0 8px ${color}` }}/>
-                  <h2 style={{ fontFamily:'Cinzel,serif', fontSize:16, fontWeight:700,
+                  <h2 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:16, fontWeight:700,
                     color, margin:0 }}>{t}</h2>
-                  <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:12, color:'var(--muted)' }}>
+                  <span style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:12, color:'var(--muted)' }}>
                     시너지 챔피언 {related.length + 1}명
                   </span>
                   <div className="gold-divider" style={{ flex:1, margin:0 }}/>
@@ -279,9 +279,9 @@ export default async function ChampionDetailPage({ params }: { params: Promise<{
               }}>
                 <span style={{ color:'var(--muted)', fontSize:18 }}>←</span>
                 <div>
-                  <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:10, color:'var(--muted)',
+                  <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:10, color:'var(--muted)',
                     textTransform:'uppercase', letterSpacing:'0.08em' }}>이전</div>
-                  <div style={{ fontFamily:'Cinzel,serif', fontSize:14, fontWeight:700, color:'var(--gold-2)' }}>
+                  <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, fontWeight:700, color:'var(--gold-2)' }}>
                     {prevChamp.name}
                   </div>
                 </div>
@@ -292,7 +292,7 @@ export default async function ChampionDetailPage({ params }: { params: Promise<{
               display:'flex', alignItems:'center', gap:6, textDecoration:'none',
               padding:'12px 20px', borderRadius:6,
               background:'var(--gold-3)', border:'1px solid var(--border-hover)',
-              fontFamily:'Rajdhani,sans-serif', fontSize:13, fontWeight:600, color:'var(--gold)',
+              fontFamily:"'Noto Sans KR',sans-serif", fontSize:13, fontWeight:600, color:'var(--gold)',
             }}>
               전체 도감
             </Link>
@@ -305,9 +305,9 @@ export default async function ChampionDetailPage({ params }: { params: Promise<{
                 transition:'all 0.15s',
               }}>
                 <div style={{ textAlign:'right' }}>
-                  <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:10, color:'var(--muted)',
+                  <div style={{ fontFamily:"'Noto Sans KR',sans-serif", fontSize:10, color:'var(--muted)',
                     textTransform:'uppercase', letterSpacing:'0.08em' }}>다음</div>
-                  <div style={{ fontFamily:'Cinzel,serif', fontSize:14, fontWeight:700, color:'var(--gold-2)' }}>
+                  <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, fontWeight:700, color:'var(--gold-2)' }}>
                     {nextChamp.name}
                   </div>
                 </div>
