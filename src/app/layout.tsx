@@ -1,107 +1,76 @@
-import type { Metadata } from "next";
+'use client';
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: {
-    template: "%s | SHUD",
-    default: "코딩 입문자의 크립토 자동화 일지 | SHUD",
-  },
-  description:
-    "코딩 한 줄 못 짜던 사람이 AI(Claude Code)로 크립토 봇을 만들어가는 실전 기록.",
-  keywords: "바이브코딩, 크립토 봇, 펀딩비 차익거래, 에어드랍 파밍, Claude Code",
-  openGraph: {
-    type: "website",
-    url: "https://tftchess.com",
-    locale: "ko_KR",
-    siteName: "SHUD",
-  },
-  alternates: { canonical: "https://tftchess.com" },
-};
+const TABS = [
+  { href: '/',           label: '홈'       },
+  { href: '/champions',  label: '챔피언'   },
+  { href: '/decks',      label: '덱 추천'  },
+  { href: '/meta',       label: '메타 통계' },
+  { href: '/items',      label: '아이템'   },
+];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
   return (
     <html lang="ko">
       <head>
+        <title>TFT.GG — Season 17 Arcane Depths</title>
+        <meta name="description" content="롤토체스 시즌 17 아케인 심연 — 챔피언 도감, 덱 추천, 메타 통계, 아이템 조합기" />
         <meta name="robots" content="index, follow" />
-        <meta name="google-adsense-account" content="ca-pub-8600828705366909" />
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8600828705366909"
-          crossOrigin="anonymous"
-        />
       </head>
-      <body style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-        <header
-          style={{
-            borderBottom: "1px solid var(--border)",
-            position: "sticky",
-            top: 0,
-            background: "rgba(255,255,255,0.92)",
-            backdropFilter: "blur(10px)",
-            WebkitBackdropFilter: "blur(10px)",
-            zIndex: 100,
-          }}
-        >
-          <div
-            className="container"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              height: 52,
-            }}
-          >
-            <Link
-              href="/"
-              style={{
-                fontWeight: 700,
-                fontSize: 15,
-                color: "var(--text-primary)",
-                textDecoration: "none",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              SHUD<span style={{ color: "var(--accent)" }}>.</span>
+      <body>
+        {/* 네비게이션 */}
+        <nav className="tft-nav">
+          <div className="container tft-nav-inner">
+            <Link href="/" className="tft-logo">
+              <div className="tft-logo-hex">T</div>
+              <span className="tft-logo-text">
+                TFT<span className="gg">.GG</span>
+              </span>
+              <span className="tft-logo-badge">S17</span>
             </Link>
 
-            <nav style={{ display: "flex", gap: 24, alignItems: "center" }}>
-              <Link href="/" className="nav-link">홈</Link>
-              <Link href="/blog" className="nav-link">블로그</Link>
-              <Link href="/about" className="nav-link">소개</Link>
-            </nav>
+            <div className="tft-tabs">
+              {TABS.map(t => {
+                const active = t.href === '/'
+                  ? pathname === '/'
+                  : pathname.startsWith(t.href);
+                return (
+                  <Link
+                    key={t.href}
+                    href={t.href}
+                    className={`tft-tab ${active ? 'active' : ''}`}
+                  >
+                    {t.label}
+                  </Link>
+                );
+              })}
+            </div>
+
+            <span className="tft-patch">Patch 17.1</span>
           </div>
-        </header>
+        </nav>
 
-        <main style={{ flex: 1 }}>{children}</main>
+        <main>{children}</main>
 
-        <footer
-          style={{
-            borderTop: "1px solid var(--border)",
-            padding: "28px 0",
-            marginTop: 80,
-          }}
-        >
-          <div
-            className="container"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: 12,
-            }}
-          >
-            <span style={{ fontSize: 13, color: "var(--text-tertiary)" }}>
-              © 2026 SHUD
+        <footer style={{
+          borderTop: '1px solid var(--border)',
+          padding: '28px 0',
+          marginTop: 80,
+        }}>
+          <div className="container" style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            flexWrap: 'wrap', gap: 12,
+          }}>
+            <span style={{ fontSize: 13, color: 'var(--muted)', fontFamily: 'Rajdhani, sans-serif' }}>
+              © 2026 TFT.GG — 팬 사이트, Riot Games와 무관합니다
             </span>
-            <div style={{ display: "flex", gap: 20 }}>
-              <Link href="/privacy" style={{ fontSize: 13, color: "var(--text-tertiary)", textDecoration: "none" }}>
-                개인정보처리방침
-              </Link>
-              <Link href="/contact" style={{ fontSize: 13, color: "var(--text-tertiary)", textDecoration: "none" }}>
-                연락하기
-              </Link>
+            <div style={{ display: 'flex', gap: 20 }}>
+              <Link href="/privacy" style={{ fontSize: 13, color: 'var(--muted)', textDecoration: 'none' }}>개인정보처리방침</Link>
+              <Link href="/contact" style={{ fontSize: 13, color: 'var(--muted)', textDecoration: 'none' }}>연락하기</Link>
             </div>
           </div>
         </footer>
