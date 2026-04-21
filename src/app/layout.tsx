@@ -20,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <title>TFT.GG — Season 17 Arcane Depths</title>
         <meta name="description" content="롤토체스 시즌 17 아케인 심연 — 챔피언 도감, 덱 추천, 메타 통계, 아이템 조합기" />
         <meta name="robots" content="index, follow" />
+        <meta name="google-site-verification" content="QMhQF2aEFB6DI0kK-DEBDwCjfHRHb3YtkUzVx4x2_cc" />
       </head>
       <body>
         {/* 네비게이션 */}
