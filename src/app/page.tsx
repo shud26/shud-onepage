@@ -1,59 +1,93 @@
 'use client';
 import Link from "next/link";
-import { DECKS, CHAMPIONS, TIER_COLORS, COST_COLORS, TRAIT_COLORS, TRAIT_LABELS } from "@/lib/tft-data";
-import type { TraitKey } from "@/lib/tft-data";
+import Image from "next/image";
+import { DECKS, TIER_COLORS, COST_COLORS, META_AUGMENTS } from "@/lib/tft-data";
+import type { Tier } from "@/lib/tft-data";
+import { useTFTChampions, getChampByApi } from "@/lib/use-tft-champions";
 
 const STATS = [
-  { num: '58', label: '챔피언' },
-  { num: '24', label: '덱 추천' },
-  { num: '127', label: '증강체' },
-  { num: '9', label: '기본 아이템' },
+  { num: '63', label: '챔피언' },
+  { num: '5',  label: '추천 덱' },
+  { num: '44', label: '시너지' },
+  { num: '37', label: '조합 아이템' },
   { num: '17', label: '시즌' },
 ];
 
-const TRAITS: { key: TraitKey; count: number }[] = [
-  { key:'piltover', count:6 }, { key:'shadow',   count:5 },
-  { key:'freljord', count:5 }, { key:'noxus',    count:4 },
-  { key:'ionian',   count:4 }, { key:'void',     count:5 },
-  { key:'mage',     count:6 }, { key:'warrior',  count:7 },
-];
+function ChampHex({ apiName, size = 36 }: { apiName: string; size?: number }) {
+  const data = useTFTChampions();
+  const champ = data ? getChampByApi(data.champions, apiName) : undefined;
+  const costColor = champ ? COST_COLORS[champ.cost] : '#555';
 
-function HexFrame({ name, cost, size = 40 }: { name: string; cost: number; size?: number }) {
-  const color = COST_COLORS[cost as keyof typeof COST_COLORS];
   return (
-    <div className="hex-outer" style={{ width: size, height: size, background: color }}>
-      <div className="hex-inner" style={{ color, fontSize: size * 0.18 }}>
-        {name[0]}
-      </div>
+    <div style={{
+      width: size, height: size, flexShrink: 0,
+      clipPath: 'polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)',
+      background: costColor, overflow: 'hidden',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      {champ?.imageUrl ? (
+        <div style={{
+          width: '88%', height: '88%',
+          clipPath: 'polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)',
+          overflow: 'hidden', position: 'relative',
+        }}>
+          <Image src={champ.imageUrl} alt={champ.name} width={size} height={size}
+            style={{ objectFit: 'cover', width: '100%', height: '100%' }} unoptimized />
+        </div>
+      ) : (
+        <div style={{
+          width: '88%', height: '88%',
+          clipPath: 'polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)',
+          background: 'linear-gradient(135deg, #142035, #050b18)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: 'Cinzel,serif', fontSize: size * 0.22, fontWeight: 700, color: costColor,
+        }}>
+          {champ ? champ.name[0] : '?'}
+        </div>
+      )}
     </div>
   );
 }
 
-function TierBadge({ tier, large = false }: { tier: string; large?: boolean }) {
-  const color = TIER_COLORS[tier as keyof typeof TIER_COLORS] || '#fff';
+function TierBadge({ tier, large = false }: { tier: Tier; large?: boolean }) {
+  const color = TIER_COLORS[tier];
   return (
-    <span
-      className={`tier-badge ${large ? 'lg' : ''}`}
-      style={{
-        color,
-        borderColor: color,
-        background: `linear-gradient(135deg, ${color}33, ${color}11)`,
-        boxShadow: `0 0 10px ${color}44`,
-      }}
-    >
-      {tier}
-    </span>
+    <span className={`tier-badge ${large ? 'lg' : ''}`} style={{
+      color, borderColor: color,
+      background: `linear-gradient(135deg, ${color}33, ${color}11)`,
+      boxShadow: `0 0 10px ${color}44`,
+    }}>{tier}</span>
   );
 }
 
-function TraitTag({ trait }: { trait: TraitKey }) {
-  const color = TRAIT_COLORS[trait];
+// 시너지별 고정 색상
+const TRAIT_PALETTE: Record<string, string> = {
+  'N.O.V.A.':    '#4A9EE8',
+  '별돌보미':    '#C89B3C',
+  '정령족':      '#60D8F0',
+  '암흑의 별':   '#8B5CF6',
+  '동물특공대':  '#4AE890',
+  '태고족':      '#E8A454',
+  '중재자':      '#60A8F0',
+  '습격자':      '#C060F0',
+  '도전자':      '#E85454',
+  '선봉대':      '#909090',
+  '복제자':      '#F0C060',
+  '요새':        '#60E8A4',
+  '시간 균열자': '#E860E8',
+  '초능력':      '#60E860',
+  '우주 그루브': '#E86060',
+  '불한당':      '#a0a0a0',
+  '저격수':      '#60A8E8',
+  '말살자':      '#E8A060',
+};
+function traitColor(t: string) { return TRAIT_PALETTE[t] || '#aaa'; }
+
+function TraitTag({ trait }: { trait: string }) {
+  const color = traitColor(trait);
   return (
-    <span
-      className="trait-tag"
-      style={{ color, background: `${color}15`, borderColor: `${color}44` }}
-    >
-      {TRAIT_LABELS[trait]}
+    <span className="trait-tag" style={{ color, background: `${color}15`, borderColor: `${color}44` }}>
+      {trait}
     </span>
   );
 }
@@ -66,71 +100,37 @@ export default function HomePage() {
       {/* ── 히어로 ── */}
       <section style={{
         background: 'linear-gradient(160deg, #0a1a38 0%, #050b18 50%, #0d0a24 100%)',
-        padding: '80px 24px 60px',
-        position: 'relative',
-        overflow: 'hidden',
+        padding: '80px 24px 60px', position: 'relative', overflow: 'hidden',
       }}>
-        {/* 배경 글로우 오브 */}
-        <div style={{
-          position:'absolute', top:-100, left:'30%',
-          width:400, height:400, borderRadius:'50%',
-          background:'radial-gradient(circle, rgba(200,155,60,0.08) 0%, transparent 70%)',
-          pointerEvents:'none',
-        }}/>
-        <div style={{
-          position:'absolute', bottom:-80, right:'10%',
-          width:300, height:300, borderRadius:'50%',
-          background:'radial-gradient(circle, rgba(75,60,200,0.08) 0%, transparent 70%)',
-          pointerEvents:'none',
-        }}/>
+        <div style={{ position:'absolute', top:-100, left:'30%', width:400, height:400, borderRadius:'50%',
+          background:'radial-gradient(circle, rgba(200,155,60,0.08) 0%, transparent 70%)', pointerEvents:'none' }}/>
+        <div style={{ position:'absolute', bottom:-80, right:'10%', width:300, height:300, borderRadius:'50%',
+          background:'radial-gradient(circle, rgba(75,60,200,0.08) 0%, transparent 70%)', pointerEvents:'none' }}/>
 
         <div className="container fade-up">
-          {/* LIVE 뱃지 */}
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:20 }}>
-            <div style={{
-              width:8, height:8, borderRadius:'50%',
-              background:'var(--gold)',
-              boxShadow:'0 0 8px var(--gold)',
-              animation:'glowPulse 1.5s ease-in-out infinite',
-            }}/>
-            <span style={{
-              fontFamily:'Rajdhani,sans-serif', fontSize:12,
-              fontWeight:600, letterSpacing:'0.12em',
-              color:'var(--gold)', textTransform:'uppercase',
-            }}>
+            <div style={{ width:8, height:8, borderRadius:'50%', background:'var(--gold)',
+              boxShadow:'0 0 8px var(--gold)', animation:'glowPulse 1.5s ease-in-out infinite' }}/>
+            <span style={{ fontFamily:'Rajdhani,sans-serif', fontSize:12, fontWeight:600,
+              letterSpacing:'0.12em', color:'var(--gold)', textTransform:'uppercase' }}>
               SEASON 17 LIVE
             </span>
           </div>
 
-          <h1 style={{
-            fontFamily:'Cinzel,serif',
-            fontSize:'clamp(32px,5vw,68px)',
-            fontWeight:900,
-            color:'var(--gold-2)',
-            lineHeight:1.1,
-            marginBottom:20,
-            letterSpacing:'0.02em',
-          }}>
+          <h1 style={{ fontFamily:'Cinzel,serif', fontSize:'clamp(32px,5vw,68px)', fontWeight:900,
+            color:'var(--gold-2)', lineHeight:1.1, marginBottom:20, letterSpacing:'0.02em' }}>
             ARCANE{' '}
             <span style={{
               background:'linear-gradient(90deg, #C89B3C, #F0E6C0, #C89B3C)',
-              backgroundSize:'200% auto',
-              WebkitBackgroundClip:'text',
-              WebkitTextFillColor:'transparent',
-              backgroundClip:'text',
+              backgroundSize:'200% auto', WebkitBackgroundClip:'text',
+              WebkitTextFillColor:'transparent', backgroundClip:'text',
               animation:'shimmer 3s linear infinite',
-            }}>
-              DEPTHS
-            </span>
+            }}>DEPTHS</span>
           </h1>
 
-          <p style={{
-            fontFamily:'Rajdhani,sans-serif',
-            fontSize:18, fontWeight:500,
-            color:'var(--muted)',
-            maxWidth:480, marginBottom:32, lineHeight:1.6,
-          }}>
-            시즌 17 아케인 심연 — 챔피언 도감, 최강 덱 추천, 실시간 메타 통계를 한 곳에서.
+          <p style={{ fontFamily:'Rajdhani,sans-serif', fontSize:18, fontWeight:500,
+            color:'var(--muted)', maxWidth:480, marginBottom:32, lineHeight:1.6 }}>
+            시즌 17 아케인 심연 — 챔피언 도감, 최강 덱 추천, 아이템 조합기를 한 곳에서.
           </p>
 
           <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
@@ -144,60 +144,46 @@ export default function HomePage() {
       <div style={{ background:'var(--navy-1)', borderBottom:'1px solid var(--border)' }}>
         <div className="container" style={{ display:'flex', flexWrap:'wrap' }}>
           {STATS.map((s, i) => (
-            <div key={s.label} style={{
-              flex:'1 1 120px',
-              padding:'18px 24px',
-              borderRight: i < STATS.length-1 ? '1px solid var(--border)' : 'none',
-              textAlign:'center',
-            }}>
-              <div style={{
-                fontFamily:'Cinzel,serif', fontSize:22, fontWeight:700,
-                color:'var(--gold)', marginBottom:4,
-              }}>{s.num}</div>
-              <div style={{
-                fontFamily:'Rajdhani,sans-serif', fontSize:11,
-                fontWeight:600, letterSpacing:'0.1em',
-                textTransform:'uppercase', color:'var(--muted)',
-              }}>{s.label}</div>
+            <div key={s.label} style={{ flex:'1 1 120px', padding:'18px 24px',
+              borderRight: i < STATS.length-1 ? '1px solid var(--border)' : 'none', textAlign:'center' }}>
+              <div style={{ fontFamily:'Cinzel,serif', fontSize:22, fontWeight:700,
+                color:'var(--gold)', marginBottom:4 }}>{s.num}</div>
+              <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, fontWeight:600,
+                letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--muted)' }}>{s.label}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── 인기 덱 TOP 5 ── */}
+      {/* ── 인기 덱 ── */}
       <section style={{ padding:'48px 0' }}>
         <div className="container">
           <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:24 }}>
-            <span className="section-label">인기 덱 TOP 5</span>
+            <span className="section-label">추천 덱 TOP 5</span>
             <div className="gold-divider" style={{ flex:1, margin:0 }}/>
-            <Link href="/decks" style={{
-              fontFamily:'Rajdhani,sans-serif', fontSize:13,
-              color:'var(--gold)', textDecoration:'none', fontWeight:600,
-            }}>전체 보기 →</Link>
+            <Link href="/decks" style={{ fontFamily:'Rajdhani,sans-serif', fontSize:13,
+              color:'var(--gold)', textDecoration:'none', fontWeight:600 }}>전체 보기 →</Link>
           </div>
 
-          <div style={{
-            display:'grid',
-            gridTemplateColumns:'repeat(auto-fill, minmax(260px, 1fr))',
-            gap:12,
-          }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(260px, 1fr))', gap:12 }}>
             {topDecks.map(deck => {
-              const units = deck.unitIds.slice(0,8).map(id => CHAMPIONS.find(c => c.id === id)!).filter(Boolean);
+              const tierColor = TIER_COLORS[deck.tier];
               return (
                 <Link key={deck.id} href="/decks" style={{ textDecoration:'none' }}>
-                  <div className="tft-card" style={{ borderLeft:`3px solid ${TIER_COLORS[deck.tier]}` }}>
+                  <div className="tft-card" style={{ borderLeft:`3px solid ${tierColor}` }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-                      <span style={{
-                        fontFamily:'Cinzel,serif', fontSize:15, fontWeight:700,
-                        color:'var(--gold-2)',
-                      }}>{deck.name}</span>
+                      <span style={{ fontFamily:'Cinzel,serif', fontSize:15, fontWeight:700,
+                        color:'var(--gold-2)' }}>{deck.name}</span>
                       <TierBadge tier={deck.tier} />
                     </div>
                     <div style={{ display:'flex', gap:4, marginBottom:10, flexWrap:'wrap' }}>
-                      {deck.traits.map(t => <TraitTag key={t} trait={t} />)}
+                      {deck.traits.slice(0,3).map(t => <TraitTag key={t} trait={t} />)}
                     </div>
-                    <div style={{ display:'flex', gap:4, flexWrap:'wrap', marginBottom:12 }}>
-                      {units.map(u => <HexFrame key={u.id} name={u.name} cost={u.cost} size={36} />)}
+                    {/* 실제 챔피언 이미지 */}
+                    <div style={{ display:'flex', gap:3, flexWrap:'wrap', marginBottom:12 }}>
+                      {deck.unitApiNames.slice(0,8).map(apiName => (
+                        <ChampHex key={apiName} apiName={apiName} size={34} />
+                      ))}
                     </div>
                     <div className="gold-divider" style={{ margin:'8px 0' }}/>
                     <div style={{ display:'flex', gap:16 }}>
@@ -220,36 +206,36 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── 시너지 일람 ── */}
+      {/* ── 증강체 티어 미리보기 ── */}
       <section style={{ padding:'0 0 60px' }}>
         <div className="container">
           <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20 }}>
-            <span className="section-label">시너지 일람</span>
+            <span className="section-label">증강체 티어</span>
             <div className="gold-divider" style={{ flex:1, margin:0 }}/>
+            <Link href="/meta" style={{ fontFamily:'Rajdhani,sans-serif', fontSize:13,
+              color:'var(--gold)', textDecoration:'none', fontWeight:600 }}>전체 보기 →</Link>
           </div>
-          <div style={{
-            display:'grid',
-            gridTemplateColumns:'repeat(auto-fill, minmax(180px, 1fr))',
-            gap:10,
-          }}>
-            {TRAITS.map(t => {
-              const color = TRAIT_COLORS[t.key];
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:8 }}>
+            {META_AUGMENTS.slice(0, 8).map(aug => {
+              const tierColor = TIER_COLORS[aug.tier];
               return (
-                <div key={t.key} className="tft-card" style={{ borderTop:`2px solid ${color}` }}>
-                  <div style={{
-                    width:32, height:32, borderRadius:4,
-                    background:`${color}20`, border:`1px solid ${color}44`,
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                    fontFamily:'Cinzel,serif', fontSize:14, fontWeight:700,
-                    color, marginBottom:8,
-                  }}>
-                    {TRAIT_LABELS[t.key][0]}
+                <div key={aug.name} className="tft-card" style={{ borderLeft:`2px solid ${tierColor}`, padding:'12px 14px' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+                    <span className="tier-badge" style={{ color:tierColor, borderColor:tierColor,
+                      background:`${tierColor}22`, width:22, height:22, fontSize:12 }}>{aug.tier}</span>
+                    <span style={{ fontFamily:'Cinzel,serif', fontSize:13, fontWeight:700, color:'var(--gold-2)' }}>
+                      {aug.name}
+                    </span>
                   </div>
-                  <div style={{ fontFamily:'Cinzel,serif', fontSize:13, fontWeight:700, color:'var(--gold-2)', marginBottom:4 }}>
-                    {TRAIT_LABELS[t.key]}
-                  </div>
-                  <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:11, color:'var(--muted)' }}>
-                    챔피언 {t.count}명
+                  <div style={{ display:'flex', gap:12 }}>
+                    <div>
+                      <div style={{ fontFamily:'Cinzel,serif', fontSize:14, fontWeight:700, color:'var(--gold)' }}>{aug.avgPlace.toFixed(1)}위</div>
+                      <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:9, color:'var(--muted)', textTransform:'uppercase' }}>평균등수</div>
+                    </div>
+                    <div>
+                      <div style={{ fontFamily:'Cinzel,serif', fontSize:14, fontWeight:700, color:tierColor }}>{aug.pickRate}%</div>
+                      <div style={{ fontFamily:'Rajdhani,sans-serif', fontSize:9, color:'var(--muted)', textTransform:'uppercase' }}>픽률</div>
+                    </div>
                   </div>
                 </div>
               );
