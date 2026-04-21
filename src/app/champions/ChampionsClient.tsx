@@ -1,8 +1,11 @@
 'use client';
 import { useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
 import { COST_COLORS } from "@/lib/tft-data";
 import type { ApiChampion, ApiTrait } from "@/lib/tft-api";
+
+function nameToSlug(name: string) { return encodeURIComponent(name); }
 
 const COST_LABELS: Record<number, string> = { 1:'1코', 2:'2코', 3:'3코', 4:'4코', 5:'5코' };
 
@@ -85,6 +88,16 @@ function ChampCard({ champ, allTraits }: { champ: ApiChampion; allTraits: ApiTra
               );
             })}
           </div>
+          <Link
+            href={`/champions/${nameToSlug(champ.name)}`}
+            onClick={e => e.stopPropagation()}
+            style={{
+              display:'inline-block', marginTop:8,
+              fontFamily:'Rajdhani,sans-serif', fontSize:11, fontWeight:600,
+              color: costColor, textDecoration:'none', letterSpacing:'0.06em',
+              opacity:0.8,
+            }}
+          >상세 보기 →</Link>
         </>
       ) : (
         <div style={{ textAlign:'left' }}>
@@ -105,6 +118,16 @@ function ChampCard({ champ, allTraits }: { champ: ApiChampion; allTraits: ApiTra
               );
             })}
           </div>
+          <Link
+            href={`/champions/${nameToSlug(champ.name)}`}
+            onClick={e => e.stopPropagation()}
+            style={{
+              display:'inline-block', marginTop:10,
+              fontFamily:'Rajdhani,sans-serif', fontSize:11, fontWeight:600,
+              color: costColor, textDecoration:'none', letterSpacing:'0.06em',
+              opacity:0.85,
+            }}
+          >상세 페이지 →</Link>
         </div>
       )}
     </button>
