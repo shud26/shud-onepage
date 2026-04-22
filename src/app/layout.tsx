@@ -10,6 +10,7 @@ const TABS = [
   { href: '/meta',       label: '메타 통계' },
   { href: '/items',      label: '아이템'   },
   { href: '/guides',     label: '공략 가이드' },
+  { href: '/summoner',   label: '소환사 검색' },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
