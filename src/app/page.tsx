@@ -1,15 +1,17 @@
 'use client';
 import Link from "next/link";
 import Image from "next/image";
+import { useState, useEffect } from "react";
 import { DECKS, TIER_COLORS, COST_COLORS, META_AUGMENTS } from "@/lib/tft-data";
 import type { Tier } from "@/lib/tft-data";
 import { useTFTChampions, getChampByApi } from "@/lib/use-tft-champions";
+import { supabase } from "@/lib/supabase";
 
 const STATS = [
   { num: '63', label: '챔피언' },
-  { num: '5',  label: '추천 덱' },
+  { num: '10', label: '추천 덱' },
   { num: '44', label: '시너지' },
-  { num: '37', label: '조합 아이템' },
+  { num: '10', label: '공략 가이드' },
   { num: '17', label: '시즌' },
 ];
 
@@ -89,6 +91,176 @@ function TraitTag({ trait }: { trait: string }) {
     <span className="trait-tag" style={{ color, background: `${color}15`, borderColor: `${color}44` }}>
       {trait}
     </span>
+  );
+}
+
+interface Tip {
+  id: string;
+  nickname: string;
+  content: string;
+  created_at: string;
+  likes: number;
+}
+
+function CommunitySection() {
+  const [tips, setTips] = useState<Tip[]>([]);
+  const [nickname, setNickname] = useState('');
+  const [content, setContent] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from('tft_tips')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(10)
+      .then(({ data }) => { if (data) setTips(data); });
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!content.trim() || submitting) return;
+    setSubmitting(true);
+    const { data } = await supabase.from('tft_tips').insert({
+      nickname: nickname.trim() || '익명의 소환사',
+      content: content.trim(),
+      likes: 0,
+    }).select().single();
+    if (data) {
+      setTips(prev => [data, ...prev].slice(0, 10));
+      setContent('');
+      setNickname('');
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 3000);
+    }
+    setSubmitting(false);
+  }
+
+  async function handleLike(id: string, currentLikes: number) {
+    await supabase.from('tft_tips').update({ likes: currentLikes + 1 }).eq('id', id);
+    setTips(prev => prev.map(t => t.id === id ? { ...t, likes: currentLikes + 1 } : t));
+  }
+
+  function timeAgo(dateStr: string) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return '방금 전';
+    if (m < 60) return `${m}분 전`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}시간 전`;
+    return `${Math.floor(h / 24)}일 전`;
+  }
+
+  return (
+    <section style={{ padding: '0 0 60px' }}>
+      <div className="container">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+          <span className="section-label">공략 팁 공유</span>
+          <div className="gold-divider" style={{ flex: 1, margin: 0 }} />
+        </div>
+
+        {/* 작성 폼 */}
+        <form onSubmit={handleSubmit} style={{
+          background: 'var(--navy-2)',
+          border: '1px solid var(--border)',
+          borderRadius: 8,
+          padding: '16px',
+          marginBottom: 16,
+        }}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            <input
+              value={nickname}
+              onChange={e => setNickname(e.target.value)}
+              placeholder="닉네임 (선택)"
+              maxLength={20}
+              style={{
+                width: 140, flexShrink: 0,
+                background: 'var(--navy-3)', border: '1px solid var(--border)',
+                borderRadius: 4, padding: '8px 12px',
+                fontFamily: "'Noto Sans KR',sans-serif", fontSize: 13,
+                color: 'var(--text)', outline: 'none',
+              }}
+            />
+            <input
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              placeholder="TFT 공략 팁을 공유해보세요! (예: 레벨 7에서 리롤하면 4코 챔피언 잘 나와요)"
+              maxLength={200}
+              style={{
+                flex: 1,
+                background: 'var(--navy-3)', border: '1px solid var(--border)',
+                borderRadius: 4, padding: '8px 12px',
+                fontFamily: "'Noto Sans KR',sans-serif", fontSize: 13,
+                color: 'var(--text)', outline: 'none',
+              }}
+            />
+            <button type="submit" disabled={submitting || !content.trim()} style={{
+              background: content.trim() ? 'var(--gold)' : 'var(--navy-4)',
+              border: 'none', borderRadius: 4, padding: '8px 18px',
+              fontFamily: "'Bebas Neue',sans-serif", fontSize: 15,
+              color: content.trim() ? '#050b18' : 'var(--muted)',
+              cursor: content.trim() ? 'pointer' : 'default',
+              letterSpacing: '0.05em', flexShrink: 0,
+              transition: 'background 0.15s',
+            }}>
+              {submitting ? '...' : '공유'}
+            </button>
+          </div>
+          {submitted && (
+            <div style={{ fontFamily: "'Noto Sans KR',sans-serif", fontSize: 12, color: '#4AE890' }}>
+              팁이 등록됐습니다!
+            </div>
+          )}
+        </form>
+
+        {/* 팁 목록 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {tips.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '32px 0', fontFamily: "'Noto Sans KR',sans-serif", fontSize: 14, color: 'var(--muted)' }}>
+              첫 번째 팁을 공유해보세요!
+            </div>
+          )}
+          {tips.map(tip => (
+            <div key={tip.id} style={{
+              background: 'var(--navy-2)', border: '1px solid var(--border)',
+              borderRadius: 6, padding: '12px 16px',
+              display: 'flex', alignItems: 'flex-start', gap: 12,
+            }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                background: 'var(--navy-4)', border: '1px solid var(--border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, color: 'var(--gold)',
+              }}>
+                {tip.nickname[0]?.toUpperCase() ?? '?'}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontFamily: "'Noto Sans KR',sans-serif", fontSize: 13, fontWeight: 700, color: 'var(--gold-2)' }}>
+                    {tip.nickname}
+                  </span>
+                  <span style={{ fontFamily: "'Noto Sans KR',sans-serif", fontSize: 11, color: 'var(--muted)' }}>
+                    {timeAgo(tip.created_at)}
+                  </span>
+                </div>
+                <p style={{ fontFamily: "'Noto Sans KR',sans-serif", fontSize: 14, color: '#c8bfa8', margin: 0, lineHeight: 1.6 }}>
+                  {tip.content}
+                </p>
+              </div>
+              <button onClick={() => handleLike(tip.id, tip.likes)} style={{
+                background: 'none', border: '1px solid var(--border)',
+                borderRadius: 4, padding: '4px 10px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0,
+              }}>
+                <span style={{ fontSize: 13 }}>👍</span>
+                <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, color: 'var(--gold)' }}>{tip.likes}</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -206,6 +378,35 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── 가이드 미리보기 ── */}
+      <section style={{ padding: '0 0 48px' }}>
+        <div className="container">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+            <span className="section-label">공략 가이드</span>
+            <div className="gold-divider" style={{ flex: 1, margin: 0 }} />
+            <Link href="/guides" style={{ fontFamily: "'Noto Sans KR',sans-serif", fontSize: 13, color: 'var(--gold)', textDecoration: 'none', fontWeight: 600 }}>전체 보기 →</Link>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+            {[
+              { href: '/guides/tft-beginner-guide',  label: '완전 초보 가이드',     cat: '기초', color: '#4AE890' },
+              { href: '/guides/tft-economy-guide',   label: '경제 운영 완벽 가이드', cat: '전략', color: '#4A9EE8' },
+              { href: '/guides/tft-item-guide',      label: '아이템 완전 정복',      cat: '아이템', color: '#C89B3C' },
+              { href: '/guides/tft-reroll-guide',    label: '리롤 전략 가이드',      cat: '전략', color: '#4A9EE8' },
+            ].map(g => (
+              <Link key={g.href} href={g.href} style={{ textDecoration: 'none' }}>
+                <div style={{
+                  background: 'var(--navy-2)', border: '1px solid var(--border)',
+                  borderTop: `2px solid ${g.color}`, borderRadius: 6, padding: '14px 16px',
+                }}>
+                  <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 11, color: g.color, letterSpacing: '0.08em', marginBottom: 6 }}>{g.cat}</div>
+                  <div style={{ fontFamily: "'Noto Sans KR',sans-serif", fontSize: 13, fontWeight: 700, color: 'var(--gold-2)' }}>{g.label}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── 증강체 티어 미리보기 ── */}
       <section style={{ padding:'0 0 60px' }}>
         <div className="container">
@@ -243,6 +444,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── 커뮤니티 팁 ── */}
+      <CommunitySection />
     </div>
   );
 }
