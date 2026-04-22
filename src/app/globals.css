@@ -280,3 +280,83 @@ body {
   box-shadow: 0 0 60px rgba(200,155,60,0.1), 0 24px 80px rgba(0,0,0,0.6);
   animation: fadeUp 0.2s ease;
 }
+
+/* ── Guide Card ── */
+.guide-card {
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.guide-card:hover {
+  background: var(--navy-3) !important;
+}
+
+/* ── Guide Content ── */
+.guide-content {
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text);
+  line-height: 1.8;
+  font-size: 15px;
+}
+.guide-content h2 {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--gold-2);
+  margin: 36px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.guide-content h3 {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 24px 0 8px;
+}
+.guide-content p {
+  margin: 0 0 14px;
+  color: #c8bfa8;
+}
+.guide-content ul, .guide-content ol {
+  margin: 0 0 14px;
+  padding-left: 20px;
+}
+.guide-content li {
+  margin-bottom: 6px;
+  color: #c8bfa8;
+}
+.guide-content strong {
+  color: var(--gold-2);
+  font-weight: 700;
+}
+.guide-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0 20px;
+  font-size: 14px;
+}
+.guide-content th {
+  background: var(--navy-3);
+  color: var(--gold);
+  font-weight: 700;
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid var(--border);
+}
+.guide-content td {
+  padding: 9px 12px;
+  border: 1px solid rgba(200,155,60,0.1);
+  color: #c8bfa8;
+}
+.guide-content tr:nth-child(even) td {
+  background: rgba(20,32,53,0.5);
+}
+.guide-content .tip-box {
+  background: rgba(74,232,144,0.08);
+  border-left: 3px solid #4AE890;
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin: 16px 0;
+  color: #b8e8cc;
+  font-size: 14px;
+}

@@ -9,6 +9,7 @@ const TABS = [
   { href: '/decks',      label: '덱 추천'  },
   { href: '/meta',       label: '메타 통계' },
   { href: '/items',      label: '아이템'   },
+  { href: '/guides',     label: '공략 가이드' },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
