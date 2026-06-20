@@ -1,0 +1,109 @@
+---
+title: 브라우저 JS 분석해서 채굴봇 만든 썰 — RPOW2/RPOW3
+description: rpow2.com, rpow3.com의 JS 번들을 뜯어서 API 구조를 파악하고, Python으로 채굴봇을 만들어 맥미니에 배포했다. 18 MH/s 나오는 과정 기록.
+date: 2026-05-12
+series: 봇운영인프라
+seriesOrder: 17
+tags: [채굴봇, RPOW, 리버스엔지니어링, Python, 맥미니]
+---
+
+rpow3.com이라는 사이트를 발견했다.
+
+Hal Finney가 2004년에 만든 RPOW(Reusable Proofs of Work)를 현대적으로 재현한 프로젝트다. SHA256 해시를 계산해서 trailing zero bits 조건을 충족하면 토큰을 채굴할 수 있다. 브라우저에서 [ MINE ] 버튼 하나로 돌아간다.
+
+브라우저에서 돌아간다는 건, 내가 대신 돌려줄 수 있다는 뜻이다.
+
+## JS 번들 뜯기
+
+사이트의 JS 파일은 하나다. `index-CQ-5ltV7.js`. 186KB짜리 minified 번들.
+
+Puppeteer로 페이지를 열고, fetch 호출을 가로채서 API 패턴을 뽑았다.
+
+```python
+# 브라우저 JS에서 찾은 것들
+API_BASE = "https://api.rpow3.com"
+# 인증: credentials: "include" → 쿠키 기반
+# challenge: POST /challenge → {challenge_id, nonce_prefix, difficulty_bits}
+# mint: POST /mint → {challenge_id, solution_nonce}
+```
+
+핵심은 두 줄이다. `challenge_id`와 `solution_nonce`를 서버에 보내면 된다.
+
+## 채굴 알고리즘
+
+워커 파일(`miner.worker-_dYsV_mq.js`)을 분석하니 알고리즘이 나왔다.
+
+1. 서버에서 `nonce_prefix` (hex string)와 `difficulty_bits`를 받는다
+2. prefix를 bytes로 변환하고, 8바이트 little-endian 카운터를 붙인다
+3. SHA256(prefix + counter) 계산
+4. 결과 hash의 trailing zero bits를 센다
+5. `>= difficulty_bits`이면 그 카운터 값이 `solution_nonce`
+
+Python으로 구현:
+
+```python
+def count_trailing_zero_bits(h: bytes) -> int:
+    count = 0
+    for byte in reversed(h):
+        if byte == 0:
+            count += 8
+        else:
+            b = byte
+            while not (b & 1):
+                count += 1
+                b >>= 1
+            break
+    return count
+
+def mine(nonce_prefix_hex, difficulty_bits):
+    prefix = bytes.fromhex(nonce_prefix_hex)
+    for counter in range(0, 2**64):
+        nonce_bytes = struct.pack("<Q", counter)
+        h = hashlib.sha256(prefix + nonce_bytes).digest()
+        if count_trailing_zero_bits(h) >= difficulty_bits:
+            return str(counter)
+```
+
+## 쿠키 인증
+
+사이트는 magic-link 이메일 로그인 방식이라 자동화가 까다롭다. 브라우저 DevTools → Application → Cookies에서 `rpow_session` 값을 꺼내서 Python requests에 심었다.
+
+API 테스트:
+
+```bash
+curl -s "https://api.rpow3.com/me" \
+  -H "Cookie: rpow_session=eyJ..."
+# {"email":"yhun2345@gmail.com","balance":0,"minted":0}
+```
+
+인증 확인. 그 다음은 challenge → mine → mint 루프.
+
+## 맥미니 M2 성능
+
+Python multiprocessing으로 8코어 전부 쓰니까 **9.9M 해시/s** 나왔다.
+
+difficulty 24bits 기준 평균 1~3초에 해결. 생각보다 빠르다.
+
+그런데 RPOW2용 오픈소스 CLI 마이너를 발견했다. C로 컴파일된 native 바이너리를 쓰면 더 빠르다고 해서 써봤더니 **18 MH/s**. 2배 차이가 났다.
+
+```bash
+# CLI 마이너 native 엔진
+node rpow-cli.js mine --count forever --engine native --workers 8
+# speed="18.20 MH/s"
+```
+
+## 결과
+
+LaunchAgent로 맥미니에 등록해서 24시간 돌아가게 했다.
+
+RPOW3는 Python 마이너로, RPOW2는 native CLI로 각각 돌린다. RPOW2 difficulty가 34bits라서 한 번 채굴에 30분 걸리는 게 흠이지만, 어차피 백그라운드에서 돌아가니까 상관없다.
+
+## 실익은 있나
+
+솔직히 말하면 불명확하다.
+
+토큰은 중앙화 Postgres DB에 저장된다. 현재는 직접 출금하거나 환전할 방법이 없다. 사이트 상단에 Solana pump.fun 주소가 박혀있는데, wrap 기능이 있긴 하지만 아직 연동이 완전하지 않다.
+
+그래도 맥미니는 어차피 켜져 있고, CPU 자원은 남는다. 공짜로 돌리는 거니까 나중에 뭔가 생기면 그때 쓰면 된다.
+
+브라우저 JS 분석해서 API 구조 파악하는 경험 자체는 재밌었다.
